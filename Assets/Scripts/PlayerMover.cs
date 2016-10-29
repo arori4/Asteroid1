@@ -16,6 +16,9 @@ public class PlayerMover : MonoBehaviour {
     public float tiltFront;
     public float tiltSide;
 
+    public float sensitivityX;
+    public float sensitivityY;
+
     Rigidbody mRigidbody;
 
 	// Use this for initialization
@@ -23,23 +26,18 @@ public class PlayerMover : MonoBehaviour {
         mRigidbody = GetComponent<Rigidbody>();
     }
 	
-	// Update is called once per frame
 	void Update () {
-        /*
-        if ((Input.GetButton("Fire1") || Input.GetKeyDown("space")) &&
-        Time.time > mNextFire) {
-            GameObject clone = Instantiate(mShot, mShotSpawnTransform.position, mShotSpawnTransform.rotation) as GameObject;
-            mNextFire = Time.time + mFireRate;
 
-            //Play Sound
-            GetComponent<AudioSource>().Play();
-        }
-        */
     }
 
     void FixedUpdate() {
+        /* This is for keyboard input
         float moveHorizontal = Input.GetAxis("Horizontal") * speed;
         float moveVertical = Input.GetAxis("Vertical") * speed;
+        */
+
+        float moveHorizontal = Input.gyro.rotationRateUnbiased.x * sensitivityX;
+        float moveVertical = Input.gyro.rotationRateUnbiased.y * sensitivityY;
 
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
         mRigidbody.velocity = movement;

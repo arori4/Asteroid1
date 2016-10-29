@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class WeaponFireRate : MonoBehaviour {
+public class WeaponInfo : MonoBehaviour {
 
     public float fireRate;
+    public float energyCost;
+
 }

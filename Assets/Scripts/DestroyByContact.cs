@@ -5,6 +5,8 @@ public class DestroyByContact : MonoBehaviour {
 
     /* All collisions are triggers */
 
+    public GameObject explosion;
+
     GameObject gameController;
 
 	// Use this for initialization
@@ -16,9 +18,7 @@ public class DestroyByContact : MonoBehaviour {
     }
 	
     void OnTriggerEnter(Collider other) {
-
-        print(other.tag);
-
+        
         //destroy if coming into contact with collider
         if (other.CompareTag("Asteroid")) {
             Destroy(gameObject);
@@ -28,6 +28,11 @@ public class DestroyByContact : MonoBehaviour {
         else if (other.CompareTag("Player")) {
             Destroy(gameObject);
             Destroy(other.gameObject);
+        }
+
+        //Create explosion
+        if (explosion != null) {
+            Instantiate(explosion, gameObject.transform.position, gameObject.transform.rotation);
         }
 
     }
