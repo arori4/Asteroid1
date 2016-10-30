@@ -3,13 +3,19 @@ using System.Collections;
 
 public class Explode : MonoBehaviour {
 
-	// Use this for initialization
+    public GameObject explosion;
+    public Vector2 xBounds;
+
 	void Start () {
-	
+	    if (explosion == null) {
+            Debug.Log("Explode: no explosion defined for object " + gameObject.ToString());
+        }
 	}
 	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    void OnDestroy() {
+        if (transform.position.x > xBounds.x && transform.position.x < xBounds.y) {
+            Instantiate(explosion, transform.position, Quaternion.identity);
+        }
+    }
+
 }

@@ -1,0 +1,49 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="Asteroid Explosion_data" version="1.3.0" audacityversion="2.1.2" sel0="0.0000000000" sel1="0.0000000000" vpos="0" h="0.0000000000" zoom="121.8101916028" rate="44100.0" snapto="off" selectionformat="hh:mm:ss + milliseconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="Audiobeast_Small_Room_H&amp;K_416_5.56_Assault_Rifle_05m_LS5_001_Single_Shot_x1" channel="0" linked="1" mute="0" solo="0" height="150" minimized="0" isSelected="1" rate="96000" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="161563">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000582.au" len="161563" min="-0.557122" max="0.632992" rms="0.065393"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+	<wavetrack name="Audiobeast_Small_Room_H&amp;K_416_5.56_Assault_Rifle_05m_LS5_001_Single_Shot_x1" channel="1" linked="0" mute="0" solo="0" height="150" minimized="0" isSelected="1" rate="96000" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="161563">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000bbe.au" len="161563" min="-0.891251" max="0.505895" rms="0.074526"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+	<wavetrack name="FIREWORKS_DR05_01" channel="0" linked="1" mute="0" solo="0" height="150" minimized="0" isSelected="0" rate="96000" gain="1.0" pan="0.0">
+		<waveclip offset="0.22653125">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="139816">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000e9a.au" len="139816" min="-0.891251" max="0.597905" rms="0.040701"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="0.871984166667" val="1.232394337654"/>
+			</envelope>
+		</waveclip>
+	</wavetrack>
+	<wavetrack name="FIREWORKS_DR05_01" channel="1" linked="0" mute="0" solo="0" height="150" minimized="0" isSelected="0" rate="96000" gain="1.0" pan="0.0">
+		<waveclip offset="0.22653125">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="139816">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000e69.au" len="139816" min="-0.815522" max="0.49532" rms="0.036295"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="0.871984166667" val="1.232394337654"/>
+			</envelope>
+		</waveclip>
+	</wavetrack>
+</project>

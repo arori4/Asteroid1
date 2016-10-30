@@ -2,11 +2,11 @@
 using System.Collections;
 
 public class DestroyByContact : MonoBehaviour {
-
-    /* All collisions are triggers */
-
-    public GameObject explosion;
+    
     public CanCollideWith collideDefinition;
+
+    public GameObject asteroidExplosion;
+    public GameObject playerExplosion;
 
     GameObject gameController;
 
@@ -24,11 +24,13 @@ public class DestroyByContact : MonoBehaviour {
         if (other.CompareTag("Asteroid") && collideDefinition.asteroid) {
             Destroy(gameObject);
             Destroy(other.gameObject);
+            Instantiate(asteroidExplosion, transform.position, Quaternion.identity);
         }
 
         else if (other.CompareTag("Player") && collideDefinition.player) {
             Destroy(gameObject);
             Destroy(other.gameObject);
+            Instantiate(playerExplosion, transform.position, Quaternion.identity);
         }
 
         else if (other.CompareTag("Bolt") && collideDefinition.bolt) {
@@ -38,18 +40,13 @@ public class DestroyByContact : MonoBehaviour {
         
     }
 
+    
     void OnTriggerExit(Collider other) {
         if (other.CompareTag("GameBoundary")) {
             Destroy(gameObject);
         }
     }
-
-    void OnDestroy() {
-        //Create explosion
-        if (explosion != null) {
-            Instantiate(explosion, gameObject.transform.position, gameObject.transform.rotation);
-        }
-    }
+    
 }
 
 [System.Serializable]
