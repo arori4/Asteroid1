@@ -36,7 +36,6 @@ public class PlayerWeapons : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        print(isRacePressed);
 
 	    if (Input.GetKeyDown("space") || isRacePressed) {
             Fire();

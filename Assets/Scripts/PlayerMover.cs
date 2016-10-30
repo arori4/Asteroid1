@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 [System.Serializable]
@@ -19,11 +20,15 @@ public class PlayerMover : MonoBehaviour {
     public float sensitivityX;
     public float sensitivityY;
 
+    //Debug
+    public Text debugText;
+
     Rigidbody mRigidbody;
 
 	// Use this for initialization
 	void Start () {
         mRigidbody = GetComponent<Rigidbody>();
+        Input.gyro.enabled = true;
     }
 	
 	void Update () {
@@ -35,10 +40,13 @@ public class PlayerMover : MonoBehaviour {
         float moveHorizontal = Input.GetAxis("Horizontal") * speed;
         float moveVertical = Input.GetAxis("Vertical") * speed;
         */
+        
+        float moveVertical = (Input.acceleration.y + 0.4f) * sensitivityY; //added offset
+        float moveHorizontal = Input.acceleration.x * sensitivityX;
 
-        float moveHorizontal = Input.gyro.rotationRateUnbiased.x * sensitivityX;
-        float moveVertical = Input.gyro.rotationRateUnbiased.y * sensitivityY;
-
+        debugText.text = "Gyroscope " + Input.gyro.enabled + 
+            " Horizontal: " + moveHorizontal + " \nVertical " + moveVertical;
+             
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
         mRigidbody.velocity = movement;
 

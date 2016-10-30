@@ -6,6 +6,7 @@ public class DestroyByContact : MonoBehaviour {
     /* All collisions are triggers */
 
     public GameObject explosion;
+    public CanCollideWith collideDefinition;
 
     GameObject gameController;
 
@@ -20,21 +21,21 @@ public class DestroyByContact : MonoBehaviour {
     void OnTriggerEnter(Collider other) {
         
         //destroy if coming into contact with collider
-        if (other.CompareTag("Asteroid")) {
+        if (other.CompareTag("Asteroid") && collideDefinition.asteroid) {
             Destroy(gameObject);
             Destroy(other.gameObject);
         }
 
-        else if (other.CompareTag("Player")) {
+        else if (other.CompareTag("Player") && collideDefinition.player) {
             Destroy(gameObject);
             Destroy(other.gameObject);
         }
 
-        //Create explosion
-        if (explosion != null) {
-            Instantiate(explosion, gameObject.transform.position, gameObject.transform.rotation);
+        else if (other.CompareTag("Bolt") && collideDefinition.bolt) {
+            Destroy(gameObject);
+            Destroy(other.gameObject);
         }
-
+        
     }
 
     void OnTriggerExit(Collider other) {
@@ -42,4 +43,20 @@ public class DestroyByContact : MonoBehaviour {
             Destroy(gameObject);
         }
     }
+
+    void OnDestroy() {
+        //Create explosion
+        if (explosion != null) {
+            Instantiate(explosion, gameObject.transform.position, gameObject.transform.rotation);
+        }
+    }
+}
+
+[System.Serializable]
+public class CanCollideWith {
+
+    public bool asteroid;
+    public bool player;
+    public bool bolt;
+
 }
