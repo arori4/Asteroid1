@@ -5,8 +5,10 @@ public class DestroyByContact : MonoBehaviour {
     
     public CanCollideWith collideDefinition;
 
-    public GameObject asteroidExplosion;
-    public GameObject playerExplosion;
+    public static GameObject[] asteroidLargeExplosion;
+    public static GameObject[] asteroidSmallExplosion;
+    public static GameObject playerExplosion;
+    public static GameObject alienExplosion;
 
     GameObject gameController;
 
@@ -20,24 +22,38 @@ public class DestroyByContact : MonoBehaviour {
 	
     void OnTriggerEnter(Collider other) {
         
-        //destroy if coming into contact with collider
-        if (other.CompareTag("Asteroid") && collideDefinition.asteroid) {
+        if (other.CompareTag("Large Asteroid") && collideDefinition.asteroid) {
             Destroy(gameObject);
-            Destroy(other.gameObject);
-            Instantiate(asteroidExplosion, transform.position, Quaternion.identity);
+            Destroy(other.transform.parent.gameObject);
+            Instantiate(asteroidLargeExplosion[Random.Range(0, asteroidLargeExplosion.Length)], 
+                transform.position, Quaternion.identity);
         }
+
+        else if (other.CompareTag("Small Asteroid") && collideDefinition.asteroid) {
+            Destroy(gameObject);
+            Destroy(other.transform.parent.gameObject);
+            Instantiate(asteroidSmallExplosion[Random.Range(0, asteroidSmallExplosion.Length)],
+                transform.position, Quaternion.identity);
+        }
+
 
         else if (other.CompareTag("Player") && collideDefinition.player) {
             Destroy(gameObject);
-            Destroy(other.gameObject);
+            Destroy(other.transform.parent.gameObject);
             Instantiate(playerExplosion, transform.position, Quaternion.identity);
         }
 
         else if (other.CompareTag("Bolt") && collideDefinition.bolt) {
             Destroy(gameObject);
-            Destroy(other.gameObject);
+            Destroy(other.transform.parent.gameObject);
         }
-        
+
+        else if (other.CompareTag("Alien") && collideDefinition.alien) {
+            Destroy(gameObject);
+            Destroy(other.transform.parent.gameObject);
+            Instantiate(alienExplosion, transform.position, Quaternion.identity);
+        }
+
     }
 
     
@@ -55,5 +71,6 @@ public class CanCollideWith {
     public bool asteroid;
     public bool player;
     public bool bolt;
+    public bool alien;
 
 }

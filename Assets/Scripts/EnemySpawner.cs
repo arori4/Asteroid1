@@ -14,20 +14,14 @@ public class EnemySpawner : MonoBehaviour {
     public int beginningWait;
     public int spawnWait;
 
-    bool activated;
-
     // Use this for initialization
     void Start() {
         if (levelEnemies.Length != frequencies.Length) {
-            activated = false;
             print("EnemySpawner: frequencies and elevel enemies not of same length");
         }
         else {
-            activated = true;
+            StartCoroutine(SpawnWaves());
         }
-
-        StartCoroutine(SpawnWaves());
-
     }
 
     // Update is called once per frame

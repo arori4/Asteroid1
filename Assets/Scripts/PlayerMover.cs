@@ -20,9 +20,6 @@ public class PlayerMover : MonoBehaviour {
     public float sensitivityX;
     public float sensitivityY;
 
-    //Debug
-    public Text debugText;
-
     Rigidbody mRigidbody;
 
 	// Use this for initialization
@@ -43,9 +40,6 @@ public class PlayerMover : MonoBehaviour {
         
         float moveVertical = (Input.acceleration.y + 0.4f) * sensitivityY; //added offset
         float moveHorizontal = Input.acceleration.x * sensitivityX;
-
-        debugText.text = "Gyroscope " + Input.gyro.enabled + 
-            " Horizontal: " + moveHorizontal + " \nVertical " + moveVertical;
              
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
         mRigidbody.velocity = movement;
