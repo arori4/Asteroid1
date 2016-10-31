@@ -20,6 +20,8 @@ public class PlayerMover : MonoBehaviour {
     public float sensitivityX;
     public float sensitivityY;
 
+    public bool keyboardInput;
+
     Rigidbody mRigidbody;
 
 	// Use this for initialization
@@ -33,13 +35,18 @@ public class PlayerMover : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        /* This is for keyboard input
-        float moveHorizontal = Input.GetAxis("Horizontal") * speed;
-        float moveVertical = Input.GetAxis("Vertical") * speed;
-        */
-        
-        float moveVertical = (Input.acceleration.y + 0.4f) * sensitivityY; //added offset
-        float moveHorizontal = Input.acceleration.x * sensitivityX;
+
+        float moveHorizontal = 0;
+        float moveVertical = 0;
+
+        if (keyboardInput) {
+            moveHorizontal = Input.GetAxis("Horizontal") * speed;
+            moveVertical = Input.GetAxis("Vertical") * speed;
+        }
+        else {
+            moveVertical = (Input.acceleration.y + 0.4f) * sensitivityY; //added offset
+            moveHorizontal = Input.acceleration.x * sensitivityX;
+        }
              
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
         mRigidbody.velocity = movement;

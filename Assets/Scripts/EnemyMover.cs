@@ -5,7 +5,8 @@ public class EnemyMover : MonoBehaviour {
 
     public Vector3 initialDirection = Vector3.left;
     public float speed;
-    public float tilt;
+    public float tiltForward;
+    public float tiltSide;
     public Boundary boundary;
     public float smoothing;
 
@@ -97,7 +98,7 @@ public class EnemyMover : MonoBehaviour {
             Mathf.Clamp(rb.position.z, boundary.bottom, boundary.top)
         );
 
-        rb.rotation = Quaternion.Euler(0.0f, 0.0f, rb.velocity.x * -tilt);
+        rb.rotation = Quaternion.Euler(rb.velocity.z * tiltSide, rb.velocity.x * -tiltForward, 0.0f);
     }
 
 }
