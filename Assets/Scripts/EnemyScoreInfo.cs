@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ScoreInfo : MonoBehaviour {
+public class EnemyScoreInfo : MonoBehaviour {
 
     public int score;
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class EnemyMover : MonoBehaviour {
+public class AlienMover : MonoBehaviour {
 
     public Vector3 initialDirection = Vector3.left;
     public float speed;

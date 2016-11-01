@@ -3,8 +3,7 @@ using System.Collections;
 
 public class EnemySpawner : MonoBehaviour {
 
-    public GameObject[] levelEnemies;
-    public int[] frequencies;
+    public Pair[] levelEnemies;
 
     public float topSpawnLimit;
     public float bottomSpawnLimit;
@@ -16,12 +15,7 @@ public class EnemySpawner : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        if (levelEnemies.Length != frequencies.Length) {
-            print("EnemySpawner: frequencies and elevel enemies not of same length");
-        }
-        else {
             StartCoroutine(SpawnWaves());
-        }
     }
 
     // Update is called once per frame
@@ -36,7 +30,7 @@ public class EnemySpawner : MonoBehaviour {
 
         while (true) {
             //Choose a random hazard
-            GameObject hazard = levelEnemies[Random.Range(0, levelEnemies.Length)];
+            GameObject hazard = levelEnemies[Random.Range(0, levelEnemies.Length)].obj;
 
             Vector3 spawnPosition = new Vector3(
                 spawnConstraints.x, 
@@ -57,4 +51,14 @@ public class EnemySpawner : MonoBehaviour {
         }
     }
     
+
+
+}
+
+[System.Serializable]
+public class Pair {
+
+    public GameObject obj;
+    public int frequency;
+
 }

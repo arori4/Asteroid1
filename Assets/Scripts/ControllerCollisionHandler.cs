@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using System.Collections;
 
-public class CollisionHandler : MonoBehaviour {
+public class ControllerCollisionHandler : MonoBehaviour {
 
     public GameObject alienExplosion;
     public GameObject[] asteroidLargeExplosion;
@@ -71,12 +71,12 @@ public class CollisionHandler : MonoBehaviour {
     }
 
     private int getScoreFromTwoObjects(GameObject obj1, GameObject obj2) {
-        ScoreInfo info = obj1.GetComponent<ScoreInfo>();
+        EnemyScoreInfo info = obj1.GetComponent<EnemyScoreInfo>();
         if (info != null) {
             return info.score;
         }
         else {
-            return obj2.GetComponent<ScoreInfo>().score;
+            return obj2.GetComponent<EnemyScoreInfo>().score;
         }
     }
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class EnemyWeapons : MonoBehaviour {
+public class AlienWeapons : MonoBehaviour {
 
     public GameObject boltType;
     public Transform gun;
