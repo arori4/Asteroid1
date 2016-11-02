@@ -12,18 +12,15 @@ public class EnemySpawner : MonoBehaviour {
 
     public int beginningWait;
     public int spawnWait;
-
-    // Use this for initialization
+    
     void Start() {
-            StartCoroutine(SpawnWaves());
+        StartCoroutine(SpawnWaves());
     }
-
-    // Update is called once per frame
+    
     void Update() {
 
     }
-
-    //Coroutine
+    
     IEnumerator SpawnWaves() {
 
         yield return new WaitForSeconds(beginningWait); //pause
@@ -40,14 +37,7 @@ public class EnemySpawner : MonoBehaviour {
             Instantiate(hazard, spawnPosition, spawnRotation);
 
             yield return new WaitForSeconds(spawnWait); //pause
-
-            /*
-            if (mGameOver) {
-                mRestartText.text = "Press 'R' for Restart";
-                mRestart = true;
-                break;
-            }
-            */
+            
         }
     }
     
