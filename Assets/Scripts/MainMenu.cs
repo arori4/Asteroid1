@@ -9,10 +9,13 @@ public class MainMenu : MonoBehaviour {
     public CanvasGroup titleText;
     public CanvasGroup startGameButton;
     public CanvasGroup blackScreen;
-
+    
     bool callOnce = false;
+    const float TITLE_TEXT_FADE_SPEED = 0.2f;
+    const float TITLE_TEXT_RISE_SPEED = 10f;
+    const float START_GAME_FADE_SPEED = 0.4f;
+    
 
-	// Use this for initialization
 	void Start () {
         titleText.alpha = 0;
         blackScreen.alpha = 0;
@@ -23,21 +26,19 @@ public class MainMenu : MonoBehaviour {
 
     private IEnumerator FadeUI() {
         while (titleText.alpha < 1) {
-            titleText.alpha += Time.deltaTime * 0.2f;
+            titleText.alpha += Time.deltaTime * TITLE_TEXT_FADE_SPEED;
             yield return null;
         }
 
         yield return new WaitForSeconds(0.8f);
 
         while (startGameButton.alpha < 1) {
-            startGameButton.alpha += Time.deltaTime * 0.4f;
+            startGameButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
             yield return null;
         }
     }
 
     public void StartGame() {
-        print("start game");
-
         if (callOnce == false) {
             StartCoroutine(LoadNextSceneCoroutine());
         }
