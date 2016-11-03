@@ -8,7 +8,7 @@ public class AlienMover : MonoBehaviour {
     public float tiltForward;
     public float tiltSide;
     public Boundary boundary;
-    public float smoothing;
+    public Vector2 smoothingBounds;
 
     public MoveBackwards moveBackwards;
     public MoveSideways moveSideways;
@@ -17,6 +17,7 @@ public class AlienMover : MonoBehaviour {
     Rigidbody rb;
     float targetX;
     float targetZ;
+    float smoothing;
 
     void Start () {
         rb = GetComponent<Rigidbody>();
@@ -25,6 +26,7 @@ public class AlienMover : MonoBehaviour {
 
         targetX = -speed;
         targetZ = 0;
+        smoothing = Random.Range(smoothingBounds.x, smoothingBounds.y);
 
         if (moveBackwards.activated) {
             StartCoroutine(Backwards());
@@ -36,7 +38,7 @@ public class AlienMover : MonoBehaviour {
             StartCoroutine(TargetPlayer());
         }
     }
-	
+
     IEnumerator Sideways() {
         while (true) {
             yield return new WaitForSeconds(Random.Range(
@@ -55,6 +57,24 @@ public class AlienMover : MonoBehaviour {
         }
     }
 
+    IEnumerator Backwards() {
+        while (true) {
+            yield return new WaitForSeconds(Random.Range(
+                moveBackwards.frequencyConstraints.x,
+                moveBackwards.frequencyConstraints.y));
+
+            //Move the target to a random place backwards OR forwards
+            targetX = Random.Range(-moveBackwards.movementConstraints, moveBackwards.movementConstraints);
+
+            print (targetX);
+
+            yield return new WaitForSeconds(Random.Range(
+                moveBackwards.frequencyConstraints.x,
+                moveBackwards.frequencyConstraints.y));
+            targetX = -speed; //move straight forward
+        }
+    }
+
     IEnumerator TargetPlayer() {
         yield return new WaitForSeconds(Random.Range(
             targetPlayer.startTimeRange.x,
@@ -70,21 +90,6 @@ public class AlienMover : MonoBehaviour {
         }
     }
 
-    IEnumerator Backwards() {
-        while (true) {
-            yield return new WaitForSeconds(Random.Range(
-                moveBackwards.frequencyConstraints.x,
-                moveBackwards.frequencyConstraints.y));
-
-            //Move the target to a random place backwards OR forwards
-            targetZ = Random.Range(-moveBackwards.movementConstraints, moveBackwards.movementConstraints);
-
-            yield return new WaitForSeconds(Random.Range(
-                moveBackwards.frequencyConstraints.x,
-                moveBackwards.frequencyConstraints.y));
-            targetX = -speed; //move straight forward
-        }
-    }
 
     void FixedUpdate() {
         float maneuverX = Mathf.MoveTowards(rb.velocity.x, targetX, Time.deltaTime * smoothing);
