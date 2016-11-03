@@ -54,13 +54,13 @@ public class UIController : MonoBehaviour {
 	void Update () {
         //handle health bar
         healthSlider.value = Mathf.SmoothDamp(
-            healthSlider.value, 
-            playerCollision.currentHealth / 100.0f,
+            healthSlider.value,
+            playerCollision.GetCurrentHealth() / 100.0f,
             ref healthSliderVelocityFront,
             HEALTH_SLIDER_FRONT_SMOOTH);
         healthSliderBack.value = Mathf.SmoothDamp(
             healthSliderBack.value,
-            playerCollision.currentHealth / 100.0f,
+            playerCollision.GetCurrentHealth() / 100.0f,
             ref healthSliderVelocityBack,
             HEALTH_SLIDER_BACK_SMOOTH);
         //force back slider to be over or at the regular health slider amount

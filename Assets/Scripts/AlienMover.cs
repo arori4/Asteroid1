@@ -66,8 +66,6 @@ public class AlienMover : MonoBehaviour {
             //Move the target to a random place backwards OR forwards
             targetX = Random.Range(-moveBackwards.movementConstraints, moveBackwards.movementConstraints);
 
-            print (targetX);
-
             yield return new WaitForSeconds(Random.Range(
                 moveBackwards.frequencyConstraints.x,
                 moveBackwards.frequencyConstraints.y));

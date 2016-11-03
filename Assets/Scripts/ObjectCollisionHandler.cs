@@ -5,10 +5,15 @@ using System.Collections;
 public class ObjectCollisionHandler : MonoBehaviour {
 
     public CanCollideWith collideDefinition;
-    public float currentHealth;
+    public float maxHealth;
     public float damageAmount;
     public GameObject[] explosionList;
 
+    //drops
+    public DropPair[] drops;
+    public int maxDrops;
+
+    float currentHealth;
     GameObject gameController;
     UIController ui;
     EnemySpawner enemySpawner;
@@ -24,6 +29,9 @@ public class ObjectCollisionHandler : MonoBehaviour {
         if (gameController == null) {
             Debug.Log("Cannot find 'GameController' script");
         }
+
+        //Set current health
+        currentHealth = maxHealth;
 
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
@@ -69,6 +77,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 }
             }
 
+            if (collideDefinition.powerup) {
+                if (other.CompareTag("Powerup")) {
+                    other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
+                    dealDamage(other.transform.root.gameObject);
+                }
+            }
+
         }
     }
 
@@ -99,6 +114,15 @@ public class ObjectCollisionHandler : MonoBehaviour {
     }
 
 
+    public void addHealth(float health) {
+        currentHealth = Mathf.Min(currentHealth + health, maxHealth);
+    }
+
+    public float GetCurrentHealth() {
+        return currentHealth;
+    }
+
+
     void Update() {
         //kill when current health <= 0
         if (currentHealth <= 0) {
@@ -121,6 +145,47 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 ui.GameOver();
             }
 
+            //handle drops
+            if (drops.Length > 0) {
+                //calculate the maximum possible number of drops to do, regardless of user settings
+                //find total drop frequencies in same loop
+                int amountOfDrops = 0;
+                int dropFrequencies = 0;
+                for (int index = 0; index < drops.Length; index++) {
+                    amountOfDrops += drops[index].numDrops;
+                    dropFrequencies += drops[index].frequency;
+                }
+                amountOfDrops = Mathf.Max(amountOfDrops, maxDrops + 1);
+                amountOfDrops = Random.Range(0, amountOfDrops);
+
+                print(amountOfDrops);
+
+                //instantiate drops
+                while (amountOfDrops > 0) {
+                    int chosenFrequency = Random.Range(0, dropFrequencies) + 1;
+                    int chooseIndex = 0;
+                    while (chosenFrequency > 0) {
+                        chosenFrequency -= drops[chooseIndex++].frequency;
+                    }
+                    chooseIndex--; //correction to choose the correct one b/c it adds stuff
+
+                    //choose game object
+                    GameObject dropSpawned = drops[chooseIndex].obj;
+
+                    //must instantiate drops near the destroyed object, but not all together
+                    Vector3 spawnLocation = new Vector3(
+                        Random.Range(-0.2f, 0.2f) + transform.position.x,
+                        transform.position.y,
+                        Random.Range(-0.2f, 0.2f) + transform.position.z);
+
+                    Instantiate(dropSpawned, spawnLocation, transform.rotation);
+
+                    amountOfDrops--;
+                }
+
+
+            }
+
             //finally kill object
             Destroy(gameObject);
         }
@@ -136,5 +201,13 @@ public class CanCollideWith {
     public bool asteroid;
     public bool player;
     public bool playerWeapon;
+    public bool powerup;
 
+}
+
+[System.Serializable]
+public class DropPair {
+    public GameObject obj;
+    public int frequency;
+    public int numDrops;
 }

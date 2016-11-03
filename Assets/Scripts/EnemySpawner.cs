@@ -9,39 +9,49 @@ public class EnemySpawner : MonoBehaviour {
     public float bottomSpawnLimit;
 
     public Vector2 spawnConstraints;
-
     public int beginningWait;
-    public int spawnWait;
+    public Vector2 waitBetweenEnemies;
+
+    int totalFrequencies;
     
     void Start() {
+        //initialize frequency generator
+        for (int index = 0; index < levelEnemies.Length; index++) {
+            totalFrequencies += levelEnemies[index].frequency;
+        }
+
+        if (totalFrequencies == 0) {
+            print("Total frequencies is 0");
+        }
+
         StartCoroutine(SpawnWaves());
     }
     
-    void Update() {
-
-    }
-    
     IEnumerator SpawnWaves() {
-
         yield return new WaitForSeconds(beginningWait); //pause
 
         while (true) {
-            //Choose a random hazard
-            GameObject hazard = levelEnemies[Random.Range(0, levelEnemies.Length)].obj;
+            //Choose a random enemy
+            int chosenFrequency = Random.Range(0, totalFrequencies) + 1;
+            int chooseIndex = 0;
+            while (chosenFrequency > 0) {
+                chosenFrequency -= levelEnemies[chooseIndex++].frequency;
+            }
+            chooseIndex--; //correction to choose the correct one b/c it adds stuff
+
+            GameObject enemySpawned = levelEnemies[chooseIndex].obj;
 
             Vector3 spawnPosition = new Vector3(
                 spawnConstraints.x, 
                 spawnConstraints.y, 
                 Random.Range(topSpawnLimit, bottomSpawnLimit));
             Quaternion spawnRotation = Quaternion.identity;
-            Instantiate(hazard, spawnPosition, spawnRotation);
+            Instantiate(enemySpawned, spawnPosition, spawnRotation);
 
-            yield return new WaitForSeconds(spawnWait); //pause
+            yield return new WaitForSeconds(Random.Range(waitBetweenEnemies.x, waitBetweenEnemies.y)); //pause
             
         }
     }
-    
-
 
 }
 
