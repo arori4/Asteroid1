@@ -3,18 +3,25 @@ using System.Collections;
 
 public class PlayerWeapons : MonoBehaviour {
 
-    public GameObject boltType;
     public Transform gun;
     public float maxEnergy = 100;
     public float rechargeRate = 0;
-
     float energy;
-    float nextFire;
 
+    public GameObject boltType;
+    float boltNextFire;
     float boltFireRate;
     float boltEnergyCost;
 
-    bool isRacePressed;
+    public GameObject shieldType;
+    float shieldEnergyDrain;
+    float shieldDamageMultiplier;
+    float shieldRechargeTime;
+    bool shieldIsActivated;
+    bool shieldRecharging;
+
+    bool isFireButtonPressed;
+    bool isShieldButtonPressed;
     
 	void Start () {
         //Null Checks
@@ -26,18 +33,21 @@ public class PlayerWeapons : MonoBehaviour {
         }
 
         //Set script global values
-        nextFire = Time.time;
+        boltNextFire = Time.time;
         energy = 100;
 
         //Set bolt specific values
         ChangeWeapon(boltType);
+        ChangeShield(shieldType);
     }
 	
 	void Update () {
 
-	    if (Input.GetKeyDown("space") || isRacePressed) {
+	    if (Input.GetKeyDown("space") || isFireButtonPressed) {
             Fire();
         }
+
+        Shield();
 
         //Update Energy
         energy += rechargeRate * Time.deltaTime;
@@ -47,7 +57,7 @@ public class PlayerWeapons : MonoBehaviour {
     public void Fire() {
 
         //only fire after a certain time quantum and amount of energy
-        if (Time.time >= nextFire && energy > boltEnergyCost) {
+        if (Time.time >= boltNextFire && energy > boltEnergyCost) {
 
             //create the bolt
             GameObject spawnedBolt = Instantiate(boltType, gun.position, gun.rotation) as GameObject;
@@ -55,16 +65,74 @@ public class PlayerWeapons : MonoBehaviour {
             spawnedBolt.GetComponent<StraightMover>().initialDirection = gun.up;
 
             //set next fire and energy amount
-            nextFire = Time.time + boltFireRate;
+            boltNextFire = Time.time + boltFireRate;
             energy -= boltEnergyCost;
         }
-
+    }
+    
+    public void Shield() {
+        if (isShieldButtonPressed && !shieldRecharging) {
+            energy -= shieldEnergyDrain * Time.deltaTime;
+        }
     }
 
     public void ChangeWeapon(GameObject bolt) {
+        WeaponInfo info = bolt.GetComponent<WeaponInfo>();
+        if (info == null) {
+            print("Changing weapon to a non bolt. Weapon not assigned");
+            return;
+        }
+
         boltType = bolt;
-        boltFireRate = bolt.GetComponent<WeaponInfo>().fireRate;
-        boltEnergyCost = bolt.GetComponent<WeaponInfo>().energyCost;
+        boltFireRate = info.fireRate;
+        boltEnergyCost = info.energyCost;
+    }
+
+    public void ChangeShield(GameObject shield) {
+        Shield shieldInfo = shield.GetComponent<Shield>();
+        if (shieldInfo == null) {
+            print("Changing shield to a non shield. Shield not assigned");
+            return;
+        }
+
+        shieldType = shield;
+        shieldEnergyDrain = shieldInfo.energyDrain;
+        shieldDamageMultiplier = shieldInfo.damageMultiplier;
+        shieldRechargeTime = shieldInfo.rechargeTime;
+        shieldIsActivated = true;
+    }
+
+    public float Hit(float amount) {
+        //should only be called if activated
+        if (shieldIsActivated && !shieldRecharging) {
+            energy -= amount;
+
+            //return 0 if shield still up, or amount of hit left if weak
+            if (energy < 0) {
+                StartCoroutine(Recharge());
+                float retval = -energy;
+                energy = 0;
+                return retval;
+            }
+            else {
+                return 0;
+            }
+        }
+
+        else {
+            return amount;
+        }
+    }
+
+
+    /*
+     * Recharge the shield when it has been destroyed
+     */
+    IEnumerator Recharge() {
+        shieldIsActivated = false;
+        shieldRecharging = true;
+        yield return new WaitForSeconds(shieldRechargeTime);
+        shieldRecharging = false;
     }
 
     public float GetEnergy() {
@@ -75,17 +143,20 @@ public class PlayerWeapons : MonoBehaviour {
         energy = Mathf.Min(maxEnergy, energy + add);
     }
 
-    public void Shield() {
-
-    }
-
-
-
     //For UI Use
     public void onPointerDownRaceButton() {
-        isRacePressed = true;
+        isFireButtonPressed = true;
     }
     public void onPointerUpRaceButton() {
-        isRacePressed = false;
+        isFireButtonPressed = false;
+    }
+
+    public void onShieldButtonDown() {
+        isShieldButtonPressed = true;
+        shieldType.SetActive(true);
+    }
+    public void onShieldButtonUp() {
+        isShieldButtonPressed = false;
+        shieldType.SetActive(false);
     }
 }

@@ -101,9 +101,23 @@ public class ObjectCollisionHandler : MonoBehaviour {
      * Handles death when needed
      */
     private void dealDamage(GameObject other) {
+        //Get reference to collider
         ObjectCollisionHandler otherCollider = other.GetComponent<ObjectCollisionHandler>();
-        currentHealth -= otherCollider.damageAmount;
-        otherCollider.currentHealth -= damageAmount;
+
+        //Different behavior if hitting or is the player
+        if (tag.CompareTo("Player") == 0) {
+            currentHealth -= gameObject.GetComponent<PlayerWeapons>().Hit(otherCollider.damageAmount);
+        }
+        else {
+            currentHealth -= otherCollider.damageAmount;
+        }
+
+        if (other.tag.CompareTo("Player") == 0) {
+            otherCollider.currentHealth -= other.GetComponent<PlayerWeapons>().Hit(damageAmount);
+        }
+        else {
+            otherCollider.currentHealth -= damageAmount;
+        }
 
         lastColliderTag = other.transform.root.tag;
         otherCollider.lastColliderTag = tag;
