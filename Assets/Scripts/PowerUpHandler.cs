@@ -7,18 +7,22 @@ public class PowerUpHandler : MonoBehaviour {
     public EnergyPowerup energyDef;
 
     GameObject player;
+    ObjectCollisionHandler playerCollisionHandler;
+    PlayerWeapons playerWeapons;
 
 	void Start () {
         player = GameObject.FindWithTag("Player").transform.root.gameObject;
+        playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
+        playerWeapons = player.GetComponent<PlayerWeapons>();
 	}
 
     public void activate() {
         if (healthDef.activated) {
-            player.GetComponent<ObjectCollisionHandler>().addHealth(healthDef.amount);
+            playerCollisionHandler.addHealth(healthDef.amount);
         }
 
         if (energyDef.activated) {
-
+            playerWeapons.addEnergy(energyDef.amount);
         }
     }
 	

@@ -20,7 +20,7 @@ public class PlayerMover : MonoBehaviour {
     public float sensitivityX;
     public float sensitivityY;
 
-    public bool keyboardInput;
+    bool keyboardInput;
 
     Rigidbody mRigidbody;
 
@@ -28,6 +28,13 @@ public class PlayerMover : MonoBehaviour {
 	void Start () {
         mRigidbody = GetComponent<Rigidbody>();
         Input.gyro.enabled = true;
+
+        //set platform for keyboard input
+        if (Application.platform == RuntimePlatform.WindowsPlayer ||
+            Application.platform == RuntimePlatform.WindowsEditor || 
+            Application.platform == RuntimePlatform.WindowsWebPlayer) {
+            keyboardInput = true;
+        }
     }
 	
 	void Update () {

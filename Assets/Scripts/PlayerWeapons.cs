@@ -15,8 +15,7 @@ public class PlayerWeapons : MonoBehaviour {
     float boltEnergyCost;
 
     bool isRacePressed;
-
-	// Use this for initialization
+    
 	void Start () {
         //Null Checks
         if (gun == null) {
@@ -34,7 +33,6 @@ public class PlayerWeapons : MonoBehaviour {
         ChangeWeapon(boltType);
     }
 	
-	// Update is called once per frame
 	void Update () {
 
 	    if (Input.GetKeyDown("space") || isRacePressed) {
@@ -71,6 +69,10 @@ public class PlayerWeapons : MonoBehaviour {
 
     public float GetEnergy() {
         return energy;
+    }
+
+    public void addEnergy(float add) {
+        energy = Mathf.Min(maxEnergy, energy + add);
     }
 
     public void Shield() {

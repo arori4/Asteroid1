@@ -5,9 +5,9 @@ using System.Collections;
 public class ObjectCollisionHandler : MonoBehaviour {
 
     public CanCollideWith collideDefinition;
+    public GameObject[] explosionList;
     public float maxHealth;
     public float damageAmount;
-    public GameObject[] explosionList;
 
     //drops
     public DropPair[] drops;
@@ -26,12 +26,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
 	void Start () {
         //find first game object with tag 
         gameController = GameObject.FindWithTag("GameController"); 
-        if (gameController == null) {
-            Debug.Log("Cannot find 'GameController' script");
-        }
 
         //Set current health
         currentHealth = maxHealth;
+        if (maxHealth <= 0) {
+            print("Object health initialized to " + maxHealth + ", by default will set to 10.");
+            currentHealth = maxHealth = 10;
+        }
 
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
@@ -43,9 +44,9 @@ public class ObjectCollisionHandler : MonoBehaviour {
 	
     void OnTriggerEnter(Collider other) {
 
+        //handle collisions
         if (canCollide) {
-
-            //handle collisions
+            
             if (collideDefinition.asteroid) {
                 if (other.CompareTag("Large Asteroid") || 
                     other.CompareTag("Small Asteroid")) {
@@ -94,6 +95,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         }
     }
 
+
     /*
      * Deals damage to both objects on collision, by definition
      * Handles death when needed
@@ -105,23 +107,16 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
         lastColliderTag = other.transform.root.tag;
         otherCollider.lastColliderTag = tag;
+
+        StartCoroutine(delayNextCollision());
     }
+
 
     IEnumerator delayNextCollision() {
         canCollide = false;
         yield return new WaitForSeconds(DAMAGE_DELAY);
         canCollide = true;
     }
-
-
-    public void addHealth(float health) {
-        currentHealth = Mathf.Min(currentHealth + health, maxHealth);
-    }
-
-    public float GetCurrentHealth() {
-        return currentHealth;
-    }
-
 
     void Update() {
         //kill when current health <= 0
@@ -157,9 +152,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 }
                 amountOfDrops = Mathf.Max(amountOfDrops, maxDrops + 1);
                 amountOfDrops = Random.Range(0, amountOfDrops);
-
-                print(amountOfDrops);
-
+                
                 //instantiate drops
                 while (amountOfDrops > 0) {
                     int chosenFrequency = Random.Range(0, dropFrequencies) + 1;
@@ -182,15 +175,26 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
                     amountOfDrops--;
                 }
-
-
             }
 
             //finally kill object
             Destroy(gameObject);
         }
     }
-    
+
+
+    /*
+     * Auxilary functions 
+     */
+
+    public void addHealth(float health) {
+        currentHealth = Mathf.Min(currentHealth + health, maxHealth);
+    }
+
+    public float GetCurrentHealth() {
+        return currentHealth;
+    }
+
 }
 
 [System.Serializable]
