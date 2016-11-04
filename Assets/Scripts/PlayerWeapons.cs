@@ -17,7 +17,7 @@ public class PlayerWeapons : MonoBehaviour {
     float shieldEnergyDrain;
     float shieldDamageMultiplier;
     float shieldRechargeTime;
-    bool shieldIsActivated;
+    bool shieldIsOnline;
     bool shieldRecharging;
 
     bool isFireButtonPressed;
@@ -99,13 +99,13 @@ public class PlayerWeapons : MonoBehaviour {
         shieldEnergyDrain = shieldInfo.energyDrain;
         shieldDamageMultiplier = shieldInfo.damageMultiplier;
         shieldRechargeTime = shieldInfo.rechargeTime;
-        shieldIsActivated = true;
+        shieldIsOnline = true;
     }
 
     public float Hit(float amount) {
         //should only be called if activated
-        if (shieldIsActivated && !shieldRecharging) {
-            energy -= amount;
+        if (isShieldButtonPressed && shieldIsOnline && !shieldRecharging) {
+            energy -= amount * shieldDamageMultiplier;
 
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
@@ -129,7 +129,7 @@ public class PlayerWeapons : MonoBehaviour {
      * Recharge the shield when it has been destroyed
      */
     IEnumerator Recharge() {
-        shieldIsActivated = false;
+        shieldIsOnline = false;
         shieldRecharging = true;
         yield return new WaitForSeconds(shieldRechargeTime);
         shieldRecharging = false;
