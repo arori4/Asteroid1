@@ -12,6 +12,10 @@ public class UIController : MonoBehaviour {
     public Slider energySlider;
     public Slider energySliderBack;
     public Text scoreText;
+    //regular UI weapons
+    public Text weaponText;
+    public WeaponStringPair[] weaponPairs;
+    public GameObject weaponUIParent;
 
     //Game over UI
     public CanvasGroup gameOverGUI;
@@ -121,6 +125,34 @@ public class UIController : MonoBehaviour {
         StartCoroutine(FadeUI());
     }
 
+    public void ChangeWeapon(string weaponType) {
+
+        for (int index = 0; index < weaponPairs.Length; index++) {
+            if (weaponPairs[index].weaponName == weaponType) { //yes we can do this ==
+
+                //set weapon text
+                weaponText.text = weaponType;
+
+                //remove all children of the parent
+                foreach (Transform child in weaponUIParent.transform) {
+                    GameObject.Destroy(child.gameObject);
+                }
+
+                //add in new child
+                GameObject newSymbol = Instantiate(
+                    weaponPairs[index].uiWeaponIcon,
+                    weaponUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+                newSymbol.transform.parent = weaponUIParent.transform;
+
+                return;
+            }
+        }
+
+        print("Could not find weapon type " + weaponType);
+
+        
+    }
+
     private IEnumerator FadeUI() {
         StartCoroutine(FadeInUI(gameOverGUI, 0.5f));
 
@@ -143,4 +175,10 @@ public class UIController : MonoBehaviour {
         }
     }
 
+}
+
+[System.Serializable]
+public class WeaponStringPair {
+    public string weaponName;
+    public GameObject uiWeaponIcon;
 }

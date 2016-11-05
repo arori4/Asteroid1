@@ -122,7 +122,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
         lastColliderTag = other.transform.root.tag;
         otherCollider.lastColliderTag = tag;
 
-        StartCoroutine(delayNextCollision());
+        //removed for now b/c of autocannon
+        //StartCoroutine(delayNextCollision());
     }
 
 

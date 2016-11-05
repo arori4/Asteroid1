@@ -3,12 +3,14 @@ using System.Collections;
 
 public class PlayerWeapons : MonoBehaviour {
 
+    public UIController ui;
     public Transform gun;
     public float maxEnergy = 100;
     public float rechargeRate = 0;
     float energy;
 
     public GameObject boltType;
+    string boltName;
     float boltNextFire;
     float boltFireRate;
     float boltEnergyCost;
@@ -31,6 +33,9 @@ public class PlayerWeapons : MonoBehaviour {
         if (boltType == null) {
             Debug.Log("Object with gun has a null bolt type");
         }
+
+        //Set UIController
+        ui = GameObject.FindWithTag("GameController").GetComponent<UIController>();
 
         //Set script global values
         boltNextFire = Time.time;
@@ -72,6 +77,7 @@ public class PlayerWeapons : MonoBehaviour {
     
     public void Shield() {
         if (isShieldButtonPressed && !shieldRecharging) {
+            shieldType.SetActive(true);
             energy -= shieldEnergyDrain * Time.deltaTime;
         }
     }
@@ -83,9 +89,15 @@ public class PlayerWeapons : MonoBehaviour {
             return;
         }
 
+        //Receive weapon info
         boltType = bolt;
         boltFireRate = info.fireRate;
         boltEnergyCost = info.energyCost;
+        boltName = info.name;
+
+        //Change Weapon UI Info
+        ui.ChangeWeapon(boltName);
+
     }
 
     public void ChangeShield(GameObject shield) {
@@ -95,6 +107,7 @@ public class PlayerWeapons : MonoBehaviour {
             return;
         }
 
+        //Receive shield info
         shieldType = shield;
         shieldEnergyDrain = shieldInfo.energyDrain;
         shieldDamageMultiplier = shieldInfo.damageMultiplier;
@@ -102,6 +115,9 @@ public class PlayerWeapons : MonoBehaviour {
         shieldIsOnline = true;
     }
 
+    /*
+     * Determines hit when a shield is hit
+     */
     public float Hit(float amount) {
         //should only be called if activated
         if (isShieldButtonPressed && shieldIsOnline && !shieldRecharging) {
@@ -153,7 +169,6 @@ public class PlayerWeapons : MonoBehaviour {
 
     public void onShieldButtonDown() {
         isShieldButtonPressed = true;
-        shieldType.SetActive(true);
     }
     public void onShieldButtonUp() {
         isShieldButtonPressed = false;
