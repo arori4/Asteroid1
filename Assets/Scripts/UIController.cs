@@ -192,13 +192,13 @@ public class UIController : MonoBehaviour {
 
     private IEnumerator RestartGameCoroutine() {
         StartCoroutine(FadeInUI(blackFader, 0.5f));
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(2f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private IEnumerator MainMenuCoroutine() {
         StartCoroutine(FadeInUI(blackFader, 0.3f));
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(2f);
         SceneManager.LoadScene("Main Menu");
     }
 
