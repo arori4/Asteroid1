@@ -128,6 +128,7 @@ public class PlayerWeapons : MonoBehaviour {
                 StartCoroutine(Recharge());
                 float retval = -energy;
                 energy = 0;
+                ui.HitUI(retval);
                 return retval;
             }
             else {
@@ -136,6 +137,7 @@ public class PlayerWeapons : MonoBehaviour {
         }
 
         else {
+            ui.HitUI(amount);
             return amount;
         }
     }

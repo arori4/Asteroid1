@@ -32,6 +32,8 @@ public class UIController : MonoBehaviour {
     int score;
     PlayerWeapons weapons;
     ObjectCollisionHandler playerCollision;
+    bool buttonPressed;
+    bool hitCanvasActivated;
 
     private float healthSliderVelocityFront;
     private float energySliderVelocityFront;
@@ -43,6 +45,7 @@ public class UIController : MonoBehaviour {
     private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
 
     void Start () {
+        //set alphas
         blackFader.alpha = 1;
         healthLoss.alpha = 0;
         gameOverGUI.alpha = 0;
@@ -52,67 +55,51 @@ public class UIController : MonoBehaviour {
         playerCollision = player.GetComponent<ObjectCollisionHandler>();
         score = 0;
 
+        //make sure game over is deactivated
+        gameOverGUI.interactable = false;
+        buttonPressed = false;
+        hitCanvasActivated = false;
+
+        //start the game and fade up
         StartCoroutine(FadeOutUI(blackFader, 0.4f));
 	}
 	
 	void Update () {
         //handle health bar
-        healthSlider.value = Mathf.SmoothDamp(
-            healthSlider.value,
+        healthSlider.value = Mathf.SmoothDamp(healthSlider.value,
             playerCollision.GetCurrentHealth() / 100.0f,
-            ref healthSliderVelocityFront,
-            HEALTH_SLIDER_FRONT_SMOOTH);
-        healthSliderBack.value = Mathf.SmoothDamp(
-            healthSliderBack.value,
+            ref healthSliderVelocityFront,  HEALTH_SLIDER_FRONT_SMOOTH);
+        healthSliderBack.value = Mathf.SmoothDamp( healthSliderBack.value,
             playerCollision.GetCurrentHealth() / 100.0f,
-            ref healthSliderVelocityBack,
-            HEALTH_SLIDER_BACK_SMOOTH);
+            ref healthSliderVelocityBack, HEALTH_SLIDER_BACK_SMOOTH);
         //force back slider to be over or at the regular health slider amount
         healthSliderBack.value = Mathf.Max(healthSlider.value, healthSliderBack.value);
 
         //handle energy bar
-        energySlider.value = Mathf.SmoothDamp(
-            energySlider.value, 
+        energySlider.value = Mathf.SmoothDamp(energySlider.value, 
             weapons.GetEnergy() / 100.0f, 
-            ref energySliderVelocityFront, 
-            ENERGY_SLIDER_FRONT_SMOOTH);
-        energySliderBack.value = Mathf.SmoothDamp(
-            energySliderBack.value,
+            ref energySliderVelocityFront, ENERGY_SLIDER_FRONT_SMOOTH);
+        energySliderBack.value = Mathf.SmoothDamp(energySliderBack.value,
             weapons.GetEnergy() / 100.0f,
-            ref energySliderVelocityBack,
-            ENERGY_SLIDER_BACK_SMOOTH);
+            ref energySliderVelocityBack, ENERGY_SLIDER_BACK_SMOOTH);
         //force back slider up
         energySliderBack.value = Mathf.Max(energySlider.value, energySliderBack.value);
     }
-
-    //Used by the button
-    public void RestartGame () {
-        StopAllCoroutines();
-        StartCoroutine(RestartGameCoroutine());
-    }
-
-    //Used by the button
-    public void MainMenu() {
-        StopAllCoroutines();
-        StartCoroutine(MainMenuCoroutine());
-    }
-
-    private IEnumerator RestartGameCoroutine() {
-        while (blackFader.alpha < 1) {
-            blackFader.alpha += Time.deltaTime * 0.3f;
-            yield return null;
+    
+    public void ButtonRestartGame () {
+        if (!buttonPressed) {
+            StopAllCoroutines();
+            buttonPressed = true;
+            StartCoroutine(RestartGameCoroutine());
         }
-        yield return new WaitForSeconds(0.5f);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
-    private IEnumerator MainMenuCoroutine() {
-        while (blackFader.alpha < 1) {
-            blackFader.alpha += Time.deltaTime * 0.3f;
-            yield return null;
+    
+    public void ButtonMainMenu() {
+        if (!buttonPressed) {
+            StopAllCoroutines();
+            buttonPressed = true;
+            StartCoroutine(MainMenuCoroutine());
         }
-        yield return new WaitForSeconds(0.5f);
-        SceneManager.LoadScene("Main Menu");
     }
 
     public void AddScore(int scoreToAdd) {
@@ -122,7 +109,8 @@ public class UIController : MonoBehaviour {
 
     public void GameOver() {
         gameOverScoreText.text = "Score: " + score;
-        StartCoroutine(FadeUI());
+        gameOverGUI.interactable = true;
+        StartCoroutine(GameOverFadeUI());
     }
 
     public void ChangeWeapon(string weaponType) {
@@ -148,19 +136,42 @@ public class UIController : MonoBehaviour {
             }
         }
 
+        //If there is no weapon of weapon type, debug
         print("Could not find weapon type " + weaponType);
-
-        
     }
 
-    private IEnumerator FadeUI() {
+    public void HitUI(float damage) {
+        if (!hitCanvasActivated) {
+            StartCoroutine(HitRoutine(damage));
+            hitCanvasActivated = true;
+        }
+    }
+
+    private IEnumerator HitRoutine(float damage) {
+        //Does not use provided methods because there is a different alpha
+        while (healthLoss.alpha < damage / 50.0f) {
+            healthLoss.alpha += Time.deltaTime * 70.0f / damage;
+            yield return null;
+        }
+
+        while (healthLoss.alpha > 0) {
+            healthLoss.alpha -= Time.deltaTime * 35.0f / damage;
+            yield return null;
+        }
+
+        hitCanvasActivated = false;
+    }
+
+    private IEnumerator GameOverFadeUI() {
         StartCoroutine(FadeInUI(gameOverGUI, 0.5f));
-
         yield return new WaitForSeconds(1);
-
         StartCoroutine(FadeOutUI(regularUI, 1));
     }
 
+    /**
+     * Fades the canvas in to an alpha of 1
+     * Canvas will be opaque
+     */
     private IEnumerator FadeInUI(CanvasGroup canvas, float smoothing) {
         while (canvas.alpha < 1) {
             canvas.alpha += Time.deltaTime * smoothing;
@@ -168,11 +179,27 @@ public class UIController : MonoBehaviour {
         }
     }
 
+    /**
+     * Fades the canvas out to an alpha of 0.
+     * Canvas will be transparent
+     */
     private IEnumerator FadeOutUI(CanvasGroup canvas, float smoothing) {
         while (canvas.alpha > 0) {
             canvas.alpha -= Time.deltaTime * smoothing;
             yield return null;
         }
+    }
+
+    private IEnumerator RestartGameCoroutine() {
+        StartCoroutine(FadeInUI(blackFader, 0.5f));
+        yield return new WaitForSeconds(0.5f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private IEnumerator MainMenuCoroutine() {
+        StartCoroutine(FadeInUI(blackFader, 0.3f));
+        yield return new WaitForSeconds(0.5f);
+        SceneManager.LoadScene("Main Menu");
     }
 
 }
