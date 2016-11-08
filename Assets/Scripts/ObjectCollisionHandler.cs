@@ -73,7 +73,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
             }
 
             if (collideDefinition.playerWeapon) {
-                if (other.CompareTag("Player Bolt")) {
+                if (other.CompareTag("Player Bolt") ||
+                    other.CompareTag("Player Laser")) {
                     dealDamage(other.transform.root.gameObject);
                 }
             }
@@ -144,7 +145,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
             }
 
             //handle score
-            if ( lastColliderTag.CompareTo("Player Bolt") == 0 ){ 
+            if ( lastColliderTag.CompareTo("Player Bolt") == 0 ||
+                 lastColliderTag.CompareTo("Player Laser") == 0){ 
                 int amount = GetComponent<EnemyScoreInfo>().score;
                 ui.AddScore(amount);
             }

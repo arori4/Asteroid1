@@ -36,6 +36,7 @@ public class EnemySpawner : MonoBehaviour {
             int chooseIndex = 0;
             while (chosenFrequency > 0) {
                 chosenFrequency -= levelEnemies[chooseIndex++].frequency;
+                yield return null;
             }
             chooseIndex--; //correction to choose the correct one b/c it adds stuff
 

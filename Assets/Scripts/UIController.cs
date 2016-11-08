@@ -12,6 +12,7 @@ public class UIController : MonoBehaviour {
     public Slider energySlider;
     public Slider energySliderBack;
     public Slider shieldBar;
+    CanvasGroup shieldBarCanvas;
     public Text scoreText;
     //regular UI weapons
     public Text weaponText;
@@ -57,6 +58,7 @@ public class UIController : MonoBehaviour {
         playerCollision = player.GetComponent<ObjectCollisionHandler>();
         score = 0;
         shieldBar.gameObject.SetActive(false);
+        shieldBarCanvas = shieldBar.GetComponent<CanvasGroup>();
     
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
@@ -169,11 +171,32 @@ public class UIController : MonoBehaviour {
         }
 
         //keep shield bar up for a second before removing it
-        yield return new WaitForSeconds(1f);
+        for (int index = 0; index < 2; index++) {
+            while (shieldBarCanvas.alpha > 0) {
+                shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+                yield return null;
+            }
+            while (shieldBarCanvas.alpha < 1) {
+                shieldBarCanvas.alpha += Time.deltaTime / 0.25f;
+                yield return null;
+            }
+            
+        }
+
+        //finallly fade the shield bar
+        while (shieldBarCanvas.alpha > 0) {
+            shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+            yield return null;
+        }
+        //set alpha back to 1 so that when we need it again, it appears
+        shieldBarCanvas.alpha = 1;
         shieldBar.gameObject.SetActive(false);
     }
 
     private IEnumerator HitRoutine(float damage) {
+        //cap damage to highest amount
+        damage = Mathf.Min(damage, 49.99f);
+
         //Does not use provided methods because there is a different alpha
         while (healthLoss.alpha < damage / 50.0f) {
             healthLoss.alpha += Time.deltaTime * 70.0f / damage;
@@ -218,13 +241,13 @@ public class UIController : MonoBehaviour {
 
     private IEnumerator RestartGameCoroutine() {
         StartCoroutine(FadeInUI(blackFader, 0.5f));
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(2.5f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private IEnumerator MainMenuCoroutine() {
         StartCoroutine(FadeInUI(blackFader, 0.3f));
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(2.5f);
         SceneManager.LoadScene("Main Menu");
     }
 
