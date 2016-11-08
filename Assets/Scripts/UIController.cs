@@ -11,11 +11,13 @@ public class UIController : MonoBehaviour {
     public Slider healthSliderBack;
     public Slider energySlider;
     public Slider energySliderBack;
+    public Slider shieldBar;
     public Text scoreText;
     //regular UI weapons
     public Text weaponText;
     public WeaponStringPair[] weaponPairs;
     public GameObject weaponUIParent;
+    public GameObject shieldUIParent;
 
     //Game over UI
     public CanvasGroup gameOverGUI;
@@ -54,7 +56,8 @@ public class UIController : MonoBehaviour {
         weapons = player.GetComponent<PlayerWeapons>();
         playerCollision = player.GetComponent<ObjectCollisionHandler>();
         score = 0;
-
+        shieldBar.gameObject.SetActive(false);
+    
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
         buttonPressed = false;
@@ -110,6 +113,11 @@ public class UIController : MonoBehaviour {
     public void GameOver() {
         gameOverScoreText.text = "Score: " + score;
         gameOverGUI.interactable = true;
+
+        //hide the ui buttons
+        weaponUIParent.SetActive(false);
+        shieldUIParent.SetActive(false);
+
         StartCoroutine(GameOverFadeUI());
     }
 
@@ -145,6 +153,24 @@ public class UIController : MonoBehaviour {
             StartCoroutine(HitRoutine(damage));
             hitCanvasActivated = true;
         }
+    }
+
+    public void StartShieldRecharge(float numSeconds) {
+        shieldBar.gameObject.SetActive(true);
+        shieldBar.value = 0f;
+
+        StartCoroutine(ShieldRechargeRoutine(numSeconds));
+    }
+
+    private IEnumerator ShieldRechargeRoutine(float numSeconds) {
+        while (shieldBar.value < 1) {
+            shieldBar.value += Time.deltaTime / numSeconds;
+            yield return null;
+        }
+
+        //keep shield bar up for a second before removing it
+        yield return new WaitForSeconds(1f);
+        shieldBar.gameObject.SetActive(false);
     }
 
     private IEnumerator HitRoutine(float damage) {

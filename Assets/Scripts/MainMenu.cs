@@ -9,6 +9,7 @@ public class MainMenu : MonoBehaviour {
     public CanvasGroup titleText;
     public CanvasGroup startGameButton;
     public CanvasGroup blackScreen;
+    AudioSource backgroundMusic;
     
     bool callOnce = false;
     const float TITLE_TEXT_FADE_SPEED = 0.2f;
@@ -20,6 +21,8 @@ public class MainMenu : MonoBehaviour {
         titleText.alpha = 0;
         blackScreen.alpha = 0;
         startGameButton.alpha = 0;
+
+        backgroundMusic = GetComponent<AudioSource>();
 
         StartCoroutine(FadeUI());
 	}
@@ -48,6 +51,7 @@ public class MainMenu : MonoBehaviour {
         callOnce = true;
         while (blackScreen.alpha < 1) {
             blackScreen.alpha += Time.deltaTime * 0.5f;
+            backgroundMusic.volume -= Time.deltaTime * 0.5f;
             yield return null;
         }
         SceneManager.LoadScene("Main Game");

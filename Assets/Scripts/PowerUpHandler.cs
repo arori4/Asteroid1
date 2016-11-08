@@ -23,7 +23,7 @@ public class PowerUpHandler : MonoBehaviour {
         }
 
         if (energyDef.activated) {
-            playerWeapons.addEnergy(energyDef.amount);
+            playerWeapons.AddEnergy(energyDef.amount);
         }
 
         if (powerupDef.activated) {
