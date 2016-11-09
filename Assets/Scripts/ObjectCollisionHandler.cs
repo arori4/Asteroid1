@@ -11,6 +11,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     //drops
     public DropPair[] drops;
+    public DropPair[] alwaysDrops;
     public int maxDrops;
 
     float currentHealth;
@@ -62,6 +63,12 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
             if (collideDefinition.alienWeapon) {
                 if (other.CompareTag("Alien Bolt")) {
+                    dealDamage(other.transform.root.gameObject);
+                }
+            }
+
+            if (collideDefinition.mine) {
+                if (other.CompareTag("Mine")) {
                     dealDamage(other.transform.root.gameObject);
                 }
             }
@@ -158,7 +165,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
             }
 
             //handle drops
-            if (drops.Length > 0) {
+            if (drops.Length > 0 || alwaysDrops.Length > 0) {
                 //calculate the maximum possible number of drops to do, regardless of user settings
                 //find total drop frequencies in same loop
                 int amountOfDrops = 0;
@@ -169,8 +176,34 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 }
                 amountOfDrops = Mathf.Min(amountOfDrops, maxDrops + 1);
                 amountOfDrops = Random.Range(0, amountOfDrops);
-                
-                //instantiate drops
+
+                //instantiate essential drops
+                int amountOfAlwaysDrops = 0;
+                for (int index = 0; index < alwaysDrops.Length; index++) {
+                    amountOfAlwaysDrops += alwaysDrops[index].numDrops;
+
+                    for (int inner = 0; inner < alwaysDrops[index].numDrops; inner++) {
+                        //must instantiate drops near the destroyed object, but not all together
+                        Vector3 spawnLocation = new Vector3(
+                            Random.Range(-0.2f, 0.2f) + transform.position.x,
+                            transform.position.y,
+                            Random.Range(-0.2f, 0.2f) + transform.position.z);
+
+                        GameObject dropSpawned = alwaysDrops[index].obj;
+                        GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
+
+                        //If object is a straight mover, then make sure that it goes in a random direction
+                        ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
+                        if (straightMover != null) {
+                            straightMover.wasDropped = true;
+                        }
+                    }
+                }
+
+                //Adjust amount of drops to always drops
+                amountOfDrops -= amountOfAlwaysDrops;
+
+                //instantiate non-essential drops
                 while (amountOfDrops > 0) {
                     int chosenFrequency = Random.Range(0, dropFrequencies) + 1;
                     int chooseIndex = 0;
@@ -234,6 +267,7 @@ public class CanCollideWith {
     public bool alien;
     public bool alienWeapon;
     public bool asteroid;
+    public bool mine;
     public bool player;
     public bool playerWeapon;
     public bool powerup;

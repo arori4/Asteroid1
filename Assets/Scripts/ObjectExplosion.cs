@@ -1,0 +1,28 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class ObjectExplosion : MonoBehaviour {
+
+    public float maxRadius;
+    public float expandTime;
+
+    SphereCollider collider;
+
+	void Start () {
+        collider = GetComponent<SphereCollider>();
+        StartCoroutine(Expand());
+	}
+	
+    IEnumerator Expand() {
+        while (collider.radius < maxRadius) {
+            collider.radius += maxRadius * Time.deltaTime / expandTime;
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+
+	void Update () {
+	
+	}
+}
