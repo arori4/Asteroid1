@@ -74,7 +74,7 @@ public class PlayerWeapons : MonoBehaviour {
             //create the bolt
             GameObject spawnedBolt = Instantiate(boltType, gunLocation.position, gunLocation.rotation) as GameObject;
             //set the velocity to be the normal of the gun plane (up should be correct)
-            spawnedBolt.GetComponent<StraightMover>().initialDirection = gunLocation.up;
+            spawnedBolt.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
 
             //set next fire and energy amount
             weaponNextFire = Time.time + weaponFireRate;

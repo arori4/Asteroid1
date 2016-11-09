@@ -167,7 +167,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
                     amountOfDrops += drops[index].numDrops;
                     dropFrequencies += drops[index].frequency;
                 }
-                amountOfDrops = Mathf.Max(amountOfDrops, maxDrops + 1);
+                amountOfDrops = Mathf.Min(amountOfDrops, maxDrops + 1);
                 amountOfDrops = Random.Range(0, amountOfDrops);
                 
                 //instantiate drops
@@ -179,8 +179,16 @@ public class ObjectCollisionHandler : MonoBehaviour {
                     }
                     chooseIndex--; //correction to choose the correct one b/c it adds stuff
 
-                    //choose game object
-                    GameObject dropSpawned = drops[chooseIndex].obj;
+                    //choose game object only if there are enough
+                    GameObject dropSpawned;
+                    if (drops[chooseIndex].numDrops > 0) {
+                        dropSpawned = drops[chooseIndex].obj;
+                        drops[chooseIndex].numDrops--;
+                    } 
+                    else { //if no more exist, then continue
+                        amountOfDrops--;
+                        continue;
+                    }
 
                     //must instantiate drops near the destroyed object, but not all together
                     Vector3 spawnLocation = new Vector3(
@@ -188,7 +196,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
                         transform.position.y,
                         Random.Range(-0.2f, 0.2f) + transform.position.z);
 
-                    Instantiate(dropSpawned, spawnLocation, transform.rotation);
+                    GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
+
+                    //If object is a straight mover, then make sure that it goes in a random direction
+                    ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
+                    if (straightMover != null){
+                        straightMover.wasDropped = true;
+                    }
 
                     amountOfDrops--;
                 }
