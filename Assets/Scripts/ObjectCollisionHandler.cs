@@ -20,13 +20,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
     EnemySpawner enemySpawner;
 
     string lastColliderTag; //for keeping tab of score right now
-    const float DAMAGE_DELAY = 0.5f; //period of time to stay uncollideable
-    bool canCollide; //when something collides, there is a period of time that object can't collide again
-    
 
-	void Start () {
+
+    void Start() {
         //find first game object with tag 
-        gameController = GameObject.FindWithTag("GameController"); 
+        gameController = GameObject.FindWithTag("GameController");
 
         //Set current health
         currentHealth = maxHealth;
@@ -38,65 +36,58 @@ public class ObjectCollisionHandler : MonoBehaviour {
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
         enemySpawner = gameController.GetComponent<EnemySpawner>();
-
-        //Make collisions happen
-        canCollide = true;
     }
-	
+
     void OnTriggerEnter(Collider other) {
 
-        //handle collisions
-        if (canCollide) {
-            
-            if (collideDefinition.asteroid) {
-                if (other.CompareTag("Large Asteroid") || 
-                    other.CompareTag("Small Asteroid")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.asteroid) {
+            if (other.CompareTag("Large Asteroid") ||
+                other.CompareTag("Small Asteroid")) {
+                dealDamage(other.transform.root.gameObject);
             }
+        }
 
-            if (collideDefinition.alien) {
-                if (other.CompareTag("Alien")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.alien) {
+            if (other.CompareTag("Alien")) {
+                dealDamage(other.transform.root.gameObject);
             }
+        }
 
-            if (collideDefinition.alienWeapon) {
-                if (other.CompareTag("Alien Bolt")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.alienWeapon) {
+            if (other.CompareTag("Alien Weapon")) {
+                dealDamage(other.transform.root.gameObject);
             }
+        }
 
-            if (collideDefinition.mine) {
-                if (other.CompareTag("Mine")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.mine) {
+            if (other.CompareTag("Mine")) {
+                dealDamage(other.transform.root.gameObject);
             }
+        }
 
-            if (collideDefinition.player) {
-                if (other.CompareTag("Player")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.player) {
+            if (other.CompareTag("Player")) {
+                dealDamage(other.transform.root.gameObject);
             }
+        }
 
-            if (collideDefinition.playerWeapon) {
-                if (other.CompareTag("Player Bolt") ||
-                    other.CompareTag("Player Laser")) {
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.playerWeapon) {
+            if (other.CompareTag("Player Weapon")) {
+                dealDamage(other.transform.root.gameObject);
+                //player missile detector is not enumerated here b/c it is not a collision
             }
+        }
 
-            if (collideDefinition.powerup) {
-                if (other.CompareTag("Powerup")) {
-                    other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
-                    dealDamage(other.transform.root.gameObject);
-                }
+        if (collideDefinition.powerup) {
+            if (other.CompareTag("Powerup")) {
+                other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
+                dealDamage(other.transform.root.gameObject);
             }
 
         }
     }
 
-    
+
     void OnTriggerExit(Collider other) {
         if (other.CompareTag("GameBoundary")) {
             Destroy(gameObject);
@@ -127,19 +118,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
             otherCollider.currentHealth -= damageAmount;
         }
 
+        //set tags for possible scoring
         lastColliderTag = other.transform.root.tag;
         otherCollider.lastColliderTag = tag;
-
-        //removed for now b/c of autocannon
-        //StartCoroutine(delayNextCollision());
     }
 
-
-    IEnumerator delayNextCollision() {
-        canCollide = false;
-        yield return new WaitForSeconds(DAMAGE_DELAY);
-        canCollide = true;
-    }
 
     void Update() {
         //kill when current health <= 0
@@ -147,13 +130,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
             //create explosion if it exists
             if (explosionList.Length > 0) {
-                Instantiate(explosionList[Random.Range(0, explosionList.Length)], 
+                Instantiate(explosionList[Random.Range(0, explosionList.Length)],
                     transform.position, transform.rotation);
             }
 
             //handle score
-            if ( lastColliderTag.CompareTo("Player Bolt") == 0 ||
-                 lastColliderTag.CompareTo("Player Laser") == 0){ 
+            if (lastColliderTag.CompareTo("Player Bolt") == 0 ||
+                 lastColliderTag.CompareTo("Player Laser") == 0) {
                 int amount = GetComponent<EnemyScoreInfo>().score;
                 ui.AddScore(amount);
             }
@@ -217,7 +200,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
                     if (drops[chooseIndex].numDrops > 0) {
                         dropSpawned = drops[chooseIndex].obj;
                         drops[chooseIndex].numDrops--;
-                    } 
+                    }
                     else { //if no more exist, then continue
                         amountOfDrops--;
                         continue;
@@ -233,7 +216,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
                     //If object is a straight mover, then make sure that it goes in a random direction
                     ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
-                    if (straightMover != null){
+                    if (straightMover != null) {
                         straightMover.wasDropped = true;
                     }
 

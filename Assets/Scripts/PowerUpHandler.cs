@@ -5,7 +5,8 @@ public class PowerUpHandler : MonoBehaviour {
 
     public HealthPowerup healthDef;
     public EnergyPowerup energyDef;
-    public WeaponPowerup powerupDef;
+    public WeaponPowerup changeWeaponDef;
+    public MissilePowerup changeMissileDef;
 
     GameObject player;
     ObjectCollisionHandler playerCollisionHandler;
@@ -26,8 +27,11 @@ public class PowerUpHandler : MonoBehaviour {
             playerWeapons.AddEnergy(energyDef.amount);
         }
 
-        if (powerupDef.activated) {
-            playerWeapons.ChangeWeapon(powerupDef.boltType);
+        if (changeWeaponDef.activated) {
+            playerWeapons.ChangeWeapon(changeWeaponDef.weaponType);
+        }
+        if (changeMissileDef.activated) {
+            playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount);
         }
     }
 	
@@ -50,5 +54,11 @@ public class EnergyPowerup : PowerupDefinition {
 
 [System.Serializable]
 public class WeaponPowerup : PowerupDefinition {
-    public GameObject boltType;
+    public GameObject weaponType;
+}
+
+[System.Serializable]
+public class MissilePowerup : PowerupDefinition {
+    public GameObject missileType;
+    public int amount;
 }

@@ -31,8 +31,7 @@ public class PlayerMover : MonoBehaviour {
 
         //set platform for keyboard input
         if (Application.platform == RuntimePlatform.WindowsPlayer ||
-            Application.platform == RuntimePlatform.WindowsEditor || 
-            Application.platform == RuntimePlatform.WindowsWebPlayer) {
+            Application.platform == RuntimePlatform.WindowsEditor) {
             keyboardInput = true;
         }
     }

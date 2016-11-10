@@ -6,7 +6,7 @@ public class ObjectExplosion : MonoBehaviour {
     public float maxRadius;
     public float expandTime;
 
-    SphereCollider collider;
+    new SphereCollider collider;
 
 	void Start () {
         collider = GetComponent<SphereCollider>();

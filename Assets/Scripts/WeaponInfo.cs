@@ -3,8 +3,10 @@ using System.Collections;
 
 public class WeaponInfo : MonoBehaviour {
 
-    public string name;
+    public string weaponName;
     public float fireRate;
     public float energyCost;
+
+    public GameObject weaponIcon;
 
 }

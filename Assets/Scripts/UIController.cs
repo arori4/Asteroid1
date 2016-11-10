@@ -14,11 +14,17 @@ public class UIController : MonoBehaviour {
     public Slider shieldBar;
     CanvasGroup shieldBarCanvas;
     public Text scoreText;
+
     //regular UI weapons
     public Text weaponText;
-    public WeaponStringPair[] weaponPairs;
     public GameObject weaponUIParent;
+    public Text shieldText;
     public GameObject shieldUIParent;
+    public Text missileText;
+    public GameObject missileUIParent;
+    CanvasGroup missileTextCanvas;
+    CanvasGroup missileUIParentCanvas;
+    GameObject missileIcon;
 
     //Game over UI
     public CanvasGroup gameOverGUI;
@@ -29,13 +35,13 @@ public class UIController : MonoBehaviour {
     public CanvasGroup healthLoss;
 
     //Others
-    public GameObject player;
+    GameObject player;
 
     //Game States
     int score;
     PlayerWeapons weapons;
     ObjectCollisionHandler playerCollision;
-    bool buttonPressed;
+    bool gameOverButtonPressed;
     bool hitCanvasActivated;
 
     private float healthSliderVelocityFront;
@@ -54,15 +60,18 @@ public class UIController : MonoBehaviour {
         gameOverGUI.alpha = 0;
         regularUI.alpha = 1;
 
+        player = GameObject.FindGameObjectWithTag("Player").transform.root.gameObject;
         weapons = player.GetComponent<PlayerWeapons>();
         playerCollision = player.GetComponent<ObjectCollisionHandler>();
         score = 0;
         shieldBar.gameObject.SetActive(false);
         shieldBarCanvas = shieldBar.GetComponent<CanvasGroup>();
-    
+        missileTextCanvas = missileText.GetComponent<CanvasGroup>();
+        missileUIParentCanvas = missileUIParent.GetComponent<CanvasGroup>();
+
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
-        buttonPressed = false;
+        gameOverButtonPressed = false;
         hitCanvasActivated = false;
 
         //start the game and fade up
@@ -92,17 +101,17 @@ public class UIController : MonoBehaviour {
     }
     
     public void ButtonRestartGame () {
-        if (!buttonPressed) {
+        if (!gameOverButtonPressed) {
             StopAllCoroutines();
-            buttonPressed = true;
+            gameOverButtonPressed = true;
             StartCoroutine(RestartGameCoroutine());
         }
     }
     
     public void ButtonMainMenu() {
-        if (!buttonPressed) {
+        if (!gameOverButtonPressed) {
             StopAllCoroutines();
-            buttonPressed = true;
+            gameOverButtonPressed = true;
             StartCoroutine(MainMenuCoroutine());
         }
     }
@@ -123,31 +132,54 @@ public class UIController : MonoBehaviour {
         StartCoroutine(GameOverFadeUI());
     }
 
-    public void ChangeWeapon(string weaponType) {
+    public void ChangeWeapon(string weaponType, GameObject uiWeaponIcon) {
+        //set weapon text
+        weaponText.text = weaponType;
 
-        for (int index = 0; index < weaponPairs.Length; index++) {
-            if (weaponPairs[index].weaponName == weaponType) { //yes we can do this ==
-
-                //set weapon text
-                weaponText.text = weaponType;
-
-                //remove all children of the parent
-                foreach (Transform child in weaponUIParent.transform) {
-                    GameObject.Destroy(child.gameObject);
-                }
-
-                //add in new child
-                GameObject newSymbol = Instantiate(
-                    weaponPairs[index].uiWeaponIcon,
-                    weaponUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
-                newSymbol.transform.parent = weaponUIParent.transform;
-
-                return;
-            }
+        //remove all children of the parent
+        foreach (Transform child in weaponUIParent.transform) {
+            GameObject.Destroy(child.gameObject);
         }
 
-        //If there is no weapon of weapon type, debug
-        print("Could not find weapon type " + weaponType);
+        //add in new child
+        GameObject newSymbol = Instantiate(uiWeaponIcon,
+            weaponUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+        newSymbol.transform.parent = weaponUIParent.transform;
+    }
+
+
+    public void ChangeMissile(string missileType, int amount, GameObject uiMissileIcon) {
+        //set weapon text
+        ChangeMissileCount(missileType, amount);
+
+        //remove all children of the parent
+        foreach (Transform child in missileUIParent.transform) {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        //add in new child
+        missileIcon = Instantiate(uiMissileIcon,
+            missileUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+        missileIcon.transform.parent = missileUIParent.transform;
+    }
+
+    /**
+     * Separate method that will be called upon firing a missile
+     */
+    public void ChangeMissileCount(string missileType, int amount) {
+        //start initial alpha at 1
+        missileUIParentCanvas.alpha = 1;
+        missileTextCanvas.alpha = 1;
+        missileIcon.SetActive(true);
+
+        missileText.text = missileType + " (" + amount + ")";
+
+        //fade if there are no more missiles to show
+        if (amount == 0) {
+            FadeOutUI(missileUIParentCanvas, 1.0f);
+            FadeOutUI(missileTextCanvas, 1.0f);
+            missileIcon.SetActive(false);
+        }
     }
 
     public void HitUI(float damage) {
@@ -251,10 +283,4 @@ public class UIController : MonoBehaviour {
         SceneManager.LoadScene("Main Menu");
     }
 
-}
-
-[System.Serializable]
-public class WeaponStringPair {
-    public string weaponName;
-    public GameObject uiWeaponIcon;
 }

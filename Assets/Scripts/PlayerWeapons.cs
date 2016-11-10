@@ -10,7 +10,7 @@ public class PlayerWeapons : MonoBehaviour {
     float energy;
 
     //weapons
-    public GameObject boltType;
+    public GameObject weaponType;
     string weaponName;
     float weaponNextFire;
     float weaponFireRate;
@@ -26,13 +26,21 @@ public class PlayerWeapons : MonoBehaviour {
     bool shieldRecharging;
     bool shieldButtonPressed;
 
-    
-	void Start () {
+    //missile
+    public GameObject missileType;
+    string missileName;
+    int missileCount;
+    float missileFireRate;
+    bool missileButtonPressed;
+    float missileNextFire;
+
+
+    void Start () {
         //Null Checks
         if (gunLocation == null) {
             Debug.Log("PlayerWeapon gun is null");
         }
-        if (boltType == null) {
+        if (weaponType == null) {
             Debug.Log("Object with gun has a null bolt type");
         }
 
@@ -44,8 +52,9 @@ public class PlayerWeapons : MonoBehaviour {
         energy = maxEnergy;
 
         //Set bolt specific values
-        ChangeWeapon(boltType);
+        ChangeWeapon(weaponType);
         ChangeShield(shieldType);
+        ChangeMissile(missileType, 5);
     }
 	
 	void Update () {
@@ -62,6 +71,11 @@ public class PlayerWeapons : MonoBehaviour {
             DeactivateShield();
         }
 
+        //missile input
+        if (Input.GetKey(KeyCode.LeftControl) || missileButtonPressed) {
+            MissileFire();
+        }
+
         //Update Energy to maximum energy
         energy += rechargeRate * Time.deltaTime;
         energy = Mathf.Min(maxEnergy, energy);
@@ -71,14 +85,34 @@ public class PlayerWeapons : MonoBehaviour {
         //only fire after a certain time quantum and amount of energy
         if (Time.time >= weaponNextFire && energy > weaponEnergyCost) {
 
-            //create the bolt
-            GameObject spawnedBolt = Instantiate(boltType, gunLocation.position, gunLocation.rotation) as GameObject;
+            //create the weapon
+            GameObject spawnedWeapon = Instantiate(weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
             //set the velocity to be the normal of the gun plane (up should be correct)
-            spawnedBolt.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
+            spawnedWeapon.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
 
             //set next fire and energy amount
             weaponNextFire = Time.time + weaponFireRate;
             energy -= weaponEnergyCost;
+        }
+    }
+
+    public void MissileFire() {
+        //only fire after a certain time quantum and amount of energy
+        if (Time.time >= missileNextFire && missileCount > 0) {
+
+            //create the missile
+            GameObject spawnedMissile = Instantiate(
+                missileType,
+                gunLocation.position,
+                gunLocation.rotation) as GameObject;
+            spawnedMissile.SetActive(true); //line is included to remove warnings for now
+
+            //set next fire and energy amount
+            missileNextFire = Time.time + missileFireRate;
+            missileCount--;
+
+            //Set ui to show lower missileCount (0 missile count is handled by this method)
+            ui.ChangeMissileCount(missileName, missileCount);
         }
     }
     
@@ -105,13 +139,13 @@ public class PlayerWeapons : MonoBehaviour {
         }
 
         //Receive weapon info
-        boltType = bolt;
+        weaponType = bolt;
         weaponFireRate = info.fireRate;
         weaponEnergyCost = info.energyCost;
-        weaponName = info.name;
+        weaponName = info.weaponName;
 
         //Change Weapon UI Info
-        ui.ChangeWeapon(weaponName);
+        ui.ChangeWeapon(weaponName, info.weaponIcon);
 
     }
 
@@ -128,6 +162,18 @@ public class PlayerWeapons : MonoBehaviour {
         shieldDamageMultiplier = shieldInfo.shieldStrength;
         shieldRechargeTime = shieldInfo.rechargeTime;
         shieldRecharging = false;
+    }
+
+    public void ChangeMissile(GameObject missile, int count) {
+        MissileInfo info = missile.GetComponent<MissileInfo>();
+
+        missileType = missile;
+        missileFireRate = info.fireRate;
+        missileName = info.name;
+        missileCount = count;
+
+        //Change Missile UI Info
+        ui.ChangeMissile(missileName, missileCount, info.missileIcon);
     }
 
     /*
@@ -192,5 +238,11 @@ public class PlayerWeapons : MonoBehaviour {
     }
     public void onShieldButtonUp() {
         shieldButtonPressed = false;
+    }
+    public void onMissileButtonDown() {
+        missileButtonPressed = true;
+    }
+    public void onMissileButtonUp() {
+        missileButtonPressed = false;
     }
 }
