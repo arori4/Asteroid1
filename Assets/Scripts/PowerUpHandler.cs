@@ -13,9 +13,13 @@ public class PowerUpHandler : MonoBehaviour {
     PlayerWeapons playerWeapons;
 
 	void Start () {
-        player = GameObject.FindWithTag("Player").transform.root.gameObject;
-        playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
-        playerWeapons = player.GetComponent<PlayerWeapons>();
+        //find player, if it exists. this can run when the player dies, which is a nullptr
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null) {
+            player = player.transform.root.gameObject;
+            playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
+            playerWeapons = player.GetComponent<PlayerWeapons>();
+        }
 	}
 
     public void activate() {

@@ -23,7 +23,7 @@ public class UIController : MonoBehaviour {
     public Text missileText;
     public GameObject missileUIParent;
     CanvasGroup missileTextCanvas;
-    CanvasGroup missileUIParentCanvas;
+    public CanvasGroup missileButtonCanvas;
     GameObject missileIcon;
 
     //Game over UI
@@ -67,7 +67,6 @@ public class UIController : MonoBehaviour {
         shieldBar.gameObject.SetActive(false);
         shieldBarCanvas = shieldBar.GetComponent<CanvasGroup>();
         missileTextCanvas = missileText.GetComponent<CanvasGroup>();
-        missileUIParentCanvas = missileUIParent.GetComponent<CanvasGroup>();
 
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
@@ -124,18 +123,17 @@ public class UIController : MonoBehaviour {
     public void GameOver() {
         gameOverScoreText.text = "Score: " + score;
         gameOverGUI.interactable = true;
+        GetComponent<GameSave>().SaveHighScore(score, 1); //for now, only 1 level
 
         //hide the ui buttons
         weaponUIParent.SetActive(false);
+        missileUIParent.SetActive(false);
         shieldUIParent.SetActive(false);
 
         StartCoroutine(GameOverFadeUI());
     }
 
     public void ChangeWeapon(string weaponType, GameObject uiWeaponIcon) {
-        //set weapon text
-        weaponText.text = weaponType;
-
         //remove all children of the parent
         foreach (Transform child in weaponUIParent.transform) {
             GameObject.Destroy(child.gameObject);
@@ -145,13 +143,14 @@ public class UIController : MonoBehaviour {
         GameObject newSymbol = Instantiate(uiWeaponIcon,
             weaponUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
         newSymbol.transform.parent = weaponUIParent.transform;
+
+        //set weapon text
+        weaponText.text = weaponType;
+
     }
 
 
     public void ChangeMissile(string missileType, int amount, GameObject uiMissileIcon) {
-        //set weapon text
-        ChangeMissileCount(missileType, amount);
-
         //remove all children of the parent
         foreach (Transform child in missileUIParent.transform) {
             GameObject.Destroy(child.gameObject);
@@ -161,6 +160,9 @@ public class UIController : MonoBehaviour {
         missileIcon = Instantiate(uiMissileIcon,
             missileUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
         missileIcon.transform.parent = missileUIParent.transform;
+
+        //set weapon text
+        ChangeMissileCount(missileType, amount);
     }
 
     /**
@@ -168,16 +170,18 @@ public class UIController : MonoBehaviour {
      */
     public void ChangeMissileCount(string missileType, int amount) {
         //start initial alpha at 1
-        missileUIParentCanvas.alpha = 1;
-        missileTextCanvas.alpha = 1;
+        if (missileTextCanvas != null) {
+            missileTextCanvas.alpha = 1;
+        }
+        missileButtonCanvas.alpha = 1;
         missileIcon.SetActive(true);
 
         missileText.text = missileType + " (" + amount + ")";
 
         //fade if there are no more missiles to show
         if (amount == 0) {
-            FadeOutUI(missileUIParentCanvas, 1.0f);
-            FadeOutUI(missileTextCanvas, 1.0f);
+            StartCoroutine(FadeOutUI(missileTextCanvas, 1.0f));
+            StartCoroutine(FadeOutUI(missileButtonCanvas, 1.0f));
             missileIcon.SetActive(false);
         }
     }

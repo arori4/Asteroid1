@@ -40,6 +40,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     void OnTriggerEnter(Collider other) {
 
+        //ignore missile detector
+        if (CompareTag("Player Missile Detector")) {
+            return;
+        }
+
         if (collideDefinition.asteroid) {
             if (other.CompareTag("Large Asteroid") ||
                 other.CompareTag("Small Asteroid")) {
@@ -83,8 +88,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
                 dealDamage(other.transform.root.gameObject);
             }
-
         }
+
     }
 
 
@@ -135,8 +140,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
             }
 
             //handle score
-            if (lastColliderTag.CompareTo("Player Bolt") == 0 ||
-                 lastColliderTag.CompareTo("Player Laser") == 0) {
+            if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
+                lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
                 int amount = GetComponent<EnemyScoreInfo>().score;
                 ui.AddScore(amount);
             }

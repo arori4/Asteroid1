@@ -15,13 +15,12 @@ public class MissileTracker : MonoBehaviour {
         trackingCollider = GetComponent<SphereCollider>();
         trackingCollider.radius = trackingRange;
 
-        rb = GetComponent<Rigidbody>();
+        rb = transform.root.gameObject.GetComponent<Rigidbody>();
         rb.velocity = Vector3.right * 0.2f; //initial velocity is slow
         
 	}
 	
     void FixedUpdate() {
-        
         //track if there is a target
         if (target != null) {
             float currentSpeed = rb.velocity.magnitude;
@@ -30,7 +29,7 @@ public class MissileTracker : MonoBehaviour {
             //vector3 rotateTowards
             Vector3 turnedVelocity = Vector3.Lerp(
                 Vector3.Normalize(rb.velocity), 
-                Vector3.Normalize(target.transform.position - transform.position), 
+                Vector3.Normalize(target.transform.position - transform.root.transform.position), 
                 trackingSpeed * Time.deltaTime);
             rb.velocity = Vector3.Normalize(turnedVelocity) * currentSpeed;
         } 
@@ -39,15 +38,13 @@ public class MissileTracker : MonoBehaviour {
         rb.velocity += Vector3.Normalize(rb.velocity) * acceleration * Time.deltaTime;
 
         //change rotation
-        transform.forward = rb.velocity;
+        transform.root.transform.forward = rb.velocity;
 
     }
 
     void OnTriggerEnter(Collider other) {
         //Track an alien only if we haven't started
         if (target == null && other.transform.root.gameObject.tag.CompareTo("Alien") == 0) {
-            print("Missile is tracking Alien");
-
             target = other.transform.root.gameObject;
         }
     }
