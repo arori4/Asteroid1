@@ -282,7 +282,7 @@ public class UIController : MonoBehaviour {
     }
 
     private IEnumerator MainMenuCoroutine() {
-        StartCoroutine(FadeInUI(blackFader, 0.3f));
+        StartCoroutine(FadeInUI(blackFader, 0.5f));
         yield return new WaitForSeconds(2.5f);
         SceneManager.LoadScene("Main Menu");
     }

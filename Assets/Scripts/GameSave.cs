@@ -34,9 +34,9 @@ public class GameSave : MonoBehaviour {
 
     public void SaveHighScore(int score, int level) {
 
-        int index = 10;
+        int index = 9;
         while (index > 0 && score > highScores[index]) {
-            index++;
+            index--;
         }
 
         //record high score if index is less than 10
