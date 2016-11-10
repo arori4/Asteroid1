@@ -1,54 +1,85 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ * Defines behaviour for alien weapons and shields (in the future)
+ */
 public class AlienWeapons : MonoBehaviour {
-
-    public GameObject boltType;
-    public Transform gun;
-
-    float nextFire;
-    float boltFireRate;
-
-    // Use this for initialization
+    
+    public GunDefinition[] guns;
+    
     void Start () {
-        //Null Checks
-        if (gun == null) {
-            Debug.Log("EnemyWeapon gun is null");
-        }
-        if (boltType == null) {
-            Debug.Log("Object with gun has a null bolt type");
+        if (guns.Length == 0) {
+            print("Alien Weapon defined with no available guns.");
         }
 
-        //Set script global values
-        nextFire = Time.time;
-
-        //Set bolt specific values
-        ChangeWeapon(boltType);
+        //Start fire coroutine for each gun
+        for (int index = 0; index < guns.Length; index++) {
+            guns[index].Initialize();
+            StartCoroutine(FireSequence(guns[index]));
+        }
+        
     }
 	
-	// Update is called once per frame
-	void Update () {
-        Fire();
-	}
 
-    public void Fire() {
-
-        //only fire after a certain time quantum and amount of energy
-        if (Time.time >= nextFire) {
-
-            //create the bolt
-            GameObject spawnedBolt = Instantiate(boltType, gun.position, gun.rotation) as GameObject;
-            //set the velocity to be the normal of the gun plane (up should be correct)
-            spawnedBolt.GetComponent<ObjectStraightMover>().initialDirection = gun.up;
-
-            //set next fire and energy amount
-            nextFire = Time.time + boltFireRate;
+    IEnumerator FireSequence(GunDefinition gun) {
+        while (true) {
+            yield return new WaitForSecondsRealtime(gun.GetNextFire());
+            gun.Fire();
         }
 
     }
+    
 
-    public void ChangeWeapon(GameObject bolt) {
-        boltType = bolt;
-        boltFireRate = bolt.GetComponent<WeaponInfo>().fireRate;
+}
+
+[System.Serializable]
+public class GunDefinition {
+
+    public Transform gunLocation;
+    public GameObject weaponType;
+    Vector2 fireRate; //fire rate is between 100% and 200% of bolt type fire rate
+    float nextFire;
+
+    //TODO: on damage gun, have small explosion
+
+    public void Initialize() {
+        if (gunLocation == null) {
+            Debug.Log("GunDefinition gunLocation is null.");
+        }
+        if (weaponType == null) {
+            Debug.Log("GunDefinition weaponType is null");
+        }
+
+        //set variables
+        ChangeWeapon(weaponType);
+        SetNextFire();
+    }
+
+    public void Fire() {
+        //create the bolt
+        GameObject spawnedBolt = GameObject.Instantiate(
+            weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
+
+        //set the velocity to be the normal of the gun plane (up should be correct)
+        spawnedBolt.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
+
+        SetNextFire();
+    }
+
+
+    void ChangeWeapon(GameObject weapon) {
+        weaponType = weapon;
+        fireRate = new Vector2(0, 0);
+        fireRate.x = weapon.GetComponent<WeaponInfo>().fireRate;
+        fireRate.y = fireRate.x * 2.5f;
+    }
+
+    void SetNextFire() {
+        nextFire = Random.Range(fireRate.x, fireRate.y);
+    }
+
+    public float GetNextFire() {
+        return nextFire;
     }
 }
