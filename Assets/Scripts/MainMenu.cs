@@ -8,7 +8,8 @@ public class MainMenu : MonoBehaviour {
 
     public CanvasGroup mainMenu;
     public CanvasGroup titleText;
-    public CanvasGroup startGameButton;
+    public CanvasGroup startLevelsButton;
+    public CanvasGroup startSurvivalButton;
     public CanvasGroup blackScreen;
     public CanvasGroup goToHighScoresButton;
     AudioSource backgroundMusic;
@@ -27,7 +28,8 @@ public class MainMenu : MonoBehaviour {
 	void Start () {
         titleText.alpha = 0;
         blackScreen.alpha = 0;
-        startGameButton.alpha = 0;
+        startLevelsButton.alpha = 0;
+        startSurvivalButton.alpha = 0;
         mainMenu.alpha = 1;
         highScoreMenu.alpha = 0;
         goToHighScoresButton.alpha = 0;
@@ -46,15 +48,38 @@ public class MainMenu : MonoBehaviour {
 
         yield return new WaitForSeconds(0.8f);
 
-        while (startGameButton.alpha < 1) {
-            startGameButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
+        while (startLevelsButton.alpha < 1) {
+            startLevelsButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
+            startSurvivalButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
             goToHighScoresButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
             yield return null;
         }
     }
 
-    public void StartGame() {
+    public void StartLevelsGame() {
         if (callOnce == false) {
+            //Set settings
+            PlayerPrefs.SetInt("Level", 1);
+            PlayerPrefs.SetInt("Score", 0);
+            PlayerPrefs.SetInt("Mode", 0);
+
+            //Set opposite to alpha of 0
+            startSurvivalButton.alpha = 0;
+
+            StartCoroutine(LoadNextSceneCoroutine());
+        }
+    }
+
+    public void StartSurvivalGame() {
+        if (callOnce == false) {
+            //Set settings
+            PlayerPrefs.SetInt("Level", 1);
+            PlayerPrefs.SetInt("Score", 0);
+            PlayerPrefs.SetInt("Mode", 1);
+
+            //Set opposite to alpha of 0
+            startLevelsButton.alpha = 0;
+
             StartCoroutine(LoadNextSceneCoroutine());
         }
     }

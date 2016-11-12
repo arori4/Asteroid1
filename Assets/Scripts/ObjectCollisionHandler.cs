@@ -17,7 +17,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
     float currentHealth;
     GameObject gameController;
     UIController ui;
-    EnemySpawner enemySpawner;
+    ObjectSpawner objectSpawner;
 
     string lastColliderTag; //for keeping tab of score right now
 
@@ -35,7 +35,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
-        enemySpawner = gameController.GetComponent<EnemySpawner>();
+        objectSpawner = gameController.GetComponent<ObjectSpawner>();
     }
 
     void OnTriggerEnter(Collider other) {
@@ -148,7 +148,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
             //handle if player dies
             if (tag.CompareTo("Player") == 0) {
-                enemySpawner.StopAllCoroutines();
+                objectSpawner.StopAllCoroutines();
                 ui.GameOver();
             }
 

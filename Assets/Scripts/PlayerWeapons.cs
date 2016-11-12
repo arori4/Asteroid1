@@ -1,38 +1,57 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class PlayerWeapons : MonoBehaviour {
-
-    public UIController ui;
+    
     public Transform gunLocation;
     public float maxEnergy = 100;
     public float rechargeRate = 1f;
     float energy;
+    ObjectCollisionHandler playerCollision;
 
     //weapons
     public GameObject weaponType;
-    string weaponName;
+    WeaponInfo weaponInfo;
     float weaponNextFire;
-    float weaponFireRate;
-    float weaponEnergyCost;
     bool weaponButtonPressed;
 
     //shield
     public GameObject shieldType;
-    float shieldEnergyDrain;
-    float shieldDamageMultiplier;
-    float shieldRechargeTime;
+    ShieldInfo shieldInfo;
     bool shieldActivated;
     bool shieldRecharging;
     bool shieldButtonPressed;
 
     //missile
     public GameObject missileType;
-    string missileName;
+    MissileInfo missileInfo;
     int missileCount;
-    float missileFireRate;
     bool missileButtonPressed;
     float missileNextFire;
+
+    //UI
+    public Sliders sliders;
+    private float healthSliderVelocityFront;
+    private float energySliderVelocityFront;
+    private float healthSliderVelocityBack;
+    private float energySliderVelocityBack;
+    private const float ENERGY_SLIDER_FRONT_SMOOTH = 0.3f;
+    private const float ENERGY_SLIDER_BACK_SMOOTH = 1f;
+    private const float HEALTH_SLIDER_FRONT_SMOOTH = 0.7f;
+    private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
+    public Text weaponText;
+    public GameObject weaponUIParent;
+    public Text shieldText;
+    public GameObject shieldUIParent;
+    public Text missileText;
+    public GameObject missileUIParent;
+    CanvasGroup missileTextCanvas;
+    public CanvasGroup missileButtonCanvas;
+    GameObject missileIcon;
+
+    public CanvasGroup hitCanvas;
+    bool hitCanvasActivated;
 
 
     void Start () {
@@ -44,9 +63,6 @@ public class PlayerWeapons : MonoBehaviour {
             Debug.Log("Object with gun has a null bolt type");
         }
 
-        //Set UIController
-        ui = GameObject.FindWithTag("GameController").GetComponent<UIController>();
-
         //Set script global values
         weaponNextFire = Time.time;
         energy = maxEnergy;
@@ -55,6 +71,15 @@ public class PlayerWeapons : MonoBehaviour {
         ChangeWeapon(weaponType);
         ChangeShield(shieldType);
         ChangeMissile(missileType, 5);
+
+        //Set player variables
+        playerCollision = GetComponent<ObjectCollisionHandler>();
+
+        //Set UI
+        sliders.shield.gameObject.SetActive(false);
+        hitCanvasActivated = false;
+        hitCanvas.alpha = 0;
+        missileTextCanvas = missileText.GetComponent<CanvasGroup>();
     }
 	
 	void Update () {
@@ -79,11 +104,29 @@ public class PlayerWeapons : MonoBehaviour {
         //Update Energy to maximum energy
         energy += rechargeRate * Time.deltaTime;
         energy = Mathf.Min(maxEnergy, energy);
+        
+        //handle health bar
+        sliders.health.value = Mathf.SmoothDamp(sliders.health.value,
+            playerCollision.GetCurrentHealth() / 100.0f,
+            ref healthSliderVelocityFront, HEALTH_SLIDER_FRONT_SMOOTH);
+        sliders.healthBack.value = Mathf.SmoothDamp(sliders.healthBack.value,
+            playerCollision.GetCurrentHealth() / 100.0f,
+            ref healthSliderVelocityBack, HEALTH_SLIDER_BACK_SMOOTH);
+        //force back slider to be over or at the regular health slider amount
+        sliders.healthBack.value = Mathf.Max(sliders.health.value, sliders.healthBack.value);
+
+        //handle energy bar
+        sliders.energy.value = Mathf.SmoothDamp(sliders.energy.value, energy / 100.0f,
+            ref energySliderVelocityFront, ENERGY_SLIDER_FRONT_SMOOTH);
+        sliders.energyBack.value = Mathf.SmoothDamp(sliders.energyBack.value, energy / 100.0f,
+            ref energySliderVelocityBack, ENERGY_SLIDER_BACK_SMOOTH);
+        //force back slider up
+        sliders.energyBack.value = Mathf.Max(sliders.energy.value, sliders.energyBack.value);
 	}
 
     public void WeaponFire() {
         //only fire after a certain time quantum and amount of energy
-        if (Time.time >= weaponNextFire && energy > weaponEnergyCost) {
+        if (Time.time >= weaponNextFire && energy > weaponInfo.energyCost) {
 
             //create the weapon
             GameObject spawnedWeapon = Instantiate(weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
@@ -91,8 +134,8 @@ public class PlayerWeapons : MonoBehaviour {
             spawnedWeapon.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
 
             //set next fire and energy amount
-            weaponNextFire = Time.time + weaponFireRate;
-            energy -= weaponEnergyCost;
+            weaponNextFire = Time.time + weaponInfo.fireRate;
+            energy -= weaponInfo.energyCost;
         }
     }
 
@@ -108,11 +151,11 @@ public class PlayerWeapons : MonoBehaviour {
             spawnedMissile.SetActive(true); //line is included to remove warnings for now
 
             //set next fire and energy amount
-            missileNextFire = Time.time + missileFireRate;
+            missileNextFire = Time.time + missileInfo.fireRate;
             missileCount--;
 
             //Set ui to show lower missileCount (0 missile count is handled by this method)
-            ui.ChangeMissileCount(missileName, missileCount);
+            ChangeMissileCount(missileInfo.missileName, missileCount);
         }
     }
     
@@ -120,7 +163,7 @@ public class PlayerWeapons : MonoBehaviour {
         if (!shieldRecharging) {
             shieldActivated = true;
             shieldType.SetActive(true);
-            energy -= shieldEnergyDrain * Time.deltaTime;
+            energy -= shieldInfo.energyDrain * Time.deltaTime;
         }
     }
 
@@ -131,26 +174,34 @@ public class PlayerWeapons : MonoBehaviour {
         }
     }
 
-    public void ChangeWeapon(GameObject bolt) {
-        WeaponInfo info = bolt.GetComponent<WeaponInfo>();
-        if (info == null) {
+    public void ChangeWeapon(GameObject newWeapon) {
+        weaponInfo = newWeapon.GetComponent<WeaponInfo>();
+        if (weaponInfo == null) {
             print("Changing weapon to a non bolt. Weapon not assigned.");
             return;
         }
 
         //Receive weapon info
-        weaponType = bolt;
-        weaponFireRate = info.fireRate;
-        weaponEnergyCost = info.energyCost;
-        weaponName = info.weaponName;
+        weaponType = newWeapon;
 
-        //Change Weapon UI Info
-        ui.ChangeWeapon(weaponName, info.weaponIcon);
+        //Change Weapon UI Info        
+        //remove all children of the parent
+        foreach (Transform child in weaponUIParent.transform) {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        //add in new child
+        GameObject newSymbol = Instantiate(weaponInfo.weaponIcon,
+            weaponUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+        newSymbol.transform.parent = weaponUIParent.transform;
+
+        //set weapon text
+        weaponText.text = weaponInfo.weaponName;
 
     }
 
     public void ChangeShield(GameObject shield) {
-        Shield shieldInfo = shield.GetComponent<Shield>();
+        shieldInfo = shield.GetComponent<ShieldInfo>();
         if (shieldInfo == null) {
             print("Changing shield to a non shield. Shield not assigned.");
             return;
@@ -158,23 +209,52 @@ public class PlayerWeapons : MonoBehaviour {
 
         //Receive shield info
         shieldType = shield;
-        shieldEnergyDrain = shieldInfo.energyDrain;
-        shieldDamageMultiplier = shieldInfo.shieldStrength;
-        shieldRechargeTime = shieldInfo.rechargeTime;
         shieldRecharging = false;
     }
 
     public void ChangeMissile(GameObject missile, int count) {
-        MissileInfo info = missile.GetComponent<MissileInfo>();
+        missileInfo = missile.GetComponent<MissileInfo>();
 
         missileType = missile;
-        missileFireRate = info.fireRate;
-        missileName = info.name;
         missileCount = count;
 
         //Change Missile UI Info
-        ui.ChangeMissile(missileName, missileCount, info.missileIcon);
+        //remove all children of the parent
+        foreach (Transform child in missileUIParent.transform) {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        //add in new child
+        missileIcon = Instantiate(missileInfo.missileIcon,
+            missileUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+        missileIcon.transform.parent = missileUIParent.transform;
+
+        //set weapon text
+        ChangeMissileCount(missileInfo.missileName, missileCount);
     }
+    
+    
+    /**
+     * Separate method that will be called upon firing a missile
+     */
+    public void ChangeMissileCount(string missileType, int amount) {
+        //start initial alpha at 1
+        if (missileTextCanvas != null) {
+            missileTextCanvas.alpha = 1;
+        }
+        missileButtonCanvas.alpha = 1;
+        missileIcon.SetActive(true);
+
+        missileText.text = missileType + " (" + amount + ")";
+
+        //fade if there are no more missiles to show
+        if (amount == 0) {
+            StartCoroutine(FadeOutUI(missileTextCanvas, 1.0f));
+            StartCoroutine(FadeOutUI(missileButtonCanvas, 1.0f));
+            missileIcon.SetActive(false);
+        }
+    }
+
 
     /*
      * Determines hit when a shield is hit
@@ -184,14 +264,14 @@ public class PlayerWeapons : MonoBehaviour {
     public float Hit(float amount) {
         //should only be called if activated
         if (shieldActivated && !shieldRecharging) {
-            energy -= amount * shieldDamageMultiplier;
+            energy -= amount * shieldInfo.shieldStrength;
 
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
-                StartCoroutine(Recharge());
+                StartCoroutine(RechargeShield());
                 float retval = -energy;
                 energy = 0;
-                ui.HitUI(retval);
+                HitUI(retval);
                 return retval;
             }
             else {
@@ -200,30 +280,103 @@ public class PlayerWeapons : MonoBehaviour {
         }
 
         else {
-            ui.HitUI(amount);
+            HitUI(amount);
             return amount;
         }
     }
 
+    public void HitUI(float damage) {
+        if (!hitCanvasActivated) {
+            StartCoroutine(HitRoutine(damage));
+            hitCanvasActivated = true;
+        }
+    }
+
+
+    private IEnumerator HitRoutine(float damage) {
+        //cap damage to highest amount
+        damage = Mathf.Min(damage, 49.99f);
+
+        //Does not use provided methods because there is a different alpha
+        while (hitCanvas.alpha < damage / 50.0f) {
+            hitCanvas.alpha += Time.deltaTime * 70.0f / damage;
+            yield return null;
+        }
+
+        while (hitCanvas.alpha > 0) {
+            hitCanvas.alpha -= Time.deltaTime * 35.0f / damage;
+            yield return null;
+        }
+
+        hitCanvasActivated = false;
+    }
 
     /*
      * Recharge the shield when it has been destroyed
      */
-    IEnumerator Recharge() {
+    private IEnumerator RechargeShield() {
         DeactivateShield();
-        ui.StartShieldRecharge(shieldRechargeTime);
+
+        sliders.shield.gameObject.SetActive(true);
+        sliders.shield.value = 0f;
+   
         shieldRecharging = true;
-        yield return new WaitForSeconds(shieldRechargeTime);
+
+        while (sliders.shield.value < 1) {
+            sliders.shield.value += Time.deltaTime / shieldInfo.rechargeTime;
+            yield return null;
+        }
+
+        //keep shield bar up for a second before removing it
+        CanvasGroup shieldBarCanvas = sliders.shield.gameObject.GetComponent<CanvasGroup>();
+        for (int index = 0; index < 2; index++) {
+            while (shieldBarCanvas.alpha > 0) {
+                shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+                yield return null;
+            }
+            while (shieldBarCanvas.alpha < 1) {
+                shieldBarCanvas.alpha += Time.deltaTime / 0.25f;
+                yield return null;
+            }
+
+        }
+
+        //finallly fade the shield bar
+        while (shieldBarCanvas.alpha > 0) {
+            shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+            yield return null;
+        }
+        //set alpha back to 1 so that when we need it again, it appears
+        shieldBarCanvas.alpha = 1;
+        sliders.shield.gameObject.SetActive(false);
+
         shieldRecharging = false;
     }
-
-    public float GetEnergy() {
-        return energy;
-    }
-
+    
     public void AddEnergy(float add) {
         energy = Mathf.Min(maxEnergy, energy + add);
     }
+
+    /**
+     * Fades the canvas out to an alpha of 0.
+     * Canvas will be transparent
+     */
+    private IEnumerator FadeOutUI(CanvasGroup canvas, float smoothing) {
+        while (canvas.alpha > 0) {
+            canvas.alpha -= Time.deltaTime * smoothing;
+            yield return null;
+        }
+    }
+
+
+    void OnDestroy() {
+        //hide the ui buttons
+        weaponUIParent.SetActive(false);
+        missileUIParent.SetActive(false);
+        shieldUIParent.SetActive(false);
+
+    }
+
 
 
     //For UI Use
@@ -245,4 +398,13 @@ public class PlayerWeapons : MonoBehaviour {
     public void onMissileButtonUp() {
         missileButtonPressed = false;
     }
+}
+
+[System.Serializable]
+public struct Sliders {
+    public Slider health;
+    public Slider healthBack;
+    public Slider energy;
+    public Slider energyBack;
+    public Slider shield;
 }

@@ -17,8 +17,7 @@ public class PlayerMover : MonoBehaviour {
     public float tiltFront;
     public float tiltSide;
 
-    public float sensitivityX;
-    public float sensitivityY;
+    public Vector2 sensitivity;
 
     bool keyboardInput;
 
@@ -50,8 +49,8 @@ public class PlayerMover : MonoBehaviour {
             moveVertical = Input.GetAxis("Vertical") * speed;
         }
         else {
-            moveVertical = (Input.acceleration.y + 0.4f) * sensitivityY; //added offset
-            moveHorizontal = Input.acceleration.x * sensitivityX;
+            moveVertical = (Input.acceleration.y + 0.5f) * sensitivity.y; //added offset
+            moveHorizontal = Input.acceleration.x * sensitivity.x;
         }
              
         Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
