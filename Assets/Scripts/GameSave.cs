@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Handles stats
+ * Currently only handles score
+ */
 public class GameSave : MonoBehaviour {
     
     public int[] highScores;
@@ -35,9 +39,10 @@ public class GameSave : MonoBehaviour {
     public void SaveHighScore(int score, int level) {
 
         int index = 9;
-        while (index > 0 && score > highScores[index]) {
+        while (index >= 0 && score > highScores[index]) {
             index--;
         }
+        index++;
 
         //record high score if index is less than 10
         if (index < 10) {
@@ -58,5 +63,13 @@ public class GameSave : MonoBehaviour {
             PlayerPrefs.SetInt(levelKey, levels[index2]);
         }
 
+    }
+
+    public void recordAdditionInt(string name, int amount) {
+        if (!PlayerPrefs.HasKey(name)) {
+            PlayerPrefs.SetInt(name, 0);
+        }
+
+        PlayerPrefs.SetInt(name, PlayerPrefs.GetInt(name) + amount);
     }
 }

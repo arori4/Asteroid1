@@ -19,7 +19,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
     UIController ui;
     ObjectSpawner objectSpawner;
 
-    string lastColliderTag; //for keeping tab of score right now
+    string lastColliderTag = ""; //for keeping tab of score right now
 
 
     void Start() {
@@ -142,7 +142,10 @@ public class ObjectCollisionHandler : MonoBehaviour {
             //handle score
             if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
                 lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
-                int amount = GetComponent<EnemyScoreInfo>().score;
+
+                EnemyScoreInfo scoreInfo = GetComponent<EnemyScoreInfo>();
+                
+                int amount = scoreInfo.score;
                 ui.AddScore(amount);
             }
 

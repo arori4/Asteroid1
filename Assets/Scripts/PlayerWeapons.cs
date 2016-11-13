@@ -2,6 +2,11 @@
 using UnityEngine.UI;
 using System.Collections;
 
+/**
+ * Controls the player's weapons, shields, and missiles
+ * 
+ * Referenced by: 
+ */
 public class PlayerWeapons : MonoBehaviour {
     
     public Transform gunLocation;
@@ -32,14 +37,6 @@ public class PlayerWeapons : MonoBehaviour {
 
     //UI
     public Sliders sliders;
-    private float healthSliderVelocityFront;
-    private float energySliderVelocityFront;
-    private float healthSliderVelocityBack;
-    private float energySliderVelocityBack;
-    private const float ENERGY_SLIDER_FRONT_SMOOTH = 0.3f;
-    private const float ENERGY_SLIDER_BACK_SMOOTH = 1f;
-    private const float HEALTH_SLIDER_FRONT_SMOOTH = 0.7f;
-    private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
     public Text weaponText;
     public GameObject weaponUIParent;
     public Text shieldText;
@@ -50,9 +47,19 @@ public class PlayerWeapons : MonoBehaviour {
     public CanvasGroup missileButtonCanvas;
     GameObject missileIcon;
 
+    //red hit canvas
     public CanvasGroup hitCanvas;
-    bool hitCanvasActivated;
+    bool hitCanvasActivated; //lock
 
+    //Constants and single use variables
+    private float healthSliderVelocityFront;
+    private float energySliderVelocityFront;
+    private float healthSliderVelocityBack;
+    private float energySliderVelocityBack;
+    private const float ENERGY_SLIDER_FRONT_SMOOTH = 0.3f;
+    private const float ENERGY_SLIDER_BACK_SMOOTH = 1f;
+    private const float HEALTH_SLIDER_FRONT_SMOOTH = 0.7f;
+    private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
 
     void Start () {
         //Null Checks

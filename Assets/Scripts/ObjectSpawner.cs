@@ -31,6 +31,7 @@ public class ObjectSpawner : MonoBehaviour {
     //Cache
     int totalFrequencies;
     int numEnemies = 10;
+    bool initialRecalculationFinished;
 
     void Start() {
         //initiate game mode and level
@@ -57,35 +58,15 @@ public class ObjectSpawner : MonoBehaviour {
             StartCoroutine(IncreaseLevels());
         }
 
-        //initialize enemies for level appropriately
-        int numEnemyTypes = 0;
-        for (int index = 0; index < enemies.Length; index++) {
-            if (enemies[index].levelAppearance <= level) {
-                numEnemyTypes++;
-            }
-        }
-        currentLevelEnemies = new Pair[numEnemyTypes];
-        int addIndex = 0;
-        for (int index = 0; index < enemies.Length; index++) {
-            if (enemies[index].levelAppearance <= level) {
-                currentLevelEnemies[addIndex++] = enemies[index];
-            }
-        }
-
-        //initialize frequency generator
-        for (int index = 0; index < currentLevelEnemies.Length; index++) {
-            totalFrequencies += currentLevelEnemies[index].frequency;
-        }
-
-        if (totalFrequencies == 0) {
-            print("Total frequencies is 0");
-        }
+        currentLevelEnemies = new Pair[0];
 
         //Show text and fade it
         largeTextCanvas.alpha = 1;
         StartCoroutine(FadeOutText(largeTextCanvas, 0.4f));
 
         //Start level
+        initialRecalculationFinished = false;
+        StartCoroutine(RecalculateFrequencies());
         StartCoroutine(SpawnWaves());
     }
 
@@ -93,6 +74,11 @@ public class ObjectSpawner : MonoBehaviour {
         yield return new WaitForSeconds(beginningWait); //pause
 
         while (true) {
+            if (!initialRecalculationFinished) {
+                yield return new WaitForSeconds(0.5f);
+                continue;
+            }
+
             //Choose a random enemy
             int chosenFrequency = Random.Range(0, totalFrequencies) + 1;
             int chooseIndex = 0;
@@ -101,8 +87,8 @@ public class ObjectSpawner : MonoBehaviour {
                 yield return null;
             }
             chooseIndex--; //correction to choose the correct one b/c it adds stuff
-
             GameObject enemyToSpawn = currentLevelEnemies[chooseIndex].obj;
+
             if (enemyToSpawn.CompareTag("Large Asteroid") ||
                 enemyToSpawn.CompareTag("Small Asteroid")) {
                 SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
@@ -113,6 +99,7 @@ public class ObjectSpawner : MonoBehaviour {
             numEnemies--;
 
             yield return new WaitForSeconds(Random.Range(waitBetweenEnemies.x, waitBetweenEnemies.y)); //pause
+
 
             //advance when no more enemies exist
             if (numEnemies <= 0) {
@@ -138,16 +125,48 @@ public class ObjectSpawner : MonoBehaviour {
      */
     IEnumerator IncreaseLevels() {
         while (true) {
+            yield return new WaitForSeconds(20);
             level++;
             PlayerPrefs.SetInt("Level", level);
-            yield return new WaitForSeconds(20);
+            StartCoroutine(RecalculateFrequencies());
         }
     }
 
+    IEnumerator RecalculateFrequencies() {
+        //initialize enemies for level appropriately
+        int numEnemyTypes = 0;
+        for (int index = 0; index < enemies.Length; index++) {
+            if (enemies[index].levelAppearance <= level) {
+                numEnemyTypes++;
+            }
+            yield return null;
+        }
+        Pair[] newLevels = new Pair[numEnemyTypes];
+        int addIndex = 0;
+        for (int index = 0; index < enemies.Length; index++) {
+            if (enemies[index].levelAppearance <= level) {
+                newLevels[addIndex++] = enemies[index];
+            }
+            yield return null;
+        }
+
+        //initialize frequency generator
+        int newTotalFrequency = 0;
+        for (int index = 0; index < newLevels.Length; index++) {
+            newTotalFrequency += newLevels[index].frequency;
+            yield return null;
+        }
+
+        //Send variables back
+        initialRecalculationFinished = true;
+        totalFrequencies = newTotalFrequency;
+        currentLevelEnemies = newLevels;
+    }
+
     /**
-        * Fades the canvas out to an alpha of 0.
- * Canvas will be transparent
- */
+     * Fades the canvas out to an alpha of 0.
+     * Canvas will be transparent
+     */
     private IEnumerator FadeOutText(CanvasGroup canvas, float smoothing) {
         yield return new WaitForSeconds(0.8f);
 

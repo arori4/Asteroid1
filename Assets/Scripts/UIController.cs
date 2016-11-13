@@ -4,7 +4,8 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 
 /**
- * Controls most UI elements
+ * Controls some UI elements
+ * Might be deprecated
  */
 public class UIController : MonoBehaviour {
 
@@ -31,11 +32,11 @@ public class UIController : MonoBehaviour {
 
         //Set score
         if (PlayerPrefs.HasKey("Score")) {
-            score = PlayerPrefs.GetInt("Score");
+            AddScore(PlayerPrefs.GetInt("Score")); //score starts at 0
         }
         else {
             PlayerPrefs.SetInt("Score", 0);
-            score = 0;
+            AddScore(0);
         }
 
         //make sure game over is deactivated
