@@ -45,49 +45,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
             return;
         }
 
-        if (collideDefinition.asteroid) {
-            if (other.CompareTag("Large Asteroid") ||
-                other.CompareTag("Small Asteroid")) {
-                dealDamage(other.transform.root.gameObject);
-            }
-        }
-
-        if (collideDefinition.alien) {
-            if (other.CompareTag("Alien")) {
-                dealDamage(other.transform.root.gameObject);
-            }
-        }
-
-        if (collideDefinition.alienWeapon) {
-            if (other.CompareTag("Alien Weapon")) {
-                dealDamage(other.transform.root.gameObject);
-            }
-        }
-
-        if (collideDefinition.mine) {
-            if (other.CompareTag("Mine")) {
-                dealDamage(other.transform.root.gameObject);
-            }
-        }
-
-        if (collideDefinition.player) {
-            if (other.CompareTag("Player")) {
-                dealDamage(other.transform.root.gameObject);
-            }
-        }
-
-        if (collideDefinition.playerWeapon) {
-            if (other.CompareTag("Player Weapon")) {
-                dealDamage(other.transform.root.gameObject);
-                //player missile detector is not enumerated here b/c it is not a collision
-            }
-        }
-
-        if (collideDefinition.powerup) {
+        if (collideDefinition.collidesWith(other)) {
             if (other.CompareTag("Powerup")) {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
-                dealDamage(other.transform.root.gameObject);
             }
+            dealDamage(other.transform.root.gameObject);
         }
 
     }
@@ -107,6 +69,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
     private void dealDamage(GameObject other) {
         //Get reference to collider
         ObjectCollisionHandler otherCollider = other.GetComponent<ObjectCollisionHandler>();
+
+        //if no collider exists, then don't deal any damage
+        if (otherCollider == null) {
+            return;
+        }
 
         //Different behavior if hitting or is the player
         if (tag.CompareTo("Player") == 0) {
@@ -250,6 +217,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
         return currentHealth;
     }
 
+    public void damage(float amount, string otherTag) {
+        currentHealth -= amount;
+        lastColliderTag = otherTag;
+    }
+
 }
 
 [System.Serializable]
@@ -262,6 +234,56 @@ public class CanCollideWith {
     public bool player;
     public bool playerWeapon;
     public bool powerup;
+
+    public bool collidesWith(Collider other) {
+
+        if (asteroid) {
+            if (other.CompareTag("Large Asteroid") ||
+                other.CompareTag("Small Asteroid") ||
+                other.CompareTag("Asteroid")) {
+                return true;
+            }
+        }
+
+        if (alien) {
+            if (other.CompareTag("Alien")) {
+                return true;
+            }
+        }
+
+        if (alienWeapon) {
+            if (other.CompareTag("Alien Weapon")) {
+                return true;
+            }
+        }
+
+        if (mine) {
+            if (other.CompareTag("Mine")) {
+                return true;
+            }
+        }
+
+        if (player) {
+            if (other.CompareTag("Player")) {
+                return true;
+            }
+        }
+
+        if (playerWeapon) {
+            if (other.CompareTag("Player Weapon")) {
+                return true;
+                //player missile detector is not enumerated here b/c it is not a collision
+            }
+        }
+
+        if (powerup) {
+            if (other.CompareTag("Powerup")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 }
 
