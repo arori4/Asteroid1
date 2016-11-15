@@ -52,6 +52,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         }
 
         if (collideDefinition.collidesWith(other)) {
+            //special consideration for powerups
             if (other.CompareTag("Powerup")) {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
             }
@@ -111,10 +112,6 @@ public class ObjectCollisionHandler : MonoBehaviour {
     }
 
 
-    /*
-     * Auxilary functions 
-     */
-
     public void addHealth(float health) {
         currentHealth = Mathf.Min(currentHealth + health, maxHealth);
     }
@@ -140,9 +137,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
-
             EnemyScoreInfo scoreInfo = GetComponent<EnemyScoreInfo>();
-
             int amount = scoreInfo.score;
             ui.AddScore(amount);
         }
@@ -166,9 +161,9 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 Random.Range(-0.2f, 0.2f) + transform.position.z
             );
 
-            GameObject dropSpawned = alwaysDrops[index].obj;
+            GameObject dropSpawned = dropList[index];
             GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
-            yield return null;
+            //DO NOT YIELD HERE, NEED TO INITIALIZE STRAIGHT MOVER
 
             //If object is a straight mover, then make sure that it goes in a random direction
             ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
@@ -229,13 +224,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
             //if no more exist, then continue
             numNonEssentialDrops--;
             yield return null;
-
         }
 
-        //finally,  indicate that routine is done
+        //finally, indicate that routine is done
         dropCalculationDone = true;
     }
-}
+
+} //end class
 
 [System.Serializable]
 public class CanCollideWith {

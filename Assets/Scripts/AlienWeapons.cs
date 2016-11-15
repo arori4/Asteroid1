@@ -62,7 +62,7 @@ public class GunDefinition {
             weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
 
         //set the velocity to be the normal of the gun plane (up should be correct)
-        spawnedBolt.GetComponent<ObjectStraightMover>().initialDirection = gunLocation.up;
+        spawnedBolt.GetComponent<ObjectStraightMover>().finalDirection = gunLocation.up;
 
         SetNextFire();
     }

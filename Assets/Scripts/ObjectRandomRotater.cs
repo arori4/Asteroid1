@@ -6,7 +6,7 @@ using System.Collections;
  */
 public class ObjectRandomRotater : MonoBehaviour {
 
-    public float rotateSpeed = 3;
+    public float rotateSpeed = 30;
 
     public bool xRotate = true;
     public bool yRotate = true;
