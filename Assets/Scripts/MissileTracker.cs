@@ -1,15 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Handles the missile tracking and homing on different targets
+ */
 public class MissileTracker : MonoBehaviour {
 
     public float trackingRange;
     public float acceleration;
     public float trackingSpeed;
+    public float trackingTime;
 
     SphereCollider trackingCollider;
     Rigidbody rb;
     GameObject target;
+    bool tracking;
 
 	void Start () {
         trackingCollider = GetComponent<SphereCollider>();
@@ -17,12 +22,16 @@ public class MissileTracker : MonoBehaviour {
 
         rb = transform.root.gameObject.GetComponent<Rigidbody>();
         rb.velocity = Vector3.right * 0.2f; //initial velocity is slow
+
+        //Manage tracking
+        tracking = true;
+        StartCoroutine(TurnOffTracking());
         
 	}
 	
     void FixedUpdate() {
-        //track if there is a target
-        if (target != null) {
+        //track if there is a target and is set to tracking
+        if (tracking && target != null) {
             float currentSpeed = rb.velocity.magnitude;
 
             //change direction of velocity vector to slightly go towards target
@@ -47,6 +56,11 @@ public class MissileTracker : MonoBehaviour {
         if (target == null && other.transform.root.gameObject.tag.CompareTo("Alien") == 0) {
             target = other.transform.root.gameObject;
         }
+    }
+
+    private IEnumerator TurnOffTracking() {
+        yield return new WaitForSeconds(trackingTime);
+        tracking = false;
     }
     
 }

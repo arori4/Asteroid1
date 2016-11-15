@@ -25,6 +25,8 @@ public class UIController : MonoBehaviour {
     bool gameOverButtonPressed;
 
     void Start () {
+        Application.targetFrameRate = 60;
+
         //set alphas
         blackFader.alpha = 1;
         gameOverGUI.alpha = 0;

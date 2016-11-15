@@ -8,43 +8,54 @@ public class ObjectSpawner : MonoBehaviour {
     const int LEVEL_MODE = 0;
     const int SURVIVAL_MODE = 1;
     public int mode = 0;
-
-    //level
     public int level = 1;
 
     //Enemies
     public Pair[] enemies;
-    Pair[] currentLevelEnemies;
+
+    //Asteroids
+    public GameObject[] largeAsteroids;
+    public GameObject[] smallAsteroids;
     public Material[] asteroidMaterials;
 
     //Spawn Limits
-    public float topSpawnLimit;
-    public float bottomSpawnLimit;
-    public Vector2 spawnConstraints;
-    public int beginningWait;
-    public Vector2 waitBetweenEnemies;
+    public Vector2 spawnVerticalLimits = new Vector2(-4.35f, 4.35f);
+    public Vector2 spawnOtherLimits;
+    public float beginningWait;
 
-    //Large Text
+    //UI Elements
     public CanvasGroup largeTextCanvas;
     public Text largeText;
 
     //Cache
     int totalFrequencies;
-    int numEnemies = 10;
-    bool initialRecalculationFinished;
+    int numEnemiesLeft = 10;
+    bool recalculationFinished;
+    bool continueSpawningAsteroids;
+    Pair[] currentLevelEnemies;
+    Vector2 asteroidSizeRatio;
+    Vector2 waitBetweenAsteroids;
+    Vector2 waitBetweenEnemies;
+    int maxAsteroidsSpawnAtTime;
+    int maxEnemiesSpawnAtTime;
 
     void Start() {
+
+        //Initialize variables
+        waitBetweenEnemies = new Vector2(1, 2);
+        waitBetweenAsteroids = new Vector2(1, 2);
+        asteroidSizeRatio = new Vector2(7, 4);
+        currentLevelEnemies = new Pair[0];
+
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
             mode = LEVEL_MODE;
-            level = PlayerPrefs.GetInt("Level");
-            numEnemies = 20 + 5 * level;
+            SetLevel(PlayerPrefs.GetInt("Level"));
             largeText.text = "Level " + level;
         }
         else if (PlayerPrefs.GetInt("Mode") == SURVIVAL_MODE) {
             mode = SURVIVAL_MODE;
-            level = 1;
-            numEnemies = 100000000;
+            SetLevel(1);
             largeText.text = "Survive";
             StartCoroutine(IncreaseLevels());
         }
@@ -52,70 +63,160 @@ public class ObjectSpawner : MonoBehaviour {
             print("Mode not set, game will be set to survival mode by default.");
 
             mode = SURVIVAL_MODE;
-            level = 1;
-            numEnemies = 100000000;
+            SetLevel(1);
             largeText.text = "Survive";
             StartCoroutine(IncreaseLevels());
         }
 
-        currentLevelEnemies = new Pair[0];
 
         //Show text and fade it
         largeTextCanvas.alpha = 1;
         StartCoroutine(FadeOutText(largeTextCanvas, 0.4f));
 
         //Start level
-        initialRecalculationFinished = false;
+        recalculationFinished = false;
+        continueSpawningAsteroids = true;
         StartCoroutine(RecalculateFrequencies());
-        StartCoroutine(SpawnWaves());
+        StartCoroutine(SpawnEnemiesCoroutine());
+        StartCoroutine(SpawnAsteroidsCoroutine());
     }
 
-    IEnumerator SpawnWaves() {
-        yield return new WaitForSeconds(beginningWait); //pause
+    private void SetLevel(int newLevel) {
+        //set level
+        level = newLevel;
 
-        while (true) {
-            if (!initialRecalculationFinished) {
+        //check level
+        if (level <= 0) {
+            print("level is less than 0, by default will set back to 1");
+            level = 1;
+        }
+
+        //Set base numenemies left
+        if (mode == LEVEL_MODE) {
+            numEnemiesLeft = 5 * level;
+        }
+        else if (mode == SURVIVAL_MODE) {
+            numEnemiesLeft = 100000000;
+        }
+
+        //attributes for each level
+        if (level >= 1) {
+            waitBetweenEnemies = new Vector2(3, 4);
+            waitBetweenAsteroids = new Vector2(1, 1.5f);
+            maxAsteroidsSpawnAtTime = 1;
+            maxEnemiesSpawnAtTime = 1;
+        }
+        if (level >= 5) {
+            waitBetweenEnemies = new Vector2(2, 3);
+            waitBetweenAsteroids = new Vector2(0.75f, 1.25f);
+            maxAsteroidsSpawnAtTime = 2;
+        }
+        if (level >= 7) {
+            waitBetweenEnemies = new Vector2(2, 2.5f);
+            waitBetweenAsteroids = new Vector2(0.5f, 1.25f);
+        }
+        if (level >= 10) {
+            waitBetweenEnemies = new Vector2(1, 1.5f);
+            waitBetweenAsteroids = new Vector2(0.45f, 1f);
+            maxEnemiesSpawnAtTime = 2;
+            maxAsteroidsSpawnAtTime = 3;
+        }
+        if (level >= 20) {
+            waitBetweenEnemies = new Vector2(0.5f, 1.5f);
+            waitBetweenAsteroids = new Vector2(0.25f, 0.5f);
+            maxAsteroidsSpawnAtTime = 4;
+            maxEnemiesSpawnAtTime = 4;
+        }
+
+
+    }
+
+    private IEnumerator SpawnEnemiesCoroutine() {
+        yield return new WaitForSeconds(beginningWait);
+
+        while (numEnemiesLeft > 0) {
+            if (!recalculationFinished) {
                 yield return new WaitForSeconds(0.5f);
                 continue;
             }
 
-            //Choose a random enemy
-            int chosenFrequency = Random.Range(0, totalFrequencies) + 1;
-            int chooseIndex = 0;
-            while (chosenFrequency > 0) {
-                chosenFrequency -= currentLevelEnemies[chooseIndex++].frequency;
+            //Chose an amount of enemies to spawn at a time
+            int numEnemiesToSpawn = (int)Random.Range(1, maxEnemiesSpawnAtTime);
+
+            for (int index = 0; index < numEnemiesToSpawn; index++) {
+
+                //Choose a random enemy based on ratios
+                int chosenFrequency = Random.Range(0, totalFrequencies) + 1;
+                int chooseIndex = 0;
+                while (chosenFrequency > 0) {
+                    chosenFrequency -= currentLevelEnemies[chooseIndex++].frequency;
+                    yield return null;
+                }
+                chooseIndex--; //correction to choose the correct one b/c it adds stuff
+                GameObject enemyToSpawn = currentLevelEnemies[chooseIndex].obj;
+                yield return null;
+
+                //Spawn enemy
+                SpawnInWave(enemyToSpawn);
+                numEnemiesLeft--;
                 yield return null;
             }
-            chooseIndex--; //correction to choose the correct one b/c it adds stuff
-            GameObject enemyToSpawn = currentLevelEnemies[chooseIndex].obj;
-
-            if (enemyToSpawn.CompareTag("Large Asteroid") ||
-                enemyToSpawn.CompareTag("Small Asteroid")) {
-                SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
-            }
-            else {
-                SpawnInWave(enemyToSpawn);
-            }
-            numEnemies--;
 
             yield return new WaitForSeconds(Random.Range(waitBetweenEnemies.x, waitBetweenEnemies.y)); //pause
+        }
+
+        //advance when no more enemies exist
+        continueSpawningAsteroids = false;
+        yield return new WaitForSeconds(5);
+
+        largeTextCanvas.alpha = 1;
+        largeText.text = "Clear";
+        //TODO: special effect
+
+        StartCoroutine(FadeOutText(largeTextCanvas, 0.3f));
+
+        GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
+
+        yield return new WaitForSeconds(20);
+    }
 
 
-            //advance when no more enemies exist
-            if (numEnemies <= 0) {
-                yield return new WaitForSeconds(5);
+    /**
+     * Coroutine for spawning asteroids.
+     */
+    private IEnumerator SpawnAsteroidsCoroutine() {
+        yield return new WaitForSeconds(beginningWait);
 
-                largeTextCanvas.alpha = 1;
-                largeText.text = "Clear";
-                //TODO: special effect
-
-                StartCoroutine(FadeOutText(largeTextCanvas, 0.3f));
-
-                GetComponent<UIController>().AdvanceLevel();
-
-                yield return new WaitForSeconds(20);
+        while (continueSpawningAsteroids) {
+            if (!recalculationFinished) { //do not start if there is no array calculated
+                yield return new WaitForSeconds(0.5f);
+                continue;
             }
 
+            //Chose an amount of asteroids to spawn at a time
+            int numAsteroidsToSpawn = (int)Random.Range(1, maxAsteroidsSpawnAtTime);
+
+            for (int index = 0; index < numAsteroidsToSpawn; index++){
+
+                //Choose a random asteroid based on ratios
+                GameObject enemyToSpawn = null;
+                float randomSizeSToL = Random.Range(0, asteroidSizeRatio.x + asteroidSizeRatio.y);
+                if (randomSizeSToL < asteroidSizeRatio.x) { //small asteroid chosen
+                    enemyToSpawn = smallAsteroids[Random.Range(0, smallAsteroids.Length)];
+                }
+                else { //large asteroid chosen
+                    enemyToSpawn = largeAsteroids[Random.Range(0, largeAsteroids.Length)];
+                }
+                yield return null;
+
+                //Spawn asteroid
+                SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
+                yield return null;
+            }
+
+
+            //Wait for new asteroid to create
+            yield return new WaitForSeconds(Random.Range(waitBetweenAsteroids.x, waitBetweenAsteroids.y));
         }
     }
 
@@ -123,16 +224,16 @@ public class ObjectSpawner : MonoBehaviour {
      * Increases the level
      * Only for survival mode
      */
-    IEnumerator IncreaseLevels() {
+    private IEnumerator IncreaseLevels() {
         while (true) {
             yield return new WaitForSeconds(20);
-            level++;
+            SetLevel(level + 1);
             PlayerPrefs.SetInt("Level", level);
             StartCoroutine(RecalculateFrequencies());
         }
     }
 
-    IEnumerator RecalculateFrequencies() {
+    private IEnumerator RecalculateFrequencies() {
         //initialize enemies for level appropriately
         int numEnemyTypes = 0;
         for (int index = 0; index < enemies.Length; index++) {
@@ -158,7 +259,7 @@ public class ObjectSpawner : MonoBehaviour {
         }
 
         //Send variables back
-        initialRecalculationFinished = true;
+        recalculationFinished = true;
         totalFrequencies = newTotalFrequency;
         currentLevelEnemies = newLevels;
     }
@@ -188,9 +289,9 @@ public class ObjectSpawner : MonoBehaviour {
     private GameObject SpawnInWave(GameObject obj) {
 
         Vector3 spawnPosition = new Vector3(
-            spawnConstraints.x,
-            spawnConstraints.y,
-            Random.Range(topSpawnLimit, bottomSpawnLimit));
+            spawnOtherLimits.x,
+            spawnOtherLimits.y,
+            Random.Range(spawnVerticalLimits.x, spawnVerticalLimits.y));
 
         Quaternion spawnRotation = Quaternion.identity;
 

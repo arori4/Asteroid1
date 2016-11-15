@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Randomly rotates the object based on the rotate speed
+ */
 public class ObjectRandomRotater : MonoBehaviour {
 
     public float rotateSpeed = 3;
@@ -12,8 +15,12 @@ public class ObjectRandomRotater : MonoBehaviour {
     float xRotateSpeed;
     float yRotateSpeed;
     float zRotateSpeed;
-    
+
+    Vector3 rotation;
+
 	void Start () {
+        rotation = new Vector3(0, 0, 0);
+
         if (xRotate) {
             xRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
         }
@@ -26,7 +33,10 @@ public class ObjectRandomRotater : MonoBehaviour {
     }
 	
 	void Update () {
-        gameObject.transform.Rotate(new Vector3(xRotateSpeed, yRotateSpeed, zRotateSpeed));
+        rotation.x = xRotateSpeed * Time.deltaTime;
+        rotation.y = yRotateSpeed * Time.deltaTime;
+        rotation.z = zRotateSpeed * Time.deltaTime;
+        gameObject.transform.Rotate(rotation);
 
     }
 }

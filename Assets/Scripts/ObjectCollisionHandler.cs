@@ -1,26 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class ObjectCollisionHandler : MonoBehaviour {
 
+    //collision and game health
     public CanCollideWith collideDefinition;
     public GameObject[] explosionList;
     public float maxHealth;
     public float damageAmount;
 
     //drops
-    public DropPair[] drops;
+    public DropPair[] sometimesDrops;
     public DropPair[] alwaysDrops;
-    public int maxDrops;
+    public int maxNonEssentialDrops;
 
+    bool dropCalculationDone = false;
+    bool startedDeathCoroutine = false;
     float currentHealth;
     GameObject gameController;
     UIController ui;
     ObjectSpawner objectSpawner;
-
     string lastColliderTag = ""; //for keeping tab of score right now
-
+    List<GameObject> dropList = new List<GameObject>();
 
     void Start() {
         //find first game object with tag 
@@ -36,6 +39,9 @@ public class ObjectCollisionHandler : MonoBehaviour {
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
         objectSpawner = gameController.GetComponent<ObjectSpawner>();
+
+        //calculate drops
+        StartCoroutine(CalculateDropsCoroutine());
     }
 
     void OnTriggerEnter(Collider other) {
@@ -98,109 +104,9 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     void Update() {
         //kill when current health <= 0
-        if (currentHealth <= 0) {
-
-            //create explosion if it exists
-            if (explosionList.Length > 0) {
-                Instantiate(explosionList[Random.Range(0, explosionList.Length)],
-                    transform.position, transform.rotation);
-            }
-
-            //handle score
-            if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
-                lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
-
-                EnemyScoreInfo scoreInfo = GetComponent<EnemyScoreInfo>();
-                
-                int amount = scoreInfo.score;
-                ui.AddScore(amount);
-            }
-
-            //handle if player dies
-            if (tag.CompareTo("Player") == 0) {
-                objectSpawner.StopAllCoroutines();
-                ui.GameOver();
-            }
-
-            //handle drops
-            if (drops.Length > 0 || alwaysDrops.Length > 0) {
-                //calculate the maximum possible number of drops to do, regardless of user settings
-                //find total drop frequencies in same loop
-                int amountOfDrops = 0;
-                int dropFrequencies = 0;
-                for (int index = 0; index < drops.Length; index++) {
-                    amountOfDrops += drops[index].numDrops;
-                    dropFrequencies += drops[index].frequency;
-                }
-                amountOfDrops = Mathf.Min(amountOfDrops, maxDrops + 1);
-                amountOfDrops = Random.Range(0, amountOfDrops);
-
-                //instantiate essential drops
-                int amountOfAlwaysDrops = 0;
-                for (int index = 0; index < alwaysDrops.Length; index++) {
-                    amountOfAlwaysDrops += alwaysDrops[index].numDrops;
-
-                    for (int inner = 0; inner < alwaysDrops[index].numDrops; inner++) {
-                        //must instantiate drops near the destroyed object, but not all together
-                        Vector3 spawnLocation = new Vector3(
-                            Random.Range(-0.2f, 0.2f) + transform.position.x,
-                            transform.position.y,
-                            Random.Range(-0.2f, 0.2f) + transform.position.z);
-
-                        GameObject dropSpawned = alwaysDrops[index].obj;
-                        GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
-
-                        //If object is a straight mover, then make sure that it goes in a random direction
-                        ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
-                        if (straightMover != null) {
-                            straightMover.wasDropped = true;
-                        }
-                    }
-                }
-
-                //Adjust amount of drops to always drops
-                amountOfDrops -= amountOfAlwaysDrops;
-
-                //instantiate non-essential drops
-                while (amountOfDrops > 0) {
-                    int chosenFrequency = Random.Range(0, dropFrequencies) + 1;
-                    int chooseIndex = 0;
-                    while (chosenFrequency > 0) {
-                        chosenFrequency -= drops[chooseIndex++].frequency;
-                    }
-                    chooseIndex--; //correction to choose the correct one b/c it adds stuff
-
-                    //choose game object only if there are enough
-                    GameObject dropSpawned;
-                    if (drops[chooseIndex].numDrops > 0) {
-                        dropSpawned = drops[chooseIndex].obj;
-                        drops[chooseIndex].numDrops--;
-                    }
-                    else { //if no more exist, then continue
-                        amountOfDrops--;
-                        continue;
-                    }
-
-                    //must instantiate drops near the destroyed object, but not all together
-                    Vector3 spawnLocation = new Vector3(
-                        Random.Range(-0.2f, 0.2f) + transform.position.x,
-                        transform.position.y,
-                        Random.Range(-0.2f, 0.2f) + transform.position.z);
-
-                    GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
-
-                    //If object is a straight mover, then make sure that it goes in a random direction
-                    ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
-                    if (straightMover != null) {
-                        straightMover.wasDropped = true;
-                    }
-
-                    amountOfDrops--;
-                }
-            }
-
-            //finally kill object
-            Destroy(gameObject);
+        if (currentHealth <= 0 && !startedDeathCoroutine) {
+            StartCoroutine(DeathCoroutine());
+            startedDeathCoroutine = true;
         }
     }
 
@@ -222,6 +128,113 @@ public class ObjectCollisionHandler : MonoBehaviour {
         lastColliderTag = otherTag;
     }
 
+
+    private IEnumerator DeathCoroutine() {
+        //create explosion if it exists
+        if (explosionList.Length > 0) {
+            Instantiate(explosionList[Random.Range(0, explosionList.Length)],
+                transform.position, transform.rotation);
+        }
+        yield return null;
+
+        //handle score
+        if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
+            lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
+
+            EnemyScoreInfo scoreInfo = GetComponent<EnemyScoreInfo>();
+
+            int amount = scoreInfo.score;
+            ui.AddScore(amount);
+        }
+
+        //handle if player dies
+        if (tag.CompareTo("Player") == 0) {
+            objectSpawner.StopAllCoroutines();
+            ui.GameOver();
+        }
+
+        //stop if calculations aren't done
+        while (!dropCalculationDone) {
+            yield return null;
+        }
+
+        //drop everything
+        for (int index = 0; index < dropList.Count; index++) {
+            Vector3 spawnLocation = new Vector3(
+                Random.Range(-0.2f, 0.2f) + transform.position.x,
+                transform.position.y,
+                Random.Range(-0.2f, 0.2f) + transform.position.z
+            );
+
+            GameObject dropSpawned = alwaysDrops[index].obj;
+            GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
+            yield return null;
+
+            //If object is a straight mover, then make sure that it goes in a random direction
+            ObjectStraightMover straightMover = newObj.GetComponent<ObjectStraightMover>();
+            if (straightMover != null) {
+                straightMover.wasDropped = true;
+            }
+            yield return null;
+        }
+
+        //finally kill object
+        Destroy(gameObject);
+    }
+    
+
+    /**
+     * Helper coroutine to calculate drops
+     */
+    private IEnumerator CalculateDropsCoroutine() {
+
+        //add in all essential drops
+        for (int outer = 0; outer < alwaysDrops.Length; outer++) {
+            for (int inner = 0; inner < alwaysDrops[outer].numDrops; inner++) {
+                dropList.Add(alwaysDrops[outer].obj);
+                yield return null;
+            }
+            yield return null;
+        }
+
+        //find total drop frequencies in same loop
+        int numNonEssentialDrops = 0;
+        int totalDropFrequencies = 0;
+        for (int index = 0; index < sometimesDrops.Length; index++) {
+            numNonEssentialDrops += sometimesDrops[index].numDrops;
+            totalDropFrequencies += sometimesDrops[index].frequency;
+            yield return null;
+        }
+        //calculate the maximum possible number of drops to do, regardless of user settings
+        numNonEssentialDrops = Random.Range(0, Mathf.Min(numNonEssentialDrops, maxNonEssentialDrops));
+
+        //add nonessential drops to drop list
+        while (numNonEssentialDrops > 0) {
+            int chosenFrequency = Random.Range(0, totalDropFrequencies) + 1;
+            int chooseIndex = 0;
+            while (chosenFrequency > 0) {
+                chosenFrequency -= sometimesDrops[chooseIndex].frequency;
+                chooseIndex++;
+                yield return null;
+            }
+            chooseIndex--; //correction to choose the correct one b/c it adds stuff
+
+            //choose game object only if there are enough
+            //note this biases towards rarity. however, with enough drops, this will not occur as often
+            if (sometimesDrops[chooseIndex].numDrops > 0) {
+                dropList.Add(sometimesDrops[chooseIndex].obj);
+                sometimesDrops[chooseIndex].numDrops--;
+            }
+
+            //if no more exist, then continue
+            numNonEssentialDrops--;
+            yield return null;
+
+        }
+
+        //finally,  indicate that routine is done
+        dropCalculationDone = true;
+    }
 }
 
 [System.Serializable]
@@ -238,9 +251,7 @@ public class CanCollideWith {
     public bool collidesWith(Collider other) {
 
         if (asteroid) {
-            if (other.CompareTag("Large Asteroid") ||
-                other.CompareTag("Small Asteroid") ||
-                other.CompareTag("Asteroid")) {
+            if (other.CompareTag("Asteroid")) {
                 return true;
             }
         }
