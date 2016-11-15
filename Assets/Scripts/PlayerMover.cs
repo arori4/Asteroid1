@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 
 [System.Serializable]
-public class Boundary {
+public struct Boundary {
     public float left;
     public float right;
     public float top;

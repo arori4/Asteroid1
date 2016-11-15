@@ -10,40 +10,40 @@ public class ObjectSpawner : MonoBehaviour {
     public int mode = 0;
     public int level = 1;
 
-    //Enemies
-    public Pair[] enemies;
-
-    //Asteroids
-    public GameObject[] largeAsteroids;
-    public GameObject[] smallAsteroids;
-    public Material[] asteroidMaterials;
-
     //Spawn Limits
     public Vector2 spawnVerticalLimits = new Vector2(-4.35f, 4.35f);
     public Vector2 spawnOtherLimits;
     public float beginningWait;
 
+    //Enemies
+    public Pair[] enemies;
+    Pair[] currentLevelEnemies;
+    bool recalculationFinished;
+    int totalEnemyFrequencies;
+    int numEnemiesLeft;
+    int maxEnemiesSpawnAtTime;
+    Vector2 enemyWaitTime;
+
+    //Asteroids
+    public GameObject[] largeAsteroids;
+    public GameObject[] smallAsteroids;
+    public Material[] asteroidMaterials;
+    bool continueSpawningAsteroids;
+    int maxAsteroidsSpawnAtTime;
+    float asteroidSpeed;
+    Vector2 asteroidSizeRatio;
+    Vector2 asteroidWaitTime;
+
     //UI Elements
     public CanvasGroup largeTextCanvas;
     public Text largeText;
-
-    //Cache
-    int totalFrequencies;
-    int numEnemiesLeft = 10;
-    bool recalculationFinished;
-    bool continueSpawningAsteroids;
-    Pair[] currentLevelEnemies;
-    Vector2 asteroidSizeRatio;
-    Vector2 waitBetweenAsteroids;
-    Vector2 waitBetweenEnemies;
-    int maxAsteroidsSpawnAtTime;
-    int maxEnemiesSpawnAtTime;
+    
 
     void Start() {
 
         //Initialize variables
-        waitBetweenEnemies = new Vector2(1, 2);
-        waitBetweenAsteroids = new Vector2(1, 2);
+        enemyWaitTime = new Vector2(1, 2);
+        asteroidWaitTime = new Vector2(1, 2);
         asteroidSizeRatio = new Vector2(7, 4);
         currentLevelEnemies = new Pair[0];
 
@@ -60,14 +60,12 @@ public class ObjectSpawner : MonoBehaviour {
             StartCoroutine(IncreaseLevels());
         }
         else {
-            print("Mode not set, game will be set to survival mode by default.");
-
+            print("Mode is invalid, game will be set to survival mode by default. " + mode);
             mode = SURVIVAL_MODE;
             SetLevel(1);
             largeText.text = "Survive";
             StartCoroutine(IncreaseLevels());
         }
-
 
         //Show text and fade it
         largeTextCanvas.alpha = 1;
@@ -99,31 +97,34 @@ public class ObjectSpawner : MonoBehaviour {
             numEnemiesLeft = 100000000;
         }
 
+        //level dependent attributes
+        asteroidSpeed = 2 + level * 0.3f;
+
         //attributes for each level
         if (level >= 1) {
-            waitBetweenEnemies = new Vector2(3, 4);
-            waitBetweenAsteroids = new Vector2(1, 1.5f);
+            enemyWaitTime = new Vector2(2.5f, 4f);
+            asteroidWaitTime = new Vector2(1f, 1.5f);
             maxAsteroidsSpawnAtTime = 1;
             maxEnemiesSpawnAtTime = 1;
         }
         if (level >= 5) {
-            waitBetweenEnemies = new Vector2(2, 3);
-            waitBetweenAsteroids = new Vector2(0.75f, 1.25f);
+            enemyWaitTime = new Vector2(2f, 3f);
+            asteroidWaitTime = new Vector2(0.75f, 1.25f);
             maxAsteroidsSpawnAtTime = 2;
         }
         if (level >= 7) {
-            waitBetweenEnemies = new Vector2(2, 2.5f);
-            waitBetweenAsteroids = new Vector2(0.5f, 1.25f);
+            enemyWaitTime = new Vector2(1.5f, 2.5f);
+            asteroidWaitTime = new Vector2(0.5f, 1.25f);
         }
         if (level >= 10) {
-            waitBetweenEnemies = new Vector2(1, 1.5f);
-            waitBetweenAsteroids = new Vector2(0.45f, 1f);
+            enemyWaitTime = new Vector2(1f, 1.5f);
+            asteroidWaitTime = new Vector2(0.45f, 1f);
             maxEnemiesSpawnAtTime = 2;
             maxAsteroidsSpawnAtTime = 3;
         }
         if (level >= 20) {
-            waitBetweenEnemies = new Vector2(0.5f, 1.5f);
-            waitBetweenAsteroids = new Vector2(0.25f, 0.5f);
+            enemyWaitTime = new Vector2(0.5f, 1.5f);
+            asteroidWaitTime = new Vector2(0.25f, 0.5f);
             maxAsteroidsSpawnAtTime = 4;
             maxEnemiesSpawnAtTime = 4;
         }
@@ -146,7 +147,7 @@ public class ObjectSpawner : MonoBehaviour {
             for (int index = 0; index < numEnemiesToSpawn; index++) {
 
                 //Choose a random enemy based on ratios
-                int chosenFrequency = Random.Range(0, totalFrequencies) + 1;
+                int chosenFrequency = Random.Range(0, totalEnemyFrequencies) + 1;
                 int chooseIndex = 0;
                 while (chosenFrequency > 0) {
                     chosenFrequency -= currentLevelEnemies[chooseIndex++].frequency;
@@ -162,7 +163,7 @@ public class ObjectSpawner : MonoBehaviour {
                 yield return null;
             }
 
-            yield return new WaitForSeconds(Random.Range(waitBetweenEnemies.x, waitBetweenEnemies.y)); //pause
+            yield return new WaitForSeconds(Random.Range(enemyWaitTime.x, enemyWaitTime.y)); //pause
         }
 
         //advance when no more enemies exist
@@ -210,13 +211,14 @@ public class ObjectSpawner : MonoBehaviour {
                 yield return null;
 
                 //Spawn asteroid
-                SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
+                GameObject spawnedEnemy = SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
+                spawnedEnemy.GetComponent<ObjectStraightMover>().speed = asteroidSpeed;
                 yield return null;
             }
 
 
             //Wait for new asteroid to create
-            yield return new WaitForSeconds(Random.Range(waitBetweenAsteroids.x, waitBetweenAsteroids.y));
+            yield return new WaitForSeconds(Random.Range(asteroidWaitTime.x, asteroidWaitTime.y));
         }
     }
 
@@ -260,7 +262,7 @@ public class ObjectSpawner : MonoBehaviour {
 
         //Send variables back
         recalculationFinished = true;
-        totalFrequencies = newTotalFrequency;
+        totalEnemyFrequencies = newTotalFrequency;
         currentLevelEnemies = newLevels;
     }
 
@@ -280,10 +282,12 @@ public class ObjectSpawner : MonoBehaviour {
     /**
      * Spawns an object with a random material
      */
-    private void SpawnRngMaterial(GameObject obj, Material[] materials) {
+    private GameObject SpawnRngMaterial(GameObject obj, Material[] materials) {
         GameObject spawnedObj = SpawnInWave(obj);
         spawnedObj.GetComponentInChildren<Renderer>().material =
             materials[Random.Range(0, materials.Length)];
+
+        return spawnedObj;
     }
 
     private GameObject SpawnInWave(GameObject obj) {

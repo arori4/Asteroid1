@@ -46,8 +46,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     void OnTriggerEnter(Collider other) {
 
-        //ignore missile detector
+        //ignore detectors
         if (CompareTag("Player Missile Detector")) {
+            return;
+        }
+        if (CompareTag("Friend Detector")) {
             return;
         }
 
@@ -238,6 +241,7 @@ public class CanCollideWith {
     public bool alien;
     public bool alienWeapon;
     public bool asteroid;
+    public bool friend;
     public bool mine;
     public bool player;
     public bool playerWeapon;
@@ -259,6 +263,12 @@ public class CanCollideWith {
 
         if (alienWeapon) {
             if (other.CompareTag("Alien Weapon")) {
+                return true;
+            }
+        }
+
+        if (friend) {
+            if (other.CompareTag("Friend")) {
                 return true;
             }
         }

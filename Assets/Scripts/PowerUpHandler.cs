@@ -7,6 +7,7 @@ public class PowerUpHandler : MonoBehaviour {
     public EnergyPowerup energyDef;
     public WeaponPowerup changeWeaponDef;
     public MissilePowerup changeMissileDef;
+    public SpawnObject spawnObjectDef;
 
     GameObject player;
     ObjectCollisionHandler playerCollisionHandler;
@@ -37,6 +38,9 @@ public class PowerUpHandler : MonoBehaviour {
         if (changeMissileDef.activated) {
             playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount);
         }
+        if (spawnObjectDef.activated) {
+            Instantiate(spawnObjectDef.objectToSpawn, transform.position, Quaternion.identity);
+        }
     }
 	
 }
@@ -65,4 +69,9 @@ public class WeaponPowerup : PowerupDefinition {
 public class MissilePowerup : PowerupDefinition {
     public GameObject missileType;
     public int amount;
+}
+
+[System.Serializable]
+public class SpawnObject : PowerupDefinition {
+    public GameObject objectToSpawn;
 }
