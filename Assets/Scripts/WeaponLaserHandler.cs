@@ -16,15 +16,11 @@ public class WeaponLaserHandler : MonoBehaviour {
         //Upon initialization, destroy collision handler and fade
         StartCoroutine(Fade());
     }
-
-    void Update () {
-
-    }
-
+    
     private IEnumerator Fade() {
         yield return new WaitForSeconds(0.1f);
 
-        foreach (Collider c in gameObject.GetComponents<Collider>()) {
+        foreach (Collider c in gameObject.GetComponentsInChildren<Collider>()) {
             c.enabled = false;
             yield return null;
         }

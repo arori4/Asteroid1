@@ -241,6 +241,7 @@ public class CanCollideWith {
     public bool alien;
     public bool alienWeapon;
     public bool asteroid;
+    public bool barrier;
     public bool friend;
     public bool mine;
     public bool player;
@@ -263,6 +264,12 @@ public class CanCollideWith {
 
         if (alienWeapon) {
             if (other.CompareTag("Alien Weapon")) {
+                return true;
+            }
+        }
+
+        if (barrier) {
+            if (other.CompareTag("Barrier")) {
                 return true;
             }
         }
