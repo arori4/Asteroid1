@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Defines and handles powerups.
+ */
 public class PowerUpHandler : MonoBehaviour {
 
     public HealthPowerup healthDef;

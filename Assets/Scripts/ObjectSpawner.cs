@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class ObjectSpawner : MonoBehaviour {
 
@@ -9,6 +10,7 @@ public class ObjectSpawner : MonoBehaviour {
     const int SURVIVAL_MODE = 1;
     public int mode = 0;
     public int level = 1;
+    public float survivalLevelTime = 15f;
 
     //Spawn Limits
     public Vector2 spawnVerticalLimits = new Vector2(-4.35f, 4.35f);
@@ -16,10 +18,14 @@ public class ObjectSpawner : MonoBehaviour {
     public float beginningWait;
 
     //Enemies
-    public Pair[] enemies;
-    Pair[] currentLevelEnemies;
-    bool recalculationFinished;
+    public List<Pair> enemies;
+    List<Pair> currentLevelEnemies = new List<Pair>();
     int totalEnemyFrequencies;
+    //Enemy Weapons
+    public List<Pair> enemyWeapons;
+    List<Pair> currentLevelWeapons = new List<Pair>();
+    int totalWeaponFrequencies;
+
     int numEnemiesLeft;
     int maxEnemiesSpawnAtTime;
     Vector2 enemyWaitTime;
@@ -37,7 +43,9 @@ public class ObjectSpawner : MonoBehaviour {
     //UI Elements
     public CanvasGroup largeTextCanvas;
     public Text largeText;
-    
+
+    //Locks
+    bool recalculationFinished;
 
     void Start() {
 
@@ -45,7 +53,6 @@ public class ObjectSpawner : MonoBehaviour {
         enemyWaitTime = new Vector2(1, 2);
         asteroidWaitTime = new Vector2(1, 2);
         asteroidSizeRatio = new Vector2(7, 4);
-        currentLevelEnemies = new Pair[0];
 
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
@@ -129,7 +136,6 @@ public class ObjectSpawner : MonoBehaviour {
             maxEnemiesSpawnAtTime = 4;
         }
 
-
     }
 
     private IEnumerator SpawnEnemiesCoroutine() {
@@ -146,26 +152,32 @@ public class ObjectSpawner : MonoBehaviour {
 
             for (int index = 0; index < numEnemiesToSpawn; index++) {
 
-                //Choose a random enemy based on ratios
-                int chosenFrequency = Random.Range(0, totalEnemyFrequencies) + 1;
-                int chooseIndex = 0;
-                while (chosenFrequency > 0) {
-                    chosenFrequency -= currentLevelEnemies[chooseIndex++].frequency;
-                    yield return null;
-                }
-                chooseIndex--; //correction to choose the correct one b/c it adds stuff
-                GameObject enemyToSpawn = currentLevelEnemies[chooseIndex].obj;
+                GameObject enemyToSpawn = ChooseRandomFromFrequency(currentLevelEnemies, totalEnemyFrequencies);
                 yield return null;
 
                 //Spawn enemy
-                SpawnInWave(enemyToSpawn);
+                GameObject newEnemy = SpawnInWave(enemyToSpawn);
                 numEnemiesLeft--;
                 yield return null;
+
+                //Set different enemy guns if alien
+                if (newEnemy.CompareTag("Alien")) {
+                    GunDefinition[] guns = newEnemy.GetComponent<AlienWeapons>().guns;
+
+                    for (int gunIndex = 0; gunIndex < guns.Length; gunIndex++) {
+                        //Choose random gun
+                        GameObject gunToSet = ChooseRandomFromFrequency(currentLevelWeapons, totalWeaponFrequencies);
+                        yield return null;
+
+                        guns[gunIndex].ChangeWeapon(gunToSet);
+                        yield return null;
+                    }
+                }
+
+                yield return new WaitForSeconds(Random.Range(enemyWaitTime.x, enemyWaitTime.y)); //pause
             }
 
-            yield return new WaitForSeconds(Random.Range(enemyWaitTime.x, enemyWaitTime.y)); //pause
         }
-
         //advance when no more enemies exist
         continueSpawningAsteroids = false;
         yield return new WaitForSeconds(5);
@@ -179,6 +191,21 @@ public class ObjectSpawner : MonoBehaviour {
         GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
 
         yield return new WaitForSeconds(20);
+    }
+
+
+    /**
+     * Chooses a random object based on the pair list given.
+     */
+    private GameObject ChooseRandomFromFrequency(List<Pair> pairs, int totalFrequency) {
+        int chosenFrequency = Random.Range(0, totalFrequency) + 1;
+        int chooseIndex = 0;
+        while (chosenFrequency > 0) {
+            chosenFrequency -= pairs[chooseIndex++].frequency;
+        }
+        chooseIndex--; //correction to choose the correct one b/c it adds stuff
+
+        return pairs[chooseIndex].obj;
     }
 
 
@@ -228,7 +255,7 @@ public class ObjectSpawner : MonoBehaviour {
      */
     private IEnumerator IncreaseLevels() {
         while (true) {
-            yield return new WaitForSeconds(20);
+            yield return new WaitForSeconds(survivalLevelTime);
             SetLevel(level + 1);
             PlayerPrefs.SetInt("Level", level);
             StartCoroutine(RecalculateFrequencies());
@@ -236,34 +263,46 @@ public class ObjectSpawner : MonoBehaviour {
     }
 
     private IEnumerator RecalculateFrequencies() {
-        //initialize enemies for level appropriately
-        int numEnemyTypes = 0;
-        for (int index = 0; index < enemies.Length; index++) {
-            if (enemies[index].levelAppearance <= level) {
-                numEnemyTypes++;
-            }
-            yield return null;
-        }
-        Pair[] newLevels = new Pair[numEnemyTypes];
-        int addIndex = 0;
-        for (int index = 0; index < enemies.Length; index++) {
-            if (enemies[index].levelAppearance <= level) {
-                newLevels[addIndex++] = enemies[index];
-            }
-            yield return null;
-        }
+        //ENEMIES
+        //Initialize needed variables
+        List<Pair> enemiesThisLevel = new List<Pair>();
+        int newEnemyFrequency = 0;
+        yield return null;
 
-        //initialize frequency generator
-        int newTotalFrequency = 0;
-        for (int index = 0; index < newLevels.Length; index++) {
-            newTotalFrequency += newLevels[index].frequency;
+        //initialize enemies for level appropriately
+        for (int index = 0; index < enemies.Count; index++) {
+            if (enemies[index].levelAppearance <= level) {
+                enemiesThisLevel.Add(enemies[index]);
+                newEnemyFrequency += enemies[index].frequency;
+            }
             yield return null;
         }
 
         //Send variables back
+        totalEnemyFrequencies = newEnemyFrequency;
+        currentLevelEnemies = enemiesThisLevel;
+
+        //ENEMY WEAPONS
+        //Initialize needed variables
+        List<Pair> weaponsThisLevel = new List<Pair>();
+        int newWeaponFrequency = 0;
+        yield return null;
+
+        //initialize enemies for level appropriately
+        for (int index = 0; index < enemyWeapons.Count; index++) {
+            if (enemyWeapons[index].levelAppearance <= level) {
+                weaponsThisLevel.Add(enemyWeapons[index]);
+                newWeaponFrequency += enemyWeapons[index].frequency;
+            }
+            yield return null;
+        }
+
+        //Send variables back
+        totalWeaponFrequencies = newWeaponFrequency;
+        currentLevelWeapons = weaponsThisLevel;
+
+        //finally, let recalculation be finished
         recalculationFinished = true;
-        totalEnemyFrequencies = newTotalFrequency;
-        currentLevelEnemies = newLevels;
     }
 
     /**

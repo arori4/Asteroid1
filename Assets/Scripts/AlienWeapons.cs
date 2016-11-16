@@ -20,16 +20,13 @@ public class AlienWeapons : MonoBehaviour {
         }
         
     }
-	
 
     IEnumerator FireSequence(GunDefinition gun) {
         while (true) {
             yield return new WaitForSecondsRealtime(gun.GetNextFire());
             gun.Fire();
         }
-
     }
-    
 
 }
 
@@ -68,7 +65,7 @@ public class GunDefinition {
     }
 
 
-    void ChangeWeapon(GameObject weapon) {
+    public void ChangeWeapon(GameObject weapon) {
         weaponType = weapon;
         fireRate = new Vector2(0, 0);
         fireRate.x = weapon.GetComponent<WeaponInfo>().fireRate;
