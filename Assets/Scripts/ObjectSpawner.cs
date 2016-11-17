@@ -162,7 +162,15 @@ public class ObjectSpawner : MonoBehaviour {
 
                 //Set different enemy guns if alien
                 if (newEnemy.CompareTag("Alien")) {
-                    GunDefinition[] guns = newEnemy.GetComponent<AlienWeapons>().guns;
+                    AlienWeapons weapons = newEnemy.GetComponent<AlienWeapons>();
+                    GunDefinition[] guns = null;
+                    if (weapons != null) {
+                        guns = weapons.guns;
+                    }
+                    else {
+                        weapons = newEnemy.GetComponentInChildren<AlienWeapons>();
+                        guns = weapons.guns;
+                    }
 
                     for (int gunIndex = 0; gunIndex < guns.Length; gunIndex++) {
                         //Choose random gun

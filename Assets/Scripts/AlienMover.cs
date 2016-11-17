@@ -1,28 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Defines AI for alien movement
+ */
 public class AlienMover : MonoBehaviour {
 
     public Vector3 initialDirection = Vector3.left;
     public float speed;
     public float tiltForward;
     public float tiltSide;
-    public Boundary boundary;
     public Vector2 smoothingBounds;
 
     public MoveBackwards moveBackwards;
     public MoveSideways moveSideways;
     public TargetPlayer targetPlayer;
-
-    Rigidbody rb;
+    
     float targetX;
     float targetZ;
     float smoothing;
+    Vector3 currentVelocity;
 
     void Start () {
-        rb = GetComponent<Rigidbody>();
         Vector3 normalizedVelocity = Vector3.Normalize(initialDirection);
-        rb.velocity = normalizedVelocity * speed;
+        currentVelocity = normalizedVelocity * speed;
 
         targetX = -speed;
         targetZ = 0;
@@ -38,6 +39,19 @@ public class AlienMover : MonoBehaviour {
             StartCoroutine(TargetPlayer());
         }
     }
+
+    void Update() {
+        //Set movement
+        currentVelocity.x = Mathf.MoveTowards(currentVelocity.x, targetX, Time.deltaTime * smoothing);
+        currentVelocity.z = Mathf.MoveTowards(currentVelocity.z, targetZ, Time.deltaTime * smoothing);
+
+        //move the alien
+        transform.position += currentVelocity * Time.deltaTime;
+
+        //Set pitch and yaw
+        transform.rotation = Quaternion.Euler(currentVelocity.z * tiltSide, currentVelocity.x * -tiltForward, 0.0f);
+    }
+
 
     IEnumerator Sideways() {
         while (true) {
@@ -88,23 +102,9 @@ public class AlienMover : MonoBehaviour {
         }
     }
 
-
-    void FixedUpdate() {
-        float maneuverX = Mathf.MoveTowards(rb.velocity.x, targetX, Time.deltaTime * smoothing);
-        float maneuverZ = Mathf.MoveTowards(rb.velocity.z, targetZ, Time.deltaTime * smoothing);
-        rb.velocity = new Vector3(maneuverX, 0, maneuverZ);
-
-        //clamp inside bounds
-        rb.position = new Vector3(
-            Mathf.Clamp(rb.position.x, boundary.left, boundary.right),
-            0,
-            Mathf.Clamp(rb.position.z, boundary.bottom, boundary.top)
-        );
-
-        rb.rotation = Quaternion.Euler(rb.velocity.z * tiltSide, rb.velocity.x * -tiltForward, 0.0f);
-    }
-
 }
+
+
 
 [System.Serializable]
 public class Setting {
@@ -117,7 +117,6 @@ public class MoveBackwards : Setting {
     public Vector2 frequencyConstraints;
     public float movementConstraints;
 }
-
 
 [System.Serializable]
 public class MoveSideways : Setting {

@@ -17,13 +17,11 @@ public class ObjectStraightMover : MonoBehaviour {
     public float dropTime = 1;
     public bool wasDropped = false;
 
-    Rigidbody rb;
+    Vector3 currentVelocity;
     Vector3 finalVelocity;
+    float velocityLerpCounter = 0;
 
     void Start () {
-        //Find required components
-        rb = GetComponent<Rigidbody>();
-
         //Create final direction
         Vector3 resultantDirection = new Vector3(0, 0, 0);
         Quaternion finalRotation = Quaternion.Euler(0, Random.Range(-finalAngle, finalAngle), 0);
@@ -38,11 +36,14 @@ public class ObjectStraightMover : MonoBehaviour {
             resultantDirection = Vector3.Normalize(finalDirection);
         }
 
-        rb.velocity = resultantDirection * speed;
+        currentVelocity = resultantDirection * speed;
 	}
 	
-    void FixedUpdate() {
-        rb.velocity = Vector3.Lerp(rb.velocity, finalVelocity, Time.deltaTime / dropTime);
+    void Update() {
+        currentVelocity = Vector3.Lerp(currentVelocity, finalVelocity, velocityLerpCounter);
+        velocityLerpCounter += Time.deltaTime / dropTime;
+        
+        transform.position += currentVelocity * Time.deltaTime;
     }
     
 }

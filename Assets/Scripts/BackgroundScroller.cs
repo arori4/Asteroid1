@@ -10,16 +10,27 @@ public class BackgroundScroller : MonoBehaviour {
 
     public float tileSpeed = 0.3f;
     public float tileLength = 25;
-    public Material[] backgrounds;
+    public BackgroundDef[] backgrounds;
+
+    public Lights lights;
 
     
     void Start() {
+        //Chooose number
+        int chosenIndex = Random.Range(0, backgrounds.Length);
+
         //choose a random background
-        Material chosenBackground = backgrounds[Random.Range(0, backgrounds.Length)];
+        Material chosenBackground = backgrounds[chosenIndex].material;
 
         //set for each tile
         tile1.GetComponent<Renderer>().material = chosenBackground;
         tile2.GetComponent<Renderer>().material = chosenBackground;
+
+        //set lighting colors
+        lights.mainLight.color = backgrounds[chosenIndex].mainLightColor;
+        lights.light1.color = backgrounds[chosenIndex].light1Color;
+        lights.light2.color = backgrounds[chosenIndex].light2Color;
+        lights.light3.color = backgrounds[chosenIndex].light3Color;
     }
     
     void Update() {
@@ -27,4 +38,25 @@ public class BackgroundScroller : MonoBehaviour {
         tile1.transform.position = tile1Start + Vector3.left * newPosition;
         tile2.transform.position = tile2Start + Vector3.left * newPosition;
     }
+}
+
+[System.Serializable]
+public struct BackgroundDef {
+
+    public Material material;
+    public Color mainLightColor;
+    public Color light1Color;
+    public Color light2Color;
+    public Color light3Color;
+
+}
+
+[System.Serializable]
+public struct Lights {
+
+    public Light mainLight;
+    public Light light1;
+    public Light light2;
+    public Light light3;
+    
 }

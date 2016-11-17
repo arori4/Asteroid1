@@ -7,6 +7,7 @@ using System.Collections;
 public class ObjectRandomRotater : MonoBehaviour {
 
     public float rotateSpeed = 30;
+    public bool exactSpeed;
 
     public bool xRotate = true;
     public bool yRotate = true;
@@ -15,28 +16,45 @@ public class ObjectRandomRotater : MonoBehaviour {
     float xRotateSpeed;
     float yRotateSpeed;
     float zRotateSpeed;
-
-    Vector3 rotation;
+    
+    Vector3 rotateAmount;
+    Quaternion qRotate;
 
 	void Start () {
-        rotation = new Vector3(0, 0, 0);
+        rotateAmount = new Vector3(0, 0, 0);
 
         if (xRotate) {
-            xRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            if (exactSpeed) {
+                xRotateSpeed = rotateSpeed;
+            }
+            else {
+                xRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            }
         }
         if (yRotate) {
-            yRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            if (exactSpeed) {
+                yRotateSpeed = rotateSpeed;
+            }
+            else {
+                yRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            }
         }
         if (zRotate) {
-            zRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            if (exactSpeed) {
+                zRotateSpeed = rotateSpeed;
+            }
+            else {
+                zRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+            }
         }
+
+        //Set rotation amount
+        rotateAmount.x = xRotateSpeed * Time.deltaTime;
+        rotateAmount.y = yRotateSpeed * Time.deltaTime;
+        rotateAmount.z = zRotateSpeed * Time.deltaTime;
     }
 	
 	void Update () {
-        rotation.x = xRotateSpeed * Time.deltaTime;
-        rotation.y = yRotateSpeed * Time.deltaTime;
-        rotation.z = zRotateSpeed * Time.deltaTime;
-        gameObject.transform.Rotate(rotation);
-
+        transform.Rotate(rotateAmount);
     }
 }

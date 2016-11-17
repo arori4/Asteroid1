@@ -141,8 +141,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
             EnemyScoreInfo scoreInfo = GetComponent<EnemyScoreInfo>();
-            int amount = scoreInfo.score;
-            ui.AddScore(amount);
+            if (scoreInfo == null) {
+                print("Score info is null for object " + name);
+            }
+            else {
+                int amount = scoreInfo.score;
+                ui.AddScore(amount);
+            }
         }
 
         //handle if player dies

@@ -1,0 +1,150 @@
+fileFormatVersion: 2
+guid: 87d9d8c002d74064e911f8785bf9532e
+timeCreated: 1479345046
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Center_Cross
+    100002: Command_Sphere
+    100004: Cylinder
+    100006: Gun_Arm_1
+    100008: Gun_Arm_2
+    100010: Gun_Arm_3
+    100012: Inside_Ring
+    100014: Outside_Ring
+    100016: //RootNode
+    100018: Gun_1
+    100020: Gun_2
+    100022: Gun_3
+    100024: Light_1
+    100026: Light_2
+    100028: Light_3
+    100030: Light_4
+    400000: Center_Cross
+    400002: Command_Sphere
+    400004: Cylinder
+    400006: Gun_Arm_1
+    400008: Gun_Arm_2
+    400010: Gun_Arm_3
+    400012: Inside_Ring
+    400014: Outside_Ring
+    400016: //RootNode
+    400018: Gun_1
+    400020: Gun_2
+    400022: Gun_3
+    400024: Light_1
+    400026: Light_2
+    400028: Light_3
+    400030: Light_4
+    2300000: Center_Cross
+    2300002: Command_Sphere
+    2300004: Cylinder
+    2300006: Gun_Arm_1
+    2300008: Gun_Arm_2
+    2300010: Gun_Arm_3
+    2300012: Inside_Ring
+    2300014: Outside_Ring
+    2300016: Gun_1
+    2300018: Gun_2
+    2300020: Gun_3
+    2300022: Light_1
+    2300024: Light_2
+    2300026: Light_3
+    2300028: Light_4
+    3300000: Center_Cross
+    3300002: Command_Sphere
+    3300004: Cylinder
+    3300006: Gun_Arm_1
+    3300008: Gun_Arm_2
+    3300010: Gun_Arm_3
+    3300012: Inside_Ring
+    3300014: Outside_Ring
+    3300016: Gun_1
+    3300018: Gun_2
+    3300020: Gun_3
+    3300022: Light_1
+    3300024: Light_2
+    3300026: Light_3
+    3300028: Light_4
+    4300000: Cylinder
+    4300002: Gun_Arm_1
+    4300004: Command_Sphere
+    4300006: Center_Cross
+    4300008: Outside_Ring
+    4300010: Inside_Ring
+    4300012: Gun_Arm_2
+    4300014: Gun_Arm_3
+    4300016: Light_1
+    4300018: Gun_1
+    4300020: Gun_3
+    4300022: Gun_2
+    4300024: Light_2
+    4300026: Light_3
+    4300028: Light_4
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

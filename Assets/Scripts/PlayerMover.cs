@@ -2,14 +2,9 @@
 using UnityEngine.UI;
 using System.Collections;
 
-[System.Serializable]
-public struct Boundary {
-    public float left;
-    public float right;
-    public float top;
-    public float bottom;
-}
-
+/**
+ * Defines movement only for the player
+ */
 public class PlayerMover : MonoBehaviour {
 
     public Boundary boundary;
@@ -18,14 +13,14 @@ public class PlayerMover : MonoBehaviour {
     public float tiltSide;
 
     public Vector2 sensitivity;
+    float inputHoriz = 0;
+    float inputVert = 0;
 
     bool keyboardInput;
-
-    Rigidbody mRigidbody;
+    Vector3 currentVelocity = Vector3.zero;
 
 	// Use this for initialization
 	void Start () {
-        mRigidbody = GetComponent<Rigidbody>();
         Input.gyro.enabled = true;
 
         //set platform for keyboard input
@@ -36,33 +31,37 @@ public class PlayerMover : MonoBehaviour {
     }
 	
 	void Update () {
-
-    }
-
-    void FixedUpdate() {
-
-        float moveHorizontal = 0;
-        float moveVertical = 0;
-
+        //get input
         if (keyboardInput) {
-            moveHorizontal = Input.GetAxis("Horizontal") * speed;
-            moveVertical = Input.GetAxis("Vertical") * speed;
+            inputHoriz = Input.GetAxis("Horizontal") * speed;
+            inputVert = Input.GetAxis("Vertical") * speed;
         }
         else {
-            moveVertical = (Input.acceleration.y + 0.5f) * sensitivity.y; //added offset
-            moveHorizontal = Input.acceleration.x * sensitivity.x;
+            inputVert = (Input.acceleration.y + 0.4f) * sensitivity.y; //added offset
+            inputHoriz = Input.acceleration.x * sensitivity.x;
         }
-             
-        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
-        mRigidbody.velocity = movement;
 
-        //Clamp position
-        mRigidbody.position = new Vector3(
-            Mathf.Clamp(mRigidbody.position.x, boundary.left, boundary.right),
+        //Set velocity
+        currentVelocity.x = inputHoriz;
+        currentVelocity.z = inputVert;
+
+        //Set and clap position
+        transform.position += currentVelocity * Time.deltaTime;
+        transform.position = new Vector3(
+            Mathf.Clamp(transform.position.x, boundary.left, boundary.right),
             0,
-            Mathf.Clamp(mRigidbody.position.z, boundary.bottom, boundary.top));
+            Mathf.Clamp(transform.position.z, boundary.bottom, boundary.top));
 
-        //Intentionally siwtch z and x
-        mRigidbody.rotation = Quaternion.Euler(mRigidbody.velocity.z * tiltSide, 0.0f, mRigidbody.velocity.x * -tiltFront);
+        //Set pitch and yaw, intentionally siwtch z and x
+        transform.rotation = Quaternion.Euler(currentVelocity.z * tiltSide, 0.0f, currentVelocity.x * -tiltFront);
     }
+
+}
+
+[System.Serializable]
+public struct Boundary {
+    public float left;
+    public float right;
+    public float top;
+    public float bottom;
 }
