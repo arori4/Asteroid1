@@ -20,7 +20,7 @@ public class ObjectRandomRotater : MonoBehaviour {
     Vector3 rotateAmount;
     Quaternion qRotate;
 
-	void Start () {
+	void OnEnable () {
         rotateAmount = new Vector3(0, 0, 0);
 
         if (xRotate) {

@@ -21,7 +21,7 @@ public class ObjectStraightMover : MonoBehaviour {
     Vector3 finalVelocity;
     float velocityLerpCounter = 0;
 
-    void Start () {
+    void OnEnable () {
         //Create final direction
         Vector3 resultantDirection = new Vector3(0, 0, 0);
         Quaternion finalRotation = Quaternion.Euler(0, Random.Range(-finalAngle, finalAngle), 0);

@@ -16,6 +16,7 @@ public class PowerUpHandler : MonoBehaviour {
     ObjectCollisionHandler playerCollisionHandler;
     PlayerWeapons playerWeapons;
 
+    //KEEP THIS AS START
 	void Start () {
         //find player, if it exists. this can run when the player dies, which is a nullptr
         GameObject player = GameObject.FindWithTag("Player");

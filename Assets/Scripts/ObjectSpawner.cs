@@ -18,12 +18,12 @@ public class ObjectSpawner : MonoBehaviour {
     public float beginningWait;
 
     //Enemies
-    public List<Pair> enemies;
-    List<Pair> currentLevelEnemies = new List<Pair>();
+    public List<SpawnObjDef> enemies;
+    List<SpawnObjDef> currentLevelEnemies = new List<SpawnObjDef>();
     int totalEnemyFrequencies;
     //Enemy Weapons
-    public List<Pair> enemyWeapons;
-    List<Pair> currentLevelWeapons = new List<Pair>();
+    public List<SpawnObjDef> enemyWeapons;
+    List<SpawnObjDef> currentLevelWeapons = new List<SpawnObjDef>();
     int totalWeaponFrequencies;
 
     int numEnemiesLeft;
@@ -105,7 +105,7 @@ public class ObjectSpawner : MonoBehaviour {
         }
 
         //level dependent attributes
-        asteroidSpeed = 2 + level * 0.3f;
+        asteroidSpeed = 1 + level * 0.2f;
 
         //attributes for each level
         if (level >= 1) {
@@ -126,14 +126,20 @@ public class ObjectSpawner : MonoBehaviour {
         if (level >= 10) {
             enemyWaitTime = new Vector2(1f, 1.5f);
             asteroidWaitTime = new Vector2(0.45f, 1f);
-            maxEnemiesSpawnAtTime = 2;
             maxAsteroidsSpawnAtTime = 3;
+            maxEnemiesSpawnAtTime = 2;
         }
-        if (level >= 20) {
+        if (level >= 15) {
             enemyWaitTime = new Vector2(0.5f, 1.5f);
             asteroidWaitTime = new Vector2(0.25f, 0.5f);
             maxAsteroidsSpawnAtTime = 4;
             maxEnemiesSpawnAtTime = 4;
+        }
+        if (level >= 20) {
+            enemyWaitTime = new Vector2(0.5f, 1f);
+            asteroidWaitTime = new Vector2(0.25f, 0.35f);
+            maxAsteroidsSpawnAtTime = 5;
+            maxEnemiesSpawnAtTime = 5;
         }
 
     }
@@ -162,13 +168,13 @@ public class ObjectSpawner : MonoBehaviour {
 
                 //Set different enemy guns if alien
                 if (newEnemy.CompareTag("Alien")) {
-                    AlienWeapons weapons = newEnemy.GetComponent<AlienWeapons>();
+                    AIWeapons weapons = newEnemy.GetComponent<AIWeapons>();
                     GunDefinition[] guns = null;
                     if (weapons != null) {
                         guns = weapons.guns;
                     }
                     else {
-                        weapons = newEnemy.GetComponentInChildren<AlienWeapons>();
+                        weapons = newEnemy.GetComponentInChildren<AIWeapons>();
                         guns = weapons.guns;
                     }
 
@@ -205,7 +211,7 @@ public class ObjectSpawner : MonoBehaviour {
     /**
      * Chooses a random object based on the pair list given.
      */
-    private GameObject ChooseRandomFromFrequency(List<Pair> pairs, int totalFrequency) {
+    private GameObject ChooseRandomFromFrequency(List<SpawnObjDef> pairs, int totalFrequency) {
         int chosenFrequency = Random.Range(0, totalFrequency) + 1;
         int chooseIndex = 0;
         while (chosenFrequency > 0) {
@@ -230,7 +236,7 @@ public class ObjectSpawner : MonoBehaviour {
             }
 
             //Chose an amount of asteroids to spawn at a time
-            int numAsteroidsToSpawn = (int)Random.Range(1, maxAsteroidsSpawnAtTime);
+            int numAsteroidsToSpawn = Random.Range(1, maxAsteroidsSpawnAtTime);
 
             for (int index = 0; index < numAsteroidsToSpawn; index++){
 
@@ -273,7 +279,7 @@ public class ObjectSpawner : MonoBehaviour {
     private IEnumerator RecalculateFrequencies() {
         //ENEMIES
         //Initialize needed variables
-        List<Pair> enemiesThisLevel = new List<Pair>();
+        List<SpawnObjDef> enemiesThisLevel = new List<SpawnObjDef>();
         int newEnemyFrequency = 0;
         yield return null;
 
@@ -292,7 +298,7 @@ public class ObjectSpawner : MonoBehaviour {
 
         //ENEMY WEAPONS
         //Initialize needed variables
-        List<Pair> weaponsThisLevel = new List<Pair>();
+        List<SpawnObjDef> weaponsThisLevel = new List<SpawnObjDef>();
         int newWeaponFrequency = 0;
         yield return null;
 
@@ -339,26 +345,18 @@ public class ObjectSpawner : MonoBehaviour {
 
     private GameObject SpawnInWave(GameObject obj) {
 
-        Vector3 spawnPosition = new Vector3(
-            spawnOtherLimits.x,
-            spawnOtherLimits.y,
+        Vector3 spawnPosition = new Vector3(spawnOtherLimits.x, spawnOtherLimits.y,
             Random.Range(spawnVerticalLimits.x, spawnVerticalLimits.y));
-
-        Quaternion spawnRotation = Quaternion.identity;
-
-        GameObject spawnedObj = Instantiate(obj, spawnPosition, spawnRotation) as GameObject;
+        GameObject spawnedObj = Pools.Initialize(obj, spawnPosition, Quaternion.identity);
 
         return spawnedObj;
     }
-
-
 }
 
 [System.Serializable]
-public struct Pair {
+public class SpawnObjDef {
 
     public GameObject obj;
     public int frequency;
     public int levelAppearance;
-
 }

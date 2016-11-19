@@ -16,7 +16,7 @@ public class MissileTracker : MonoBehaviour {
     GameObject target;
     bool tracking;
 
-	void Start () {
+	void OnEnable () {
         trackingCollider = GetComponent<SphereCollider>();
         trackingCollider.radius = trackingRange;
 

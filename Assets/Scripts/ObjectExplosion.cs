@@ -8,7 +8,7 @@ public class ObjectExplosion : MonoBehaviour {
 
     new SphereCollider collider;
 
-	void Start () {
+	void OnEnable () {
         collider = GetComponent<SphereCollider>();
         StartCoroutine(Expand());
 	}
@@ -21,8 +21,5 @@ public class ObjectExplosion : MonoBehaviour {
 
         Destroy(gameObject);
     }
-
-	void Update () {
-	
-	}
+    
 }

@@ -7,8 +7,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     //collision and game health
     public CanCollideWith collideDefinition;
-    public GameObject[] explosionList;
-    public float maxHealth;
+    public float maxHealth = 10;
     public float damageAmount;
 
     //drops
@@ -16,29 +15,36 @@ public class ObjectCollisionHandler : MonoBehaviour {
     public DropPair[] alwaysDrops;
     public int maxNonEssentialDrops;
 
-    bool dropCalculationDone = false;
-    bool startedDeathCoroutine = false;
+    //States
+    bool dropCalculationDone;
+    bool startedDeathCoroutine;
     float currentHealth;
+    string lastColliderTag = ""; //for keeping tab of score right now
+    List<GameObject> dropList = new List<GameObject>();
+
+    //Scripts
     GameObject gameController;
     UIController ui;
     ObjectSpawner objectSpawner;
-    string lastColliderTag = ""; //for keeping tab of score right now
-    List<GameObject> dropList = new List<GameObject>();
+
+    //Constants
+    const float MAX_X_COLLIDE = 8.8f;
 
     void Start() {
         //find first game object with tag 
         gameController = GameObject.FindWithTag("GameController");
 
-        //Set current health
-        currentHealth = maxHealth;
-        if (maxHealth <= 0) {
-            print("Object health initialized to " + maxHealth + ", by default will set to 10.");
-            currentHealth = maxHealth = 10;
-        }
-
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
         objectSpawner = gameController.GetComponent<ObjectSpawner>();
+    }
+
+    void OnEnable() {
+        //Set starting variables
+        dropCalculationDone = false;
+        startedDeathCoroutine = false;
+        currentHealth = maxHealth;
+        lastColliderTag = "";
 
         //calculate drops
         StartCoroutine(CalculateDropsCoroutine());
@@ -54,7 +60,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
             return;
         }
 
-        if (collideDefinition.collidesWith(other)) {
+        //only collide if definitions say so, and if on the screen
+        if (collideDefinition.collidesWith(other) && transform.position.x < MAX_X_COLLIDE) {
             //special consideration for powerups
             if (other.CompareTag("Powerup")) {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
@@ -67,7 +74,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
     void OnTriggerExit(Collider other) {
         if (other.CompareTag("GameBoundary")) {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
         }
     }
 
@@ -130,13 +137,6 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
 
     private IEnumerator DeathCoroutine() {
-        //create explosion if it exists
-        if (explosionList.Length > 0) {
-            Instantiate(explosionList[Random.Range(0, explosionList.Length)],
-                transform.position, transform.rotation);
-        }
-        yield return null;
-
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
@@ -170,7 +170,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
             );
 
             GameObject dropSpawned = dropList[index];
-            GameObject newObj = Instantiate(dropSpawned, spawnLocation, transform.rotation) as GameObject;
+            GameObject newObj = Pools.Initialize(dropSpawned, spawnLocation, transform.rotation);
             //DO NOT YIELD HERE, NEED TO INITIALIZE STRAIGHT MOVER
 
             //If object is a straight mover, then make sure that it goes in a random direction
@@ -182,7 +182,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         }
 
         //finally kill object
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
     
 
