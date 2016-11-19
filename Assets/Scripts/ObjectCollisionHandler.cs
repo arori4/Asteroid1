@@ -25,7 +25,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
     //Scripts
     GameObject gameController;
     UIController ui;
-    ObjectSpawner objectSpawner;
+    Spawner objectSpawner;
 
     //Constants
     const float MAX_X_COLLIDE = 8.8f;
@@ -36,7 +36,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
-        objectSpawner = gameController.GetComponent<ObjectSpawner>();
+        objectSpawner = gameController.GetComponent<Spawner>();
     }
 
     void OnEnable() {

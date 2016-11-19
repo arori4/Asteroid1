@@ -33,8 +33,15 @@ public class ObjectPool {
                 CreateObject();
             }
 
-            GameObject clone = pool[pool.Count - 1];
-            pool.RemoveAt(pool.Count - 1);
+            int indexToClaim = pool.Count - 1;
+            GameObject clone = pool[indexToClaim];
+
+            //debug check
+            if (clone.active) {
+                Debug.Log(clone.name + " in pool was still active upon initialization.");
+            }
+
+            pool.Remove(clone);
             clone.SetActive(true);
             return clone;
         }
@@ -52,11 +59,10 @@ public class ObjectPool {
         GameObject newClone = GameObject.Instantiate(sourceObject);
 
         //add object to pool and set member
-        pool.Add(newClone);
         PoolMember member = newClone.AddComponent<PoolMember>();
         member.pool = this;
 
-        //Set object to inactive
+        //Set object to inactive (also adds it to pool)
         newClone.SetActive(false);
     }
 

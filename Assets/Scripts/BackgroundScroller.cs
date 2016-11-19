@@ -14,6 +14,8 @@ public class BackgroundScroller : MonoBehaviour {
 
     public Lights lights;
 
+    public Stars stars;
+
     
     void Start() {
         //Chooose number
@@ -31,6 +33,12 @@ public class BackgroundScroller : MonoBehaviour {
         lights.light1.color = backgrounds[chosenIndex].light1Color;
         lights.light2.color = backgrounds[chosenIndex].light2Color;
         lights.light3.color = backgrounds[chosenIndex].light3Color;
+
+        //set star colors
+        stars.mainStars.startColor = backgrounds[chosenIndex].mainLightColor;
+        stars.stars1.startColor = backgrounds[chosenIndex].light1Color;
+        stars.stars2.startColor = backgrounds[chosenIndex].light2Color;
+        stars.stars3.startColor = backgrounds[chosenIndex].light3Color;
     }
     
     void Update() {
@@ -59,4 +67,14 @@ public struct Lights {
     public Light light2;
     public Light light3;
     
+}
+
+[System.Serializable]
+public struct Stars {
+
+    public ParticleSystem mainStars;
+    public ParticleSystem stars1;
+    public ParticleSystem stars2;
+    public ParticleSystem stars3;
+
 }

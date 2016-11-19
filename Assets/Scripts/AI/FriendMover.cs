@@ -28,8 +28,11 @@ public class FriendMover : MonoBehaviour {
     CanCollideWith dodgeDefinitions;
     List<GameObject> dodgeList = new List<GameObject>();
 
-	void OnEnable () {
+    void Start() {
         dodgeDefinitions = GetComponentInParent<ObjectCollisionHandler>().collideDefinition;
+    }
+
+	void OnEnable () {
         rootTransform = transform.root;
 
         StartCoroutine(RandomDirection());

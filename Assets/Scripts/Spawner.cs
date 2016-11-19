@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-public class ObjectSpawner : MonoBehaviour {
+public class Spawner : MonoBehaviour {
 
     //game mode
     const int LEVEL_MODE = 0;

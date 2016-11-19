@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ObjectExplosion : MonoBehaviour {
+public class ObjectDamageExplosion : MonoBehaviour {
 
     public float maxRadius;
     public float expandTime;
@@ -19,7 +19,7 @@ public class ObjectExplosion : MonoBehaviour {
             yield return null;
         }
 
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
     
 }
