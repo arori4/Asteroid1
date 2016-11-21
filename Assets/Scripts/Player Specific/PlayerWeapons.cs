@@ -136,7 +136,7 @@ public class PlayerWeapons : MonoBehaviour {
         if (Time.time >= weaponNextFire && energy > weaponInfo.energyCost) {
 
             //create the weapon
-            GameObject spawnedWeapon = Pools.Initialize(weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
+            GameObject spawnedWeapon = Pools.Initialize(weaponType, gunLocation.position, gunLocation.rotation);
             //set the velocity to be the normal of the gun plane (up should be correct)
             spawnedWeapon.GetComponent<ObjectStraightMover>().finalDirection = gunLocation.up;
 
@@ -151,10 +151,7 @@ public class PlayerWeapons : MonoBehaviour {
         if (Time.time >= missileNextFire && missileCount > 0) {
 
             //create the missile
-            GameObject spawnedMissile = Pools.Initialize(
-                missileType,
-                gunLocation.position,
-                gunLocation.rotation) as GameObject;
+            GameObject spawnedMissile = Pools.Initialize(missileType, gunLocation.position, gunLocation.rotation);
             spawnedMissile.SetActive(true); //line is included to remove warnings for now
 
             //set next fire and energy amount
@@ -233,7 +230,7 @@ public class PlayerWeapons : MonoBehaviour {
 
         //add in new child
         missileIcon = Instantiate(missileInfo.missileIcon,
-            missileUIParent.transform.position, new Quaternion(90, 90, 225, 0)) as GameObject;
+            missileUIParent.transform.position, new Quaternion(90, 90, 360, 0)) as GameObject;
         missileIcon.transform.parent = missileUIParent.transform;
 
         //set weapon text
@@ -376,14 +373,19 @@ public class PlayerWeapons : MonoBehaviour {
     }
 
 
-    void OnDestroy() {
+    void OnDisable() {
         //hide the ui buttons
         weaponUIParent.SetActive(false);
         missileUIParent.SetActive(false);
         shieldUIParent.SetActive(false);
 
-    }
+        //set the hit background to 0
+        hitCanvas.alpha = 0;
 
+        //set slider values to 0
+        sliders.health.value = 0;
+        sliders.healthBack.value = 0;
+    }
 
 
     //For UI Use

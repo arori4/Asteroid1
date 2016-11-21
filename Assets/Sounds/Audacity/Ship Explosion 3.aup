@@ -1,0 +1,49 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="Ship Explosion 3_data" version="1.3.0" audacityversion="2.1.2" sel0="0.0000000000" sel1="3.3742630385" vpos="0" h="0.0000000000" zoom="105.2939696121" rate="44100.0" snapto="off" selectionformat="hh:mm:ss + milliseconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="RPG_Plus_Shrapnel-Mike_Koenig-802194222" channel="0" linked="1" mute="0" solo="0" height="150" minimized="0" isSelected="1" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="147427">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000112.au" len="147427" min="-1.0" max="0.996084" rms="0.159351"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="3.342993197279" val="1.000000000000"/>
+			</envelope>
+		</waveclip>
+		<waveclip offset="3.34301587">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="1378">
+				<waveblock start="0">
+					<simpleblockfile filename="e00005d2.au" len="1378" min="-0.000002" max="0.000002" rms="0.0"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="0.000000000000" val="1.000000000000"/>
+			</envelope>
+		</waveclip>
+	</wavetrack>
+	<wavetrack name="RPG_Plus_Shrapnel-Mike_Koenig-802194222" channel="1" linked="0" mute="0" solo="0" height="150" minimized="0" isSelected="1" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="147427">
+				<waveblock start="0">
+					<simpleblockfile filename="e0000bbe.au" len="147427" min="-0.911561" max="0.883596" rms="0.158059"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="3.342993197279" val="1.000000000000"/>
+			</envelope>
+		</waveclip>
+		<waveclip offset="3.34301587">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="1378">
+				<waveblock start="0">
+					<simpleblockfile filename="e00008de.au" len="1378" min="-0.000003" max="0.000004" rms="0.0"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="1">
+				<controlpoint t="0.000000000000" val="1.000000000000"/>
+			</envelope>
+		</waveclip>
+	</wavetrack>
+</project>

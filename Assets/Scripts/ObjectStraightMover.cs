@@ -19,13 +19,17 @@ public class ObjectStraightMover : MonoBehaviour {
 
     Vector3 currentVelocity;
     Vector3 finalVelocity;
-    float velocityLerpCounter = 0;
+    float velocityLerpCounter;
 
     void OnEnable () {
+        //Reset variables
+        currentVelocity = Vector3.zero;
+        finalVelocity = Vector3.zero;
+        velocityLerpCounter = 0;
+
         //Create final direction
-        Vector3 resultantDirection = new Vector3(0, 0, 0);
-        Quaternion finalRotation = Quaternion.Euler(0, Random.Range(-finalAngle, finalAngle), 0);
-        finalVelocity = finalRotation * Vector3.Normalize(finalDirection) * speed;
+        Vector3 resultantDirection = Vector3.zero;
+        SetFinalDirection(finalDirection);
 
         if (dropMoveAway && wasDropped) {
             //choose a random direction to go
@@ -44,6 +48,12 @@ public class ObjectStraightMover : MonoBehaviour {
         velocityLerpCounter += Time.deltaTime / dropTime;
         
         transform.position += currentVelocity * Time.deltaTime;
+    }
+
+    public void SetFinalDirection(Vector3 newFinalDirection) {
+        finalDirection = newFinalDirection;
+        Quaternion finalRotation = Quaternion.Euler(0, Random.Range(-finalAngle, finalAngle), 0);
+        finalVelocity = finalRotation * Vector3.Normalize(finalDirection) * speed;
     }
     
 }

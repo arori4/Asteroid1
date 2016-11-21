@@ -29,13 +29,11 @@ public class PowerUpHandler : MonoBehaviour {
 
     public void activate() {
         if (healthDef.activated) {
-            playerCollisionHandler.addHealth(healthDef.amount);
+            playerCollisionHandler.AddHealth(healthDef.amount);
         }
-
         if (energyDef.activated) {
             playerWeapons.AddEnergy(energyDef.amount);
         }
-
         if (changeWeaponDef.activated) {
             playerWeapons.ChangeWeapon(changeWeaponDef.weaponType);
         }

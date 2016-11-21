@@ -16,10 +16,14 @@ public class Pools : MonoBehaviour {
     public GameObject[] playerWeapons;
     public GameObject[] powerups;
 
+    public GameObject[] explosions;
+    public GameObject[] audios;
+
     const int NUM_START = 5;
-    static List<GameObject[]> startingObjectArrays = new List<GameObject[]>();
-    static List<ObjectPool> pools = new List<ObjectPool>();
+    List<GameObject[]> startingObjectArrays = new List<GameObject[]>();
+    List<ObjectPool> pools = new List<ObjectPool>();
     bool started = false;
+    static Pools singleton;
 
     void Start() {
         //check for single instance
@@ -28,6 +32,7 @@ public class Pools : MonoBehaviour {
         }
         else {
             //create pools for everything
+            singleton = this;
 
             //signify started so it only starts once
             started = true;
@@ -41,6 +46,9 @@ public class Pools : MonoBehaviour {
             startingObjectArrays.Add(mine);
             startingObjectArrays.Add(playerWeapons);
             startingObjectArrays.Add(powerups);
+
+            startingObjectArrays.Add(explosions);
+            startingObjectArrays.Add(audios);
 
             //initialize all pools
             for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
@@ -74,9 +82,9 @@ public class Pools : MonoBehaviour {
     static ObjectPool GetObjectList(GameObject obj, bool shouldExistALready) {
         //find object in pools, if it exists already
         ObjectPool objPool = null;
-        for (int index = 0; index < pools.Count; index++) {
-            if (pools[index].sourceObject.Equals(obj)) {
-                objPool = pools[index];
+        for (int index = 0; index < singleton.pools.Count; index++) {
+            if (singleton.pools[index].sourceObject.Equals(obj)) {
+                objPool = singleton.pools[index];
 
                 if (!shouldExistALready) {
                     print("Object " + obj + " should not exist already, but it already has a pool.");
@@ -88,7 +96,7 @@ public class Pools : MonoBehaviour {
         //if it doesn't exist, create a new object pool and add it
         if (objPool == null) {
             objPool = new ObjectPool(obj);
-            pools.Add(objPool);
+            singleton.pools.Add(objPool);
 
             if (shouldExistALready) {
                 print("Object " + obj + " should exist already but did not have a pool.");
@@ -97,6 +105,11 @@ public class Pools : MonoBehaviour {
         }
 
         return objPool;
+    }
+
+    void OnDestroy() {
+        //clear all lists
+        pools.Clear();
     }
 
     IEnumerator EnumerateType(GameObject obj) {

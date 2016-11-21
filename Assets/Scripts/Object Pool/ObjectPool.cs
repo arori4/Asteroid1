@@ -81,7 +81,23 @@ public class PoolMember : MonoBehaviour {
 
     public ObjectPool pool;
 
+    ParticleSystem particles;
+
+    void Start() {
+        //check for different components
+        particles = GetComponent<ParticleSystem>();
+    }
+
+    void OnEnable() {
+        if (particles != null) {
+            particles.enableEmission = true;
+        }
+    }
+
     void OnDisable() {
         pool.nextObject = gameObject; //calls set
+        if (particles != null) {
+            particles.enableEmission = false;
+        }
     }
 }

@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Defines a gun
+ * Gun has a single gun location and weapon type
+ */
 [System.Serializable]
 public class GunDefinition {
 
     public Transform gunLocation;
     public GameObject weaponType;
+
     Vector2 fireRate; //fire rate is between 100% and 200% of bolt type fire rate
     float nextFire;
-
-    //TODO: on damage gun, have small explosion
 
     public void Initialize() {
         if (gunLocation == null) {
@@ -26,11 +29,10 @@ public class GunDefinition {
 
     public void Fire() {
         //create the bolt
-        GameObject spawnedBolt = Pools.Initialize(
-            weaponType, gunLocation.position, gunLocation.rotation) as GameObject;
+        GameObject spawnedBolt = Pools.Initialize(weaponType, gunLocation.position, gunLocation.rotation);
 
         //set the velocity to be the normal of the gun plane (up should be correct)
-        spawnedBolt.GetComponent<ObjectStraightMover>().finalDirection = gunLocation.up;
+        spawnedBolt.GetComponent<ObjectStraightMover>().SetFinalDirection(gunLocation.up);
 
         SetNextFire();
     }

@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * When the chain lightning hits, it will chain hits to other nearby objects
+ */
 public class WeaponChainLightningHandler : MonoBehaviour {
 
     public int numHitTotal = 3;
@@ -16,10 +19,11 @@ public class WeaponChainLightningHandler : MonoBehaviour {
 
     SphereCollider detector;
     Transform rootTransform;
-
-	void Start () {
+    
+    void OnEnable() {
         detector = GetComponent<SphereCollider>();
         detector.radius = 0;
+        hitsPerformed = 1;
 
         rootTransform = transform.root;
 	}
@@ -27,13 +31,10 @@ public class WeaponChainLightningHandler : MonoBehaviour {
     void Update() {
         detector.radius += Time.deltaTime * jumpSpeed;
 
-
         //Destroy if the collider reaches max radius and hasn't found an object to jump to
         if (hitsPerformed > numHitTotal || detector.radius > maxRadius) {
-            Destroy(gameObject);
+            gameObject.SetActive(false);
         }
-
-        //print(rootTransform.position + " " + detector.radius);
     }
 
     void OnTriggerEnter(Collider other) {
@@ -41,31 +42,29 @@ public class WeaponChainLightningHandler : MonoBehaviour {
         //On collision, damage the next object and continue from there
         if (collideDefinitions.collidesWith(other)) {
 
-            //damage is handled by the collision handler
+            //initial damage is handled by the collision handler
 
             //find information between the two locations
-            Vector3 dir = rootTransform.position - other.transform.position;
-            Vector3 mid = (rootTransform.position + other.transform.position) / 2.0f;
-            float factor = 1.5f; //change if not using a quad
-
-            Transform rodTransform = rod.GetComponent<Transform>();
-
-            rodTransform.position = mid;
-            rodTransform.rotation = Quaternion.FromToRotation(Vector3.right, dir);
-            rodTransform.Rotate(new Vector3(90, 0, 0));
+            Vector3 direction = rootTransform.position - other.transform.position;
+            Vector3 middle = (rootTransform.position + other.transform.position) / 2.0f;
+            float factor = 1.5f;
 
             //Create the rod
-            GameObject newRod = Instantiate(rod, rodTransform.position, rodTransform.rotation) as GameObject;
-            newRod.transform.localScale = new Vector3(dir.magnitude * factor, 0.5f, 0.5f);
+            Transform rodTransform = rod.GetComponent<Transform>();
+            rodTransform.position = middle;
+            rodTransform.rotation = Quaternion.FromToRotation(Vector3.right, direction);
+            rodTransform.Rotate(new Vector3(90, 0, 0));
+            GameObject newRod = Pools.Initialize(rod, rodTransform.position, rodTransform.rotation);
+            newRod.transform.localScale = new Vector3(direction.magnitude * factor, 0.5f, 0.5f);
 
             //move this handler onto the other's location and reset it
             rootTransform.position = other.transform.position;
             detector.radius = 0;
 
-            //damage the other elemtn
+            //damage the other element
             ObjectCollisionHandler handler = other.transform.root.gameObject.GetComponent<ObjectCollisionHandler>();
-            handler.damage(damageAmount, tag);
-            Instantiate(explosion, rootTransform.position, rootTransform.rotation);
+            handler.Damage(damageAmount, tag);
+            Pools.Initialize(explosion, rootTransform.position, rootTransform.rotation);
 
             //increase hits performed
             hitsPerformed++;

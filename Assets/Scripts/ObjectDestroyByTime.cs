@@ -5,7 +5,13 @@ public class ObjectDestroyByTime : MonoBehaviour {
 
     public float lifetime;
 
-    void Start() {
-        Destroy(gameObject, lifetime);
+    void OnEnable() {
+        StartCoroutine(Disable());
+    }
+
+    IEnumerator Disable() {
+        yield return new WaitForSeconds(lifetime);
+
+        gameObject.SetActive(false);
     }
 }

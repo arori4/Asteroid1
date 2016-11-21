@@ -2,7 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
-[System.Serializable]
+/**
+ * Handles all collisions.
+ * Also has behavior for death.
+ */
 public class ObjectCollisionHandler : MonoBehaviour {
 
     //collision and game health
@@ -10,9 +13,17 @@ public class ObjectCollisionHandler : MonoBehaviour {
     public float maxHealth = 10;
     public float damageAmount;
 
+    //contact
+    public GameObject[] contactEffectList;
+    public GameObject[] contactSoundList;
+
+    //death
+    public GameObject[] explosionEffectList;
+    public GameObject[] explosionSoundList;
+
     //drops
-    public DropPair[] sometimesDrops;
     public DropPair[] alwaysDrops;
+    public DropPair[] sometimesDrops;
     public int maxNonEssentialDrops;
 
     //States
@@ -28,7 +39,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
     Spawner objectSpawner;
 
     //Constants
-    const float MAX_X_COLLIDE = 8.8f;
+    const float MAX_X_COLLIDE = 10f;
+
 
     void Start() {
         //find first game object with tag 
@@ -45,6 +57,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         startedDeathCoroutine = false;
         currentHealth = maxHealth;
         lastColliderTag = "";
+        dropList.Clear();
 
         //calculate drops
         StartCoroutine(CalculateDropsCoroutine());
@@ -67,10 +80,22 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
             }
             dealDamage(other.transform.root.gameObject);
+
+            //create contact effects, if any
+            if (contactEffectList.Length > 0) {
+                Pools.Initialize(
+                    contactEffectList[Random.Range(0, contactEffectList.Length)],
+                    other.transform.position, Quaternion.identity);
+            }
+            if (contactSoundList.Length > 0) {
+                GameObject audio = Pools.Initialize(
+                    contactSoundList[Random.Range(0, contactSoundList.Length)],
+                    other.transform.position, Quaternion.identity);
+                audio.GetComponent<AudioSource>().Play();
+            }
         }
 
     }
-
 
     void OnTriggerExit(Collider other) {
         if (other.CompareTag("GameBoundary")) {
@@ -100,16 +125,8 @@ public class ObjectCollisionHandler : MonoBehaviour {
             currentHealth -= otherCollider.damageAmount;
         }
 
-        if (other.tag.CompareTo("Player") == 0) {
-            otherCollider.currentHealth -= other.GetComponent<PlayerWeapons>().Hit(damageAmount);
-        }
-        else {
-            otherCollider.currentHealth -= damageAmount;
-        }
-
         //set tags for possible scoring
         lastColliderTag = other.transform.root.tag;
-        otherCollider.lastColliderTag = tag;
     }
 
 
@@ -122,7 +139,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
     }
 
 
-    public void addHealth(float health) {
+    public void AddHealth(float health) {
         currentHealth = Mathf.Min(currentHealth + health, maxHealth);
     }
 
@@ -130,7 +147,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
         return currentHealth;
     }
 
-    public void damage(float amount, string otherTag) {
+    public void Damage(float amount, string otherTag) {
         currentHealth -= amount;
         lastColliderTag = otherTag;
     }
@@ -150,7 +167,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
             }
         }
 
-        //handle if player dies
+        //handle if player dies. more stuff right now is handled by other scripts
         if (tag.CompareTo("Player") == 0) {
             objectSpawner.StopAllCoroutines();
             ui.GameOver();
@@ -164,10 +181,11 @@ public class ObjectCollisionHandler : MonoBehaviour {
         //drop everything
         for (int index = 0; index < dropList.Count; index++) {
             Vector3 spawnLocation = new Vector3(
-                Random.Range(-0.2f, 0.2f) + transform.position.x,
+                Random.Range(-0.4f, 0.4f) + transform.position.x,
                 transform.position.y,
-                Random.Range(-0.2f, 0.2f) + transform.position.z
+                Random.Range(-0.4f, 0.4f) + transform.position.z
             );
+            yield return null;
 
             GameObject dropSpawned = dropList[index];
             GameObject newObj = Pools.Initialize(dropSpawned, spawnLocation, transform.rotation);
@@ -179,6 +197,22 @@ public class ObjectCollisionHandler : MonoBehaviour {
                 straightMover.wasDropped = true;
             }
             yield return null;
+        }
+
+        //Play explosion, if there are any
+        if (explosionEffectList.Length > 0) {
+            Pools.Initialize(
+                explosionEffectList[Random.Range(0, explosionEffectList.Length)],
+                transform.position, Quaternion.identity);
+        }
+        yield return null;
+
+        //Play death sound, if there are any
+        if (explosionSoundList.Length > 0) {
+            GameObject audio = Pools.Initialize(
+                explosionSoundList[Random.Range(0, explosionSoundList.Length)],
+                transform.position, Quaternion.identity);
+            audio.GetComponent<AudioSource>().Play();
         }
 
         //finally kill object

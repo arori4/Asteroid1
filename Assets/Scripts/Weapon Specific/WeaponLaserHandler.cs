@@ -1,17 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Handles a laser
+ */
 public class WeaponLaserHandler : MonoBehaviour {
 
-    public float glowTime = 0.25f;
+    public float glowTime;
     
     float startZSize;
 
-	void Start () {
-        startZSize = transform.localScale.z;
+	void OnEnable () {
+        //reset start size
+        startZSize = 30f;
 
-        //set position to appropriate place
-        transform.position += Vector3.right * transform.localScale.y / 4;
+        //set appropriate transform values
+        transform.localScale = new Vector3(1, startZSize, 1);
+
+        //Enable all colliders
+        foreach (Collider c in gameObject.GetComponentsInChildren<Collider>()) {
+            c.enabled = true;
+        }
 
         //Upon initialization, destroy collision handler and fade
         StartCoroutine(Fade());
@@ -26,12 +35,11 @@ public class WeaponLaserHandler : MonoBehaviour {
         }
 
         while (transform.localScale.z > 0f) {
-            transform.localScale -= new Vector3(0, 0, startZSize * Time.deltaTime / glowTime);
+            transform.localScale -= new Vector3(Time.deltaTime / glowTime, Time.deltaTime / glowTime, 
+                startZSize * Time.deltaTime / glowTime);
             yield return null;
         }
 
-        Destroy(gameObject);
-
-
+        gameObject.SetActive(false);
     }
 }
