@@ -43,6 +43,12 @@ public class Spawner : MonoBehaviour {
     Vector2 asteroidSizeRatio;
     Vector2 asteroidWaitTime;
 
+    //Powerup Spawns
+    public List<SpawnObjDef> powerups;
+    List<SpawnObjDef> currentLevelPowerups = new List<SpawnObjDef>();
+    int totalPowerupFrequencies;
+    Vector2 powerupWaitTime;
+
     //UI Elements
     public CanvasGroup largeTextCanvas;
     public Text largeText;
@@ -56,6 +62,7 @@ public class Spawner : MonoBehaviour {
         enemyWaitTime = new Vector2(1, 2);
         asteroidWaitTime = new Vector2(1, 2);
         asteroidSizeRatio = new Vector2(7, 4);
+        powerupWaitTime = new Vector2(10, 20);
 
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
@@ -87,6 +94,7 @@ public class Spawner : MonoBehaviour {
         StartCoroutine(RecalculateFrequencies());
         StartCoroutine(SpawnEnemiesCoroutine());
         StartCoroutine(SpawnAsteroidsCoroutine());
+        StartCoroutine(SpawnPowerupsCoroutine());
     }
 
     private void SetLevel(int newLevel) {
@@ -210,6 +218,27 @@ public class Spawner : MonoBehaviour {
         yield return new WaitForSeconds(20);
     }
 
+    private IEnumerator SpawnPowerupsCoroutine() {
+        yield return new WaitForSeconds(beginningWait + Random.Range(powerupWaitTime.x, powerupWaitTime.y));
+
+        while (numEnemiesLeft > 0) {
+            if (!recalculationFinished) {
+                yield return new WaitForSeconds(0.5f);
+                continue;
+            }
+
+            //Only spawn one powerup at a time
+            GameObject powerupToSpawn = ChooseRandomFromFrequency(currentLevelPowerups, totalPowerupFrequencies);
+            yield return null;
+
+            //Spawn powerup
+            SpawnInWave(powerupToSpawn);
+            yield return null;
+
+            yield return new WaitForSeconds(Random.Range(powerupWaitTime.x, powerupWaitTime.y));
+        }
+    }
+
 
     /**
      * Chooses a random object based on the pair list given.
@@ -279,12 +308,12 @@ public class Spawner : MonoBehaviour {
     }
 
     private IEnumerator RecalculateFrequencies() {
+
         //ENEMIES
         //Initialize needed variables
         List<SpawnObjDef> enemiesThisLevel = new List<SpawnObjDef>();
         int newEnemyFrequency = 0;
         yield return null;
-
         //initialize enemies for level appropriately
         for (int index = 0; index < enemies.Count; index++) {
             if (enemies[index].levelAppearance <= level) {
@@ -293,7 +322,6 @@ public class Spawner : MonoBehaviour {
             }
             yield return null;
         }
-
         //Send variables back
         totalEnemyFrequencies = newEnemyFrequency;
         currentLevelEnemies = enemiesThisLevel;
@@ -303,7 +331,6 @@ public class Spawner : MonoBehaviour {
         List<SpawnObjDef> weaponsThisLevel = new List<SpawnObjDef>();
         int newWeaponFrequency = 0;
         yield return null;
-
         //initialize enemies for level appropriately
         for (int index = 0; index < enemyWeapons.Count; index++) {
             if (enemyWeapons[index].levelAppearance <= level) {
@@ -312,10 +339,26 @@ public class Spawner : MonoBehaviour {
             }
             yield return null;
         }
-
         //Send variables back
         totalWeaponFrequencies = newWeaponFrequency;
         currentLevelWeapons = weaponsThisLevel;
+
+        //POWERUPS
+        //Initialize needed variables
+        List<SpawnObjDef> powerupsThisLevel = new List<SpawnObjDef>();
+        int newPowerupFrequency = 0;
+        yield return null;
+        //initialize enemies for level appropriately
+        for (int index = 0; index < powerups.Count; index++) {
+            if (powerups[index].levelAppearance <= level) {
+                powerupsThisLevel.Add(powerups[index]);
+                newPowerupFrequency += powerups[index].frequency;
+            }
+            yield return null;
+        }
+        //Send variables back
+        totalPowerupFrequencies = newPowerupFrequency;
+        currentLevelPowerups = powerupsThisLevel;
 
         //finally, let recalculation be finished
         recalculationFinished = true;

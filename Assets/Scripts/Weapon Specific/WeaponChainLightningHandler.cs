@@ -62,7 +62,13 @@ public class WeaponChainLightningHandler : MonoBehaviour {
             detector.radius = 0;
 
             //damage the other element
-            ObjectCollisionHandler handler = other.transform.root.gameObject.GetComponent<ObjectCollisionHandler>();
+            ObjectCollisionHandler handler = other.GetComponent<ObjectCollisionHandler>();
+            //if no collider exists, then attempt to take from parent
+            GameObject otherObject = other.gameObject;
+            while (handler == null) {
+                otherObject = otherObject.transform.parent.gameObject;
+                handler = otherObject.GetComponentInParent<ObjectCollisionHandler>();
+            }
             handler.Damage(damageAmount, tag);
             Pools.Initialize(explosion, rootTransform.position, rootTransform.rotation);
 

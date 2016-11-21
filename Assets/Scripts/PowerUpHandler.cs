@@ -29,19 +29,25 @@ public class PowerUpHandler : MonoBehaviour {
 
     public void activate() {
         if (healthDef.activated) {
+            if (healthDef.increaseMax) {
+                playerCollisionHandler.maxHealth += healthDef.amount;
+            }
             playerCollisionHandler.AddHealth(healthDef.amount);
         }
         if (energyDef.activated) {
+            if (energyDef.increaseMax) {
+                playerWeapons.maxEnergy += energyDef.amount;
+            }
             playerWeapons.AddEnergy(energyDef.amount);
         }
         if (changeWeaponDef.activated) {
-            playerWeapons.ChangeWeapon(changeWeaponDef.weaponType);
+            playerWeapons.ChangeWeapon(changeWeaponDef.weaponType, true);
         }
         if (changeMissileDef.activated) {
-            playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount);
+            playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount, true);
         }
         if (spawnObjectDef.activated) {
-            Instantiate(spawnObjectDef.objectToSpawn, transform.position, Quaternion.identity);
+            Pools.Initialize(spawnObjectDef.objectToSpawn, transform.position, Quaternion.identity);
         }
     }
 	
@@ -54,11 +60,13 @@ public class PowerupDefinition {
 
 [System.Serializable]
 public class HealthPowerup : PowerupDefinition {
+    public bool increaseMax;
     public float amount;
 }
 
 [System.Serializable]
 public class EnergyPowerup : PowerupDefinition {
+    public bool increaseMax;
     public float amount;
 }
 

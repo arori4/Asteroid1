@@ -75,11 +75,12 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
         //only collide if definitions say so, and if on the screen
         if (collideDefinition.collidesWith(other) && transform.position.x < MAX_X_COLLIDE) {
+            
             //special consideration for powerups
             if (other.CompareTag("Powerup")) {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
             }
-            dealDamage(other.transform.root.gameObject);
+            dealDamage(other.gameObject);
 
             //create contact effects, if any
             if (contactEffectList.Length > 0) {
@@ -112,9 +113,13 @@ public class ObjectCollisionHandler : MonoBehaviour {
         //Get reference to collider
         ObjectCollisionHandler otherCollider = other.GetComponent<ObjectCollisionHandler>();
 
-        //if no collider exists, then don't deal any damage
-        if (otherCollider == null) {
+        //if no collider exists, then attempt to take from parent
+        if (otherCollider == null && other.transform.parent == null) {
             return;
+        }
+        while (otherCollider == null) {
+            other = other.transform.parent.gameObject;
+            otherCollider = other.GetComponentInParent<ObjectCollisionHandler>();
         }
 
         //Different behavior if hitting or is the player

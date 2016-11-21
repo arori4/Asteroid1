@@ -7,4 +7,7 @@ public class ShieldInfo : MonoBehaviour {
     public float shieldStrength = 1.0f; //use this to make stronger shields
     public float rechargeTime = 2.0f; //in seconds;
 
+    public string shieldName;
+    public GameObject shieldIcon;
+
 }

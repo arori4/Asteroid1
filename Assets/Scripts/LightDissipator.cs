@@ -6,17 +6,21 @@ public class LightDissipator : MonoBehaviour {
     new Light light;
     public float duration;
 
+    float startingIntensity;
     float currentVelocity;
     
 	void Start () {
         light = GetComponent<Light>();
-	}
-	
+        startingIntensity = light.intensity;
+    }
+    
 	void Update () {
         light.intensity = Mathf.SmoothDamp(light.intensity, 0, ref currentVelocity, duration / 2);
-
-	    if (light.intensity <= 0.001) {
-            Destroy(gameObject);
-        }
 	}
+
+    void OnDisable() {
+        if (light != null) {
+            light.intensity = startingIntensity;
+        }
+    }
 }

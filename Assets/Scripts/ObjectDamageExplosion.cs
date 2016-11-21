@@ -10,6 +10,7 @@ public class ObjectDamageExplosion : MonoBehaviour {
 
 	void OnEnable () {
         collider = GetComponent<SphereCollider>();
+        collider.radius = 0;
         StartCoroutine(Expand());
 	}
 	

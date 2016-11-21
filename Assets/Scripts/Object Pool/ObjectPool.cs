@@ -37,7 +37,7 @@ public class ObjectPool {
             GameObject clone = pool[indexToClaim];
 
             //debug check
-            if (clone.active) {
+            if (clone.activeSelf) {
                 Debug.Log(clone.name + " in pool was still active upon initialization.");
             }
 
@@ -90,14 +90,16 @@ public class PoolMember : MonoBehaviour {
 
     void OnEnable() {
         if (particles != null) {
-            particles.enableEmission = true;
+            ParticleSystem.EmissionModule emission = particles.emission;
+            emission.enabled = true;
         }
     }
 
     void OnDisable() {
         pool.nextObject = gameObject; //calls set
         if (particles != null) {
-            particles.enableEmission = false;
+            ParticleSystem.EmissionModule emission = particles.emission;
+            emission.enabled = false;
         }
     }
 }
