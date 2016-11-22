@@ -11,6 +11,8 @@ public class PowerUpHandler : MonoBehaviour {
     public WeaponPowerup changeWeaponDef;
     public MissilePowerup changeMissileDef;
     public SpawnObject spawnObjectDef;
+    public SpawnTurret spawnTurretDef;
+    public SpawnGun spawnGunDef;
 
     GameObject player;
     ObjectCollisionHandler playerCollisionHandler;
@@ -49,6 +51,12 @@ public class PowerUpHandler : MonoBehaviour {
         if (spawnObjectDef.activated) {
             Pools.Initialize(spawnObjectDef.objectToSpawn, transform.position, Quaternion.identity);
         }
+        if (spawnTurretDef.activated) {
+            playerWeapons.AddTurret(1);
+        }
+        if (spawnGunDef.activated) {
+            playerWeapons.AddGuns(1);
+        }
     }
 	
 }
@@ -84,4 +92,12 @@ public class MissilePowerup : PowerupDefinition {
 [System.Serializable]
 public class SpawnObject : PowerupDefinition {
     public GameObject objectToSpawn;
+}
+
+[System.Serializable]
+public class SpawnTurret : PowerupDefinition {
+}
+
+[System.Serializable]
+public class SpawnGun : PowerupDefinition {
 }

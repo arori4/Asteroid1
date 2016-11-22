@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 /**
  * Controls the player's weapons, shields, and missiles
  */
 public class PlayerWeapons : MonoBehaviour {
     
-    public Transform gunLocation;
     public float maxEnergy = 100;
     public float rechargeRate = 1f;
     float energy;
@@ -37,6 +37,15 @@ public class PlayerWeapons : MonoBehaviour {
     bool missileButtonPressed;
     float missileNextFire;
 
+    //ship
+    public GameObject shipType;
+    public int numStartingGuns;
+    ShipInfo currentShipInfo;
+    List<Transform> gunLocations = new List<Transform>();
+    List<GameObject> turretObjects = new List<GameObject>();
+    public GameObject gunQuad;
+    public GameObject turretModel;
+
     //UI
     public Sliders sliders;
 
@@ -56,19 +65,12 @@ public class PlayerWeapons : MonoBehaviour {
     private const float SLIDER_SIZE_DIVIDER = 200f;
 
     void Start () {
-        //Null Checks
-        if (gunLocation == null) {
-            Debug.Log("PlayerWeapon gun is null");
-        }
-        if (weaponType == null) {
-            Debug.Log("Object with gun has a null bolt type");
-        }
-
         //Set script global values
         weaponNextFire = Time.time;
         energy = maxEnergy;
 
         //Set bolt specific values
+        ChangeShip(shipType);
         ChangeWeapon(weaponType, false);
         ChangeShield(shieldType, false);
         ChangeMissile(missileType, 5, false);
@@ -80,6 +82,9 @@ public class PlayerWeapons : MonoBehaviour {
         sliders.shield.gameObject.SetActive(false);
         hitCanvasActivated = false;
         hitCanvas.alpha = 0;
+
+        //Post Start
+        StartCoroutine(OnPostStart());
     }
 	
 	void Update () {
@@ -134,9 +139,11 @@ public class PlayerWeapons : MonoBehaviour {
             energy > weaponInfo.energyCost) {
 
             //create the weapon
-            GameObject spawnedWeapon = Pools.Initialize(weaponType, gunLocation.position, gunLocation.rotation);
-            //set the velocity to be the normal of the gun plane (up should be correct)
-            spawnedWeapon.GetComponent<ObjectStraightMover>().SetFinalDirection(gunLocation.up);
+            foreach (Transform gun in gunLocations) {
+                GameObject spawnedWeapon = Pools.Initialize(weaponType, gun.position, gun.rotation);
+                //set the velocity to be the normal of the gun plane (up should be correct)
+                spawnedWeapon.GetComponent<ObjectStraightMover>().SetFinalDirection(gun.up);
+            }
 
             //set next fire and energy amount
             weaponNextFire = Time.time + weaponInfo.fireRate;
@@ -150,7 +157,7 @@ public class PlayerWeapons : MonoBehaviour {
         if (Time.time >= missileNextFire && missileCount > 0) {
 
             //create the missile
-            GameObject spawnedMissile = Pools.Initialize(missileType, gunLocation.position, gunLocation.rotation);
+            GameObject spawnedMissile = Pools.Initialize(missileType, gunLocations[0].position, gunLocations[0].rotation);
             spawnedMissile.SetActive(true); //line is included to remove warnings for now
 
             //set next fire and energy amount
@@ -251,6 +258,69 @@ public class PlayerWeapons : MonoBehaviour {
         }
     }
 
+    public void ChangeShip(GameObject ship) {
+        if (ship == null) {
+            print("PlayerWeapons Ship is null");
+            return;
+        }
+
+        currentShipInfo = ship.GetComponent<ShipInfo>();
+        if (currentShipInfo == null) {
+            print("Changing ship to a non ship. Ship not assigned.");
+            return;
+        }
+
+        //Remove old ship
+        shipType.SetActive(false);
+
+        //Set ship parent
+        shipType = Instantiate(ship, gameObject.transform.position, gameObject.transform.rotation) as GameObject;
+        shipType.transform.parent = gameObject.transform;
+        shipType.SetActive(true);
+
+        //Clear transform list
+        gunLocations.Clear();
+
+        //Assign new amount of guns
+        int oldAmtGuns = gunLocations.Count;
+        AddGuns(oldAmtGuns);
+
+        //Assign new amount of turrets
+        int oldAmtTurrets = turretObjects.Count;
+        AddTurret(oldAmtTurrets);
+    }
+
+    public void AddGuns(int gunsToAdd) {
+        //Find the maximum amount of guns to add
+        int maxGunsAllowed = Mathf.Min(currentShipInfo.gunLocations.Count, gunLocations.Count + gunsToAdd);
+
+        for (int index = gunLocations.Count; index < maxGunsAllowed; index++) {
+            Transform newGun = Pools.Initialize(
+                gunQuad, 
+                currentShipInfo.gunLocations[index] + gameObject.transform.position, 
+                gunQuad.transform.rotation)
+                .transform;
+            newGun.parent = gameObject.transform;
+            gunLocations.Add(newGun);
+        }
+    }
+
+    public void AddTurret(int turretsToAdd) {
+        //Find the maximum amount of turrets to add
+        int maxTurretsAllowed = Mathf.Min(currentShipInfo.turretLocations.Count, turretObjects.Count + turretsToAdd);
+
+        for (int index = turretObjects.Count; index < maxTurretsAllowed; index++) {
+            GameObject newTurret = Pools.Initialize(
+                turretModel, 
+                currentShipInfo.turretLocations[index] + gameObject.transform.position, 
+                Quaternion.identity);
+            //Add to relevant lists
+            turretObjects.Add(newTurret);
+            //gunLocations.Add(newTurret) get the transform of its plane
+            //set parent
+            newTurret.transform.parent = gameObject.transform;
+        }
+    }
 
     /*
      * Determines hit when a shield is hit
@@ -359,6 +429,11 @@ public class PlayerWeapons : MonoBehaviour {
             canvas.alpha -= Time.deltaTime * smoothing;
             yield return null;
         }
+    }
+
+    private IEnumerator OnPostStart() {
+        yield return new WaitForSeconds(0.2f);
+        AddGuns(numStartingGuns);
     }
 
     void OnDisable() {

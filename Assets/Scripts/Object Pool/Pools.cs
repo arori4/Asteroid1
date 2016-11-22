@@ -122,9 +122,15 @@ public class Pools : MonoBehaviour {
 
     [ContextMenu("Sort all by name")]
     void SortArrays() {
-        for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
-            GameObject[] currentArray = startingObjectArrays[outer];
-            System.Array.Sort(currentArray, (a, b) => a.name.CompareTo(b.name));
-        }
+        System.Array.Sort(aliens, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(alienWeapons, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(asteroids, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(barriers, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(friends, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(mine, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(playerWeapons, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(powerups, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(explosions, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(audios, (a, b) => a.name.CompareTo(b.name));
     }
 }

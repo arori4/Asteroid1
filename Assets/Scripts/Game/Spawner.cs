@@ -247,7 +247,7 @@ public class Spawner : MonoBehaviour {
         int chosenFrequency = Random.Range(0, totalFrequency) + 1;
         int chooseIndex = 0;
         while (chosenFrequency > 0) {
-            chosenFrequency -= pairs[chooseIndex++].frequency;
+            chosenFrequency -= pairs[chooseIndex++].Frequency();
         }
         chooseIndex--; //correction to choose the correct one b/c it adds stuff
 
@@ -316,9 +316,9 @@ public class Spawner : MonoBehaviour {
         yield return null;
         //initialize enemies for level appropriately
         for (int index = 0; index < enemies.Count; index++) {
-            if (enemies[index].levelAppearance <= level) {
+            if (enemies[index].LevelAppearance() <= level) {
                 enemiesThisLevel.Add(enemies[index]);
-                newEnemyFrequency += enemies[index].frequency;
+                newEnemyFrequency += enemies[index].Frequency();
             }
             yield return null;
         }
@@ -333,9 +333,9 @@ public class Spawner : MonoBehaviour {
         yield return null;
         //initialize enemies for level appropriately
         for (int index = 0; index < enemyWeapons.Count; index++) {
-            if (enemyWeapons[index].levelAppearance <= level) {
+            if (enemyWeapons[index].LevelAppearance() <= level) {
                 weaponsThisLevel.Add(enemyWeapons[index]);
-                newWeaponFrequency += enemyWeapons[index].frequency;
+                newWeaponFrequency += enemyWeapons[index].Frequency();
             }
             yield return null;
         }
@@ -350,9 +350,9 @@ public class Spawner : MonoBehaviour {
         yield return null;
         //initialize enemies for level appropriately
         for (int index = 0; index < powerups.Count; index++) {
-            if (powerups[index].levelAppearance <= level) {
+            if (powerups[index].LevelAppearance() <= level) {
                 powerupsThisLevel.Add(powerups[index]);
-                newPowerupFrequency += powerups[index].frequency;
+                newPowerupFrequency += powerups[index].Frequency();
             }
             yield return null;
         }
@@ -396,12 +396,28 @@ public class Spawner : MonoBehaviour {
 
         return spawnedObj;
     }
+
+    [ContextMenu("Sort by Level Appearance")]
+    void SortEnemies() {
+        enemies.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        enemyWeapons.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        powerups.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        print("Sorted enemy lists");
+    }
 }
 
 [System.Serializable]
 public class SpawnObjDef {
 
     public GameObject obj;
-    public int frequency;
-    public int levelAppearance;
+    public Vector2 levappFreq;
+
+    public int LevelAppearance() {
+        return (int)levappFreq.x;
+    }
+
+    public int Frequency() {
+        return (int)levappFreq.y;
+    }
 }
+
