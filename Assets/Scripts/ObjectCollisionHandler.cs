@@ -14,16 +14,20 @@ public class ObjectCollisionHandler : MonoBehaviour {
     public float damageAmount;
 
     //contact
+    [Header("Contact Settings")]
     public GameObject[] contactEffectList;
     public GameObject[] contactSoundList;
 
     //death
+    [Header("Death Settings")]
     public GameObject[] explosionEffectList;
     public GameObject[] explosionSoundList;
 
     //drops
-    public DropPair[] alwaysDrops;
-    public DropPair[] sometimesDrops;
+    [Header("Drop Settings")]
+    public List<DropPair> alwaysDrops;
+    public List<DropPair> sometimesDrops;
+    List<GameObject> dropList = new List<GameObject>();
     public int maxNonEssentialDrops;
 
     //States
@@ -31,7 +35,6 @@ public class ObjectCollisionHandler : MonoBehaviour {
     bool startedDeathCoroutine;
     float currentHealth;
     string lastColliderTag = ""; //for keeping tab of score right now
-    List<GameObject> dropList = new List<GameObject>();
 
     //Scripts
     GameObject gameController;
@@ -178,6 +181,22 @@ public class ObjectCollisionHandler : MonoBehaviour {
             ui.GameOver();
         }
 
+        //Play explosion, if there are any
+        if (explosionEffectList.Length > 0) {
+            Pools.Initialize(
+                explosionEffectList[Random.Range(0, explosionEffectList.Length)],
+                transform.position, Quaternion.identity);
+        }
+        yield return null;
+
+        //Play death sound, if there are any
+        if (explosionSoundList.Length > 0) {
+            GameObject audio = Pools.Initialize(
+                explosionSoundList[Random.Range(0, explosionSoundList.Length)],
+                transform.position, Quaternion.identity);
+            audio.GetComponent<AudioSource>().Play();
+        }
+
         //stop if calculations aren't done
         while (!dropCalculationDone) {
             yield return null;
@@ -204,22 +223,6 @@ public class ObjectCollisionHandler : MonoBehaviour {
             yield return null;
         }
 
-        //Play explosion, if there are any
-        if (explosionEffectList.Length > 0) {
-            Pools.Initialize(
-                explosionEffectList[Random.Range(0, explosionEffectList.Length)],
-                transform.position, Quaternion.identity);
-        }
-        yield return null;
-
-        //Play death sound, if there are any
-        if (explosionSoundList.Length > 0) {
-            GameObject audio = Pools.Initialize(
-                explosionSoundList[Random.Range(0, explosionSoundList.Length)],
-                transform.position, Quaternion.identity);
-            audio.GetComponent<AudioSource>().Play();
-        }
-
         //finally kill object
         gameObject.SetActive(false);
     }
@@ -231,22 +234,28 @@ public class ObjectCollisionHandler : MonoBehaviour {
     private IEnumerator CalculateDropsCoroutine() {
 
         //add in all essential drops
-        for (int outer = 0; outer < alwaysDrops.Length; outer++) {
-            for (int inner = 0; inner < alwaysDrops[outer].numDrops; inner++) {
+        for (int outer = 0; outer < alwaysDrops.Count; outer++) {
+            int numAlwaysDropsToAdd = (int) Random.Range(alwaysDrops[outer].minMaxFreq.x,
+                alwaysDrops[outer].minMaxFreq.y);
+            for (int inner = 0; inner < numAlwaysDropsToAdd; inner++) {
                 dropList.Add(alwaysDrops[outer].obj);
                 yield return null;
             }
+        }
+
+        //Clone drop list
+        List<DropPair> clonedSometimesDrops = new List<DropPair>(sometimesDrops);
+        int numNonEssentialDrops = 0;
+        int totalDropFrequencies = 0;
+        yield return null;
+
+        //Calculate amount of non essential drops and total frequency
+        for (int index = 0; index < clonedSometimesDrops.Count; index++) {
+            numNonEssentialDrops += (int)clonedSometimesDrops[index].minMaxFreq.y;
+            totalDropFrequencies += (int)clonedSometimesDrops[index].minMaxFreq.z;
             yield return null;
         }
 
-        //find total drop frequencies in same loop
-        int numNonEssentialDrops = 0;
-        int totalDropFrequencies = 0;
-        for (int index = 0; index < sometimesDrops.Length; index++) {
-            numNonEssentialDrops += sometimesDrops[index].numDrops;
-            totalDropFrequencies += sometimesDrops[index].frequency;
-            yield return null;
-        }
         //calculate the maximum possible number of drops to do, regardless of user settings
         numNonEssentialDrops = Random.Range(0, Mathf.Min(numNonEssentialDrops, maxNonEssentialDrops));
 
@@ -255,17 +264,21 @@ public class ObjectCollisionHandler : MonoBehaviour {
             int chosenFrequency = Random.Range(0, totalDropFrequencies) + 1;
             int chooseIndex = 0;
             while (chosenFrequency > 0) {
-                chosenFrequency -= sometimesDrops[chooseIndex].frequency;
+                chosenFrequency -= (int)clonedSometimesDrops[chooseIndex].minMaxFreq.z;
                 chooseIndex++;
                 yield return null;
             }
             chooseIndex--; //correction to choose the correct one b/c it adds stuff
 
-            //choose game object only if there are enough
-            //note this biases towards rarity. however, with enough drops, this will not occur as often
-            if (sometimesDrops[chooseIndex].numDrops > 0) {
-                dropList.Add(sometimesDrops[chooseIndex].obj);
-                sometimesDrops[chooseIndex].numDrops--;
+            //add object
+            DropPair chosenPair = clonedSometimesDrops[chooseIndex];
+            dropList.Add(chosenPair.obj);
+            chosenPair.minMaxFreq.y--;
+
+            //remove object from list if maximum dropped is reached
+            if (chosenPair.minMaxFreq.y <= 0) {
+                totalDropFrequencies -= (int)chosenPair.minMaxFreq.z;
+                clonedSometimesDrops.Remove(chosenPair);
             }
 
             //if no more exist, then continue
@@ -357,6 +370,5 @@ public class CanCollideWith {
 [System.Serializable]
 public class DropPair {
     public GameObject obj;
-    public int frequency;
-    public int numDrops;
+    public Vector3 minMaxFreq;
 }

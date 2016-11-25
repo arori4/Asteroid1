@@ -34,6 +34,8 @@ public class Spawner : MonoBehaviour {
     Vector2 enemyWaitTime;
 
     //Asteroids
+    public List<SpawnObjDef> asteroids;
+    List<SpawnObjDef> currentLevelAsteroids = new List<SpawnObjDef>();
     public GameObject[] largeAsteroids;
     public GameObject[] smallAsteroids;
     public Material[] asteroidMaterials;
@@ -61,8 +63,8 @@ public class Spawner : MonoBehaviour {
         //Initialize variables
         enemyWaitTime = new Vector2(1, 2);
         asteroidWaitTime = new Vector2(1, 2);
-        asteroidSizeRatio = new Vector2(7, 4);
-        powerupWaitTime = new Vector2(10, 20);
+        asteroidSizeRatio = new Vector2(7, 3);
+        powerupWaitTime = new Vector2(5, 10);
 
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
@@ -421,3 +423,14 @@ public class SpawnObjDef {
     }
 }
 
+[System.Serializable]
+public class SpawnClass {
+
+    public List<SpawnObjDef> originalList;
+    List<SpawnObjDef> currentList;
+
+    public List<SpawnObjDef> GetCurrentList() {
+        return currentList;
+    }
+
+}

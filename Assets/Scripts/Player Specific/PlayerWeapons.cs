@@ -65,16 +65,6 @@ public class PlayerWeapons : MonoBehaviour {
     private const float SLIDER_SIZE_DIVIDER = 200f;
 
     void Start () {
-        //Set script global values
-        weaponNextFire = Time.time;
-        energy = maxEnergy;
-
-        //Set bolt specific values
-        ChangeShip(shipType);
-        ChangeWeapon(weaponType, false);
-        ChangeShield(shieldType, false);
-        ChangeMissile(missileType, 5, false);
-
         //Set player variables
         playerCollision = GetComponent<ObjectCollisionHandler>();
 
@@ -84,6 +74,19 @@ public class PlayerWeapons : MonoBehaviour {
         hitCanvas.alpha = 0;
 
         //Post Start
+    }
+
+    void OnEnable() {
+        //Set ship stats
+        weaponNextFire = Time.time;
+        energy = maxEnergy;
+        
+        //Set weapons
+        ChangeShip(shipType);
+        ChangeWeapon(weaponType, false);
+        ChangeShield(shieldType, false);
+        ChangeMissile(missileType, 5, false);
+
         StartCoroutine(OnPostStart());
     }
 	
@@ -316,8 +319,7 @@ public class PlayerWeapons : MonoBehaviour {
                 Quaternion.identity);
             //Add to relevant lists
             turretObjects.Add(newTurret);
-            //gunLocations.Add(newTurret) get the transform of its plane
-            //set parent
+            gunLocations.Add(newTurret.GetComponent<TurretTracker>().gunLocation);
             newTurret.transform.parent = gameObject.transform;
         }
     }

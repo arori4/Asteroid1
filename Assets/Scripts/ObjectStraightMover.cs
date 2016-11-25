@@ -34,7 +34,7 @@ public class ObjectStraightMover : MonoBehaviour {
         if (dropMoveAway && wasDropped) {
             //choose a random direction to go
             Vector3 newDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f));
-            resultantDirection = Vector3.Normalize(newDirection) * dropSpeed;
+            resultantDirection = Vector3.Normalize(newDirection) * Random.Range(0f, dropSpeed);
         }
         else {
             resultantDirection = Vector3.Normalize(finalDirection);
