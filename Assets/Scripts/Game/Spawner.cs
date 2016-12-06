@@ -13,43 +13,28 @@ public class Spawner : MonoBehaviour {
     const int SURVIVAL_MODE = 1;
     public int mode = 0;
     public int level = 1;
-    public float survivalLevelTime = 15f;
+    public float survivalLevelTime = 20f;
 
-    //Spawn Limits
-    public Vector2 spawnVerticalLimits = new Vector2(-4.35f, 4.35f);
-    public Vector2 spawnOtherLimits;
-    public float beginningWait;
+    //Spawn Location
+    public Vector2 spawnVerticalLocation = new Vector2(-4.5f, 4.5f);
+    public Vector2 spawnXZLocation;
+    public float spawnBeginningWait;
 
     //Enemies
-    public List<SpawnObjDef> enemies;
-    List<SpawnObjDef> currentLevelEnemies = new List<SpawnObjDef>();
-    int totalEnemyFrequencies;
-    //Enemy Weapons
-    public List<SpawnObjDef> enemyWeapons;
-    List<SpawnObjDef> currentLevelWeapons = new List<SpawnObjDef>();
-    int totalWeaponFrequencies;
-
+    public SpawnClass enemyClass;
+    public SpawnClass enemyWeaponClass;
     int numEnemiesLeft;
     int maxEnemiesSpawnAtTime;
-    Vector2 enemyWaitTime;
 
     //Asteroids
-    public List<SpawnObjDef> asteroids;
-    List<SpawnObjDef> currentLevelAsteroids = new List<SpawnObjDef>();
-    public GameObject[] largeAsteroids;
-    public GameObject[] smallAsteroids;
-    public Material[] asteroidMaterials;
+    public SpawnClass asteroidClass;
+    public List<Material> asteroidMaterials;
     bool continueSpawningAsteroids;
     int maxAsteroidsSpawnAtTime;
     float asteroidSpeed;
-    Vector2 asteroidSizeRatio;
-    Vector2 asteroidWaitTime;
 
-    //Powerup Spawns
-    public List<SpawnObjDef> powerups;
-    List<SpawnObjDef> currentLevelPowerups = new List<SpawnObjDef>();
-    int totalPowerupFrequencies;
-    Vector2 powerupWaitTime;
+    //Powerups
+    public SpawnClass powerupClass;
 
     //UI Elements
     public CanvasGroup largeTextCanvas;
@@ -59,12 +44,6 @@ public class Spawner : MonoBehaviour {
     bool recalculationFinished;
 
     void Start() {
-
-        //Initialize variables
-        enemyWaitTime = new Vector2(1, 2);
-        asteroidWaitTime = new Vector2(1, 2);
-        asteroidSizeRatio = new Vector2(7, 3);
-        powerupWaitTime = new Vector2(5, 10);
 
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
@@ -99,6 +78,9 @@ public class Spawner : MonoBehaviour {
         StartCoroutine(SpawnPowerupsCoroutine());
     }
 
+    /**
+     * Sets the level, and level properties
+     */
     private void SetLevel(int newLevel) {
         //set level
         level = newLevel;
@@ -122,43 +104,48 @@ public class Spawner : MonoBehaviour {
 
         //attributes for each level
         if (level >= 1) {
-            enemyWaitTime = new Vector2(2.5f, 4f);
-            asteroidWaitTime = new Vector2(1f, 1.5f);
+            enemyClass.SetWaitTime(4.0f, 5.0f);
+            asteroidClass.SetWaitTime(1.5f, 2.5f);
+            powerupClass.SetWaitTime(5f, 10f);
             maxAsteroidsSpawnAtTime = 1;
             maxEnemiesSpawnAtTime = 1;
         }
         if (level >= 5) {
-            enemyWaitTime = new Vector2(2f, 3f);
-            asteroidWaitTime = new Vector2(0.75f, 1.25f);
-            maxAsteroidsSpawnAtTime = 2;
+            enemyClass.SetWaitTime(3.0f, 4.0f);
+            asteroidClass.SetWaitTime(1.25f, 2.0f);
         }
         if (level >= 7) {
-            enemyWaitTime = new Vector2(1.5f, 2.5f);
-            asteroidWaitTime = new Vector2(0.5f, 1.25f);
+            enemyClass.SetWaitTime(2.5f, 3.25f);
+            asteroidClass.SetWaitTime(1.25f, 1.75f);
+            maxAsteroidsSpawnAtTime = 2;
         }
         if (level >= 10) {
-            enemyWaitTime = new Vector2(1f, 1.5f);
-            asteroidWaitTime = new Vector2(0.45f, 1f);
-            maxAsteroidsSpawnAtTime = 3;
+            enemyClass.SetWaitTime(2.5f, 3.0f);
+            asteroidClass.SetWaitTime(1.0f, 1.5f);
+            powerupClass.SetWaitTime(4.5f, 9f);
             maxEnemiesSpawnAtTime = 2;
         }
         if (level >= 15) {
-            enemyWaitTime = new Vector2(0.5f, 1.5f);
-            asteroidWaitTime = new Vector2(0.25f, 0.5f);
-            maxAsteroidsSpawnAtTime = 4;
-            maxEnemiesSpawnAtTime = 3;
+            enemyClass.SetWaitTime(2.0f, 2.5f);
+            asteroidClass.SetWaitTime(0.75f, 1.25f);
+            maxAsteroidsSpawnAtTime = 3;
         }
         if (level >= 20) {
-            enemyWaitTime = new Vector2(0.5f, 1f);
-            asteroidWaitTime = new Vector2(0.25f, 0.35f);
-            maxAsteroidsSpawnAtTime = 5;
-            maxEnemiesSpawnAtTime = 4;
+            enemyClass.SetWaitTime(1.75f, 2.0f);
+            asteroidClass.SetWaitTime(0.65f, 1.0f);
+            powerupClass.SetWaitTime(4f, 8f);
+        }
+        if (level >= 25) {
+            enemyClass.SetWaitTime(1.5f, 1.75f);
+            asteroidClass.SetWaitTime(0.5f, 0.85f);
+            maxAsteroidsSpawnAtTime = 4;
+            maxEnemiesSpawnAtTime = 3;
         }
 
     }
 
     private IEnumerator SpawnEnemiesCoroutine() {
-        yield return new WaitForSeconds(beginningWait);
+        yield return new WaitForSeconds(spawnBeginningWait);
 
         while (numEnemiesLeft > 0) {
             if (!recalculationFinished) {
@@ -171,7 +158,7 @@ public class Spawner : MonoBehaviour {
 
             for (int index = 0; index < numEnemiesToSpawn; index++) {
 
-                GameObject enemyToSpawn = ChooseRandomFromFrequency(currentLevelEnemies, totalEnemyFrequencies);
+                GameObject enemyToSpawn = enemyClass.NextObject();
                 yield return null;
 
                 //Spawn enemy
@@ -190,10 +177,11 @@ public class Spawner : MonoBehaviour {
                         weapons = newEnemy.GetComponentInChildren<AIWeapons>();
                         guns = weapons.guns;
                     }
+                    //TODO: correct implementation
 
                     for (int gunIndex = 0; gunIndex < guns.Length; gunIndex++) {
                         //Choose random gun
-                        GameObject gunToSet = ChooseRandomFromFrequency(currentLevelWeapons, totalWeaponFrequencies);
+                        GameObject gunToSet = enemyWeaponClass.NextObject();
                         yield return null;
 
                         guns[gunIndex].ChangeWeapon(gunToSet);
@@ -201,7 +189,7 @@ public class Spawner : MonoBehaviour {
                     }
                 }
 
-                yield return new WaitForSeconds(Random.Range(enemyWaitTime.x, enemyWaitTime.y)); //pause
+                yield return new WaitForSeconds(enemyClass.NextWaitTime()); //pause
             }
 
         }
@@ -220,8 +208,12 @@ public class Spawner : MonoBehaviour {
         yield return new WaitForSeconds(20);
     }
 
+
+    /**
+     * Coroutine for spawning powerups
+     */
     private IEnumerator SpawnPowerupsCoroutine() {
-        yield return new WaitForSeconds(beginningWait + Random.Range(powerupWaitTime.x, powerupWaitTime.y));
+        yield return new WaitForSeconds(powerupClass.NextWaitTime());
 
         while (numEnemiesLeft > 0) {
             if (!recalculationFinished) {
@@ -230,30 +222,13 @@ public class Spawner : MonoBehaviour {
             }
 
             //Only spawn one powerup at a time
-            GameObject powerupToSpawn = ChooseRandomFromFrequency(currentLevelPowerups, totalPowerupFrequencies);
+            GameObject powerupToSpawn = powerupClass.NextObject();
             yield return null;
 
             //Spawn powerup
             SpawnInWave(powerupToSpawn);
-            yield return null;
-
-            yield return new WaitForSeconds(Random.Range(powerupWaitTime.x, powerupWaitTime.y));
+            yield return new WaitForSeconds(powerupClass.NextWaitTime());
         }
-    }
-
-
-    /**
-     * Chooses a random object based on the pair list given.
-     */
-    private GameObject ChooseRandomFromFrequency(List<SpawnObjDef> pairs, int totalFrequency) {
-        int chosenFrequency = Random.Range(0, totalFrequency) + 1;
-        int chooseIndex = 0;
-        while (chosenFrequency > 0) {
-            chosenFrequency -= pairs[chooseIndex++].Frequency();
-        }
-        chooseIndex--; //correction to choose the correct one b/c it adds stuff
-
-        return pairs[chooseIndex].obj;
     }
 
 
@@ -261,38 +236,25 @@ public class Spawner : MonoBehaviour {
      * Coroutine for spawning asteroids.
      */
     private IEnumerator SpawnAsteroidsCoroutine() {
-        yield return new WaitForSeconds(beginningWait);
+        yield return new WaitForSeconds(spawnBeginningWait);
 
         while (continueSpawningAsteroids) {
-            if (!recalculationFinished) { //do not start if there is no array calculated
+            if (!recalculationFinished) {
                 yield return new WaitForSeconds(0.5f);
                 continue;
             }
 
             //Chose an amount of asteroids to spawn at a time
             int numAsteroidsToSpawn = Random.Range(1, maxAsteroidsSpawnAtTime);
-
             for (int index = 0; index < numAsteroidsToSpawn; index++){
-
-                //Choose a random asteroid based on ratios
-                GameObject enemyToSpawn = null;
-                float randomSizeSToL = Random.Range(0, asteroidSizeRatio.x + asteroidSizeRatio.y);
-                if (randomSizeSToL < asteroidSizeRatio.x) { //small asteroid chosen
-                    enemyToSpawn = smallAsteroids[Random.Range(0, smallAsteroids.Length)];
-                }
-                else { //large asteroid chosen
-                    enemyToSpawn = largeAsteroids[Random.Range(0, largeAsteroids.Length)];
-                }
-                yield return null;
-
                 //Spawn asteroid
-                GameObject spawnedEnemy = SpawnRngMaterial(enemyToSpawn, asteroidMaterials);
+                GameObject spawnedEnemy = SpawnRngMaterial(asteroidClass.NextObject(), asteroidMaterials);
                 spawnedEnemy.GetComponent<ObjectStraightMover>().speed = asteroidSpeed;
                 yield return null;
             }
 
             //Wait for new asteroid to create
-            yield return new WaitForSeconds(Random.Range(asteroidWaitTime.x, asteroidWaitTime.y));
+            yield return new WaitForSeconds(asteroidClass.NextWaitTime());
         }
     }
 
@@ -310,59 +272,15 @@ public class Spawner : MonoBehaviour {
     }
 
     private IEnumerator RecalculateFrequencies() {
-
-        //ENEMIES
-        //Initialize needed variables
-        List<SpawnObjDef> enemiesThisLevel = new List<SpawnObjDef>();
-        int newEnemyFrequency = 0;
+        enemyClass.Recalculate(level);
         yield return null;
-        //initialize enemies for level appropriately
-        for (int index = 0; index < enemies.Count; index++) {
-            if (enemies[index].LevelAppearance() <= level) {
-                enemiesThisLevel.Add(enemies[index]);
-                newEnemyFrequency += enemies[index].Frequency();
-            }
-            yield return null;
-        }
-        //Send variables back
-        totalEnemyFrequencies = newEnemyFrequency;
-        currentLevelEnemies = enemiesThisLevel;
-
-        //ENEMY WEAPONS
-        //Initialize needed variables
-        List<SpawnObjDef> weaponsThisLevel = new List<SpawnObjDef>();
-        int newWeaponFrequency = 0;
+        enemyWeaponClass.Recalculate(level);
         yield return null;
-        //initialize enemies for level appropriately
-        for (int index = 0; index < enemyWeapons.Count; index++) {
-            if (enemyWeapons[index].LevelAppearance() <= level) {
-                weaponsThisLevel.Add(enemyWeapons[index]);
-                newWeaponFrequency += enemyWeapons[index].Frequency();
-            }
-            yield return null;
-        }
-        //Send variables back
-        totalWeaponFrequencies = newWeaponFrequency;
-        currentLevelWeapons = weaponsThisLevel;
-
-        //POWERUPS
-        //Initialize needed variables
-        List<SpawnObjDef> powerupsThisLevel = new List<SpawnObjDef>();
-        int newPowerupFrequency = 0;
+        asteroidClass.Recalculate(level);
         yield return null;
-        //initialize enemies for level appropriately
-        for (int index = 0; index < powerups.Count; index++) {
-            if (powerups[index].LevelAppearance() <= level) {
-                powerupsThisLevel.Add(powerups[index]);
-                newPowerupFrequency += powerups[index].Frequency();
-            }
-            yield return null;
-        }
-        //Send variables back
-        totalPowerupFrequencies = newPowerupFrequency;
-        currentLevelPowerups = powerupsThisLevel;
+        powerupClass.Recalculate(level);
+        yield return null;
 
-        //finally, let recalculation be finished
         recalculationFinished = true;
     }
 
@@ -382,18 +300,18 @@ public class Spawner : MonoBehaviour {
     /**
      * Spawns an object with a random material
      */
-    private GameObject SpawnRngMaterial(GameObject obj, Material[] materials) {
+    private GameObject SpawnRngMaterial(GameObject obj, List<Material> materials) {
         GameObject spawnedObj = SpawnInWave(obj);
         spawnedObj.GetComponentInChildren<Renderer>().material =
-            materials[Random.Range(0, materials.Length)];
+            materials[Random.Range(0, materials.Count)];
 
         return spawnedObj;
     }
 
     private GameObject SpawnInWave(GameObject obj) {
 
-        Vector3 spawnPosition = new Vector3(spawnOtherLimits.x, spawnOtherLimits.y,
-            Random.Range(spawnVerticalLimits.x, spawnVerticalLimits.y));
+        Vector3 spawnPosition = new Vector3(spawnXZLocation.x, spawnXZLocation.y,
+            Random.Range(spawnVerticalLocation.x, spawnVerticalLocation.y));
         GameObject spawnedObj = Pools.Initialize(obj, spawnPosition, Quaternion.identity);
 
         return spawnedObj;
@@ -401,9 +319,10 @@ public class Spawner : MonoBehaviour {
 
     [ContextMenu("Sort by Level Appearance")]
     void SortEnemies() {
-        enemies.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
-        enemyWeapons.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
-        powerups.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        enemyClass.originalList.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        enemyWeaponClass.originalList.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        asteroidClass.originalList.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
+        powerupClass.originalList.Sort((x, y) => (x.LevelAppearance() - y.LevelAppearance()));
         print("Sorted enemy lists");
     }
 }
@@ -427,10 +346,52 @@ public class SpawnObjDef {
 public class SpawnClass {
 
     public List<SpawnObjDef> originalList;
-    List<SpawnObjDef> currentList;
+    Vector2 waitTime = new Vector2();
+    List<SpawnObjDef> currentList = new List<SpawnObjDef>();
+    int totalFrequency = 0;
 
-    public List<SpawnObjDef> GetCurrentList() {
-        return currentList;
+    public void SetWaitTime(float min, float max) {
+        waitTime.x = min;
+        waitTime.y = max;
+    }
+
+    /**
+     * Chooses a random object based on the pair list given.
+     */
+    public GameObject NextObject() {
+        int chosenFrequency = Random.Range(0, totalFrequency) + 1;
+        int chooseIndex = 0;
+        while (chosenFrequency > 0) {
+            chosenFrequency -= currentList[chooseIndex++].Frequency();
+        }
+        chooseIndex--; //correction to choose the correct one b/c it adds stuff
+
+        return currentList[chooseIndex].obj;
+    }
+
+    /**
+     * Recalculates frequencies for the list
+     */
+    public void Recalculate(int currentLevel) {
+
+        //Clear old list
+        currentList.Clear();
+        totalFrequency = 0;
+
+        //Sequentially add objects to the current list
+        for (int index = 0; index < originalList.Count; index++) {
+            if (originalList[index].LevelAppearance() <= currentLevel) {
+                currentList.Add(originalList[index]);
+                totalFrequency += originalList[index].Frequency();
+            }
+        }
+    }
+
+    /**
+     * Returns the next wait time
+     */
+    public float NextWaitTime() {
+        return Random.Range(waitTime.x, waitTime.y);
     }
 
 }
