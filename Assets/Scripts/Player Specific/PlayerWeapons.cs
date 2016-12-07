@@ -14,6 +14,7 @@ public class PlayerWeapons : MonoBehaviour {
     ObjectCollisionHandler playerCollision;
 
     //weapons
+    [Header("Weapon Settings")]
     public GameObject weaponType;
     public UIButtonGroup weaponUIGroup;
     WeaponInfo weaponInfo;
@@ -22,6 +23,7 @@ public class PlayerWeapons : MonoBehaviour {
     bool weaponButtonPressed;
 
     //shield
+    [Header("Shield Settings")]
     public GameObject shieldType;
     public UIButtonGroup shieldUIGroup;
     ShieldInfo shieldInfo;
@@ -30,6 +32,7 @@ public class PlayerWeapons : MonoBehaviour {
     bool shieldButtonPressed;
 
     //missile
+    [Header("Missile Settings")]
     public GameObject missileType;
     public UIButtonGroup missileUIGroup;
     MissileInfo missileInfo;
@@ -38,6 +41,7 @@ public class PlayerWeapons : MonoBehaviour {
     float missileNextFire;
 
     //ship
+    [Header("Ship Settings")]
     public GameObject shipType;
     public int numStartingGuns;
     ShipInfo currentShipInfo;
@@ -47,6 +51,7 @@ public class PlayerWeapons : MonoBehaviour {
     public GameObject turretModel;
 
     //UI
+    [Header("UI")]
     public Sliders sliders;
 
     //red hit canvas

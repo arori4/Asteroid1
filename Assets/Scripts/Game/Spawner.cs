@@ -9,6 +9,7 @@ using System.Collections.Generic;
 public class Spawner : MonoBehaviour {
 
     //game mode
+    [Header("Game Modes")]
     const int LEVEL_MODE = 0;
     const int SURVIVAL_MODE = 1;
     public int mode = 0;
@@ -16,11 +17,13 @@ public class Spawner : MonoBehaviour {
     public float survivalLevelTime = 20f;
 
     //Spawn Location
+    [Header("Spawn Location")]
     public Vector2 spawnVerticalLocation = new Vector2(-4.5f, 4.5f);
     public Vector2 spawnXZLocation;
     public float spawnBeginningWait;
 
     //Enemies
+    [Header("Spawn Definitions")]
     public SpawnClass enemyClass;
     public SpawnClass enemyWeaponClass;
     int numEnemiesLeft;
@@ -37,6 +40,7 @@ public class Spawner : MonoBehaviour {
     public SpawnClass powerupClass;
 
     //UI Elements
+    [Header("UI")]
     public CanvasGroup largeTextCanvas;
     public Text largeText;
 
