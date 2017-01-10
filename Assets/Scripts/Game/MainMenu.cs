@@ -4,8 +4,12 @@ using UnityEngine.SceneManagement;
 
 using System.Collections;
 
+/**
+ * Defines the main menu
+ */
 public class MainMenu : MonoBehaviour {
 
+    [Header("Main Menu")]
     public CanvasGroup mainMenu;
     public CanvasGroup titleText;
     public CanvasGroup startLevelsButton;
@@ -14,18 +18,31 @@ public class MainMenu : MonoBehaviour {
     public CanvasGroup goToHighScoresButton;
     AudioSource backgroundMusic;
 
+    [Header("High Score Menu")]
     public CanvasGroup highScoreMenu;
     public CanvasGroup highScoreBack;
     public Text highScoreText;
 
+    [Header("Survival Menu")]
+    public CanvasGroup survialMenu;
+    public CanvasGroup survivalEasyButton;
+    public CanvasGroup survivalMediumButton;
+    public CanvasGroup survivalHardButton;
+    public CanvasGroup survivalBackButton;
+
     GameSave gameSave;
     bool callOnce = false;
-    const float TITLE_TEXT_FADE_SPEED = 0.2f;
-    const float TITLE_TEXT_RISE_SPEED = 10f;
-    const float START_GAME_FADE_SPEED = 0.4f;
+    const float MENU_SWITCH_FADE_DURATION = 0.5f;
+    const float TITLE_TEXT_FADE_DURATION = 5f;
+    const float TITLE_TEXT_RISE_DURATION = 10f;
+    const float START_GAME_FADE_DURATION = 1f / 0.4f;
+    const int EASY_LEVEL = 1;
+    const int MEDIUM_LEVEL = 10;
+    const int HARD_LEVEL = 20;
     
 
 	void Start () {
+        //Hard set beginning values
         titleText.alpha = 0;
         blackScreen.alpha = 0;
         startLevelsButton.alpha = 0;
@@ -34,26 +51,19 @@ public class MainMenu : MonoBehaviour {
         highScoreMenu.alpha = 0;
         goToHighScoresButton.alpha = 0;
 
+        //Components
         backgroundMusic = GetComponent<AudioSource>();
         gameSave = GetComponent<GameSave>();
 
-        StartCoroutine(FadeUI());
+        StartCoroutine(StartCoroutine());
 	}
 
-    private IEnumerator FadeUI() {
-        while (titleText.alpha < 1) {
-            titleText.alpha += Time.deltaTime * TITLE_TEXT_FADE_SPEED;
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.8f);
-
-        while (startLevelsButton.alpha < 1) {
-            startLevelsButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
-            startSurvivalButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
-            goToHighScoresButton.alpha += Time.deltaTime * START_GAME_FADE_SPEED;
-            yield return null;
-        }
+    private IEnumerator StartCoroutine() {
+        StartCoroutine(FadeInCoroutine(titleText, TITLE_TEXT_FADE_DURATION));
+        yield return new WaitForSeconds(1.6f);
+        StartCoroutine(FadeInCoroutine(startLevelsButton, START_GAME_FADE_DURATION));
+        StartCoroutine(FadeInCoroutine(startSurvivalButton, START_GAME_FADE_DURATION));
+        StartCoroutine(FadeInCoroutine(goToHighScoresButton, START_GAME_FADE_DURATION));
     }
 
     public void StartLevelsGame() {
@@ -89,7 +99,7 @@ public class MainMenu : MonoBehaviour {
         mainMenu.blocksRaycasts = false;
         highScoreMenu.interactable = true;
         highScoreMenu.blocksRaycasts = true;
-        StartCoroutine(ShowHighScores());
+        StartCoroutine(ShowHighScoresCoroutine());
 
         //display high scores
         string text = "";
@@ -104,31 +114,19 @@ public class MainMenu : MonoBehaviour {
         mainMenu.blocksRaycasts = true;
         highScoreMenu.interactable = false;
         highScoreMenu.blocksRaycasts = false;
-        StartCoroutine(DoneHighScores());
+        StartCoroutine(DoneHighScoresCoroutine());
     }
 
-    private IEnumerator ShowHighScores() {
-        while (mainMenu.alpha > 0) {
-            mainMenu.alpha -= Time.deltaTime * 2f;
-            yield return null;
-        }
-
-        while (highScoreMenu.alpha < 1) {
-            highScoreMenu.alpha += Time.deltaTime * 2f;
-            yield return null;
-        }
+    private IEnumerator ShowHighScoresCoroutine() {
+        StartCoroutine(FadeOutCoroutine(mainMenu, MENU_SWITCH_FADE_DURATION));
+        yield return new WaitForSeconds(MENU_SWITCH_FADE_DURATION);
+        StartCoroutine(FadeInCoroutine(highScoreMenu, MENU_SWITCH_FADE_DURATION));
     }
 
-    private IEnumerator DoneHighScores() {
-        while (highScoreMenu.alpha > 0) {
-            highScoreMenu.alpha -= Time.deltaTime * 2f;
-            yield return null;
-        }
-
-        while (mainMenu.alpha < 1) {
-            mainMenu.alpha += Time.deltaTime * 2f;
-            yield return null;
-        }
+    private IEnumerator DoneHighScoresCoroutine() {
+        StartCoroutine(FadeOutCoroutine(highScoreMenu, MENU_SWITCH_FADE_DURATION));
+        yield return new WaitForSeconds(MENU_SWITCH_FADE_DURATION);
+        StartCoroutine(FadeInCoroutine(mainMenu, MENU_SWITCH_FADE_DURATION));
     }
 
     private IEnumerator LoadNextSceneCoroutine() {
@@ -142,4 +140,45 @@ public class MainMenu : MonoBehaviour {
         SceneManager.LoadScene("Main Game");
     }
 
+
+    public void StartSurvivalEasy() {
+
+    }
+
+    public void StartSurvivalMedium() {
+
+    }
+
+    public void StartSurvivalHard() {
+
+    }
+
+
+    /*
+     * Helper fading coroutines
+     */
+
+     private IEnumerator FadeInCoroutine(CanvasGroup canvas, float duration) {
+        float lambda = 1f / duration;
+
+        while (canvas.alpha < 1f) {
+            canvas.alpha += Time.deltaTime * lambda;
+            yield return null;
+        }
+
+        //lock at final value
+        canvas.alpha = 1f;
+    }
+
+    private IEnumerator FadeOutCoroutine(CanvasGroup canvas, float duration) {
+        float lambda = 1f / duration;
+
+        while (canvas.alpha > 0) {
+            canvas.alpha -= Time.deltaTime * lambda;
+            yield return null;
+        }
+
+        //lock at final value
+        canvas.alpha = 0;
+    }
 }
