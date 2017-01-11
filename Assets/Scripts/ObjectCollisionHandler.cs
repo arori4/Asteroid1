@@ -69,7 +69,7 @@ public class ObjectCollisionHandler : MonoBehaviour {
     void OnTriggerEnter(Collider other) {
 
         //ignore detectors
-        if (CompareTag("Player Missile Detector")) {
+        if (CompareTag("Player Detector")) {
             return;
         }
         if (CompareTag("Friend Detector")) {

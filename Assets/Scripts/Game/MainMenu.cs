@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 using System.Collections;
 
@@ -38,13 +39,18 @@ public class MainMenu : MonoBehaviour {
     public CanvasGroup levelsHardButton;
     public CanvasGroup levelsBackButton;
 
+    [Header("Help Menu")]
+    public CanvasGroup helpMenu;
+    public CanvasGroup helpMenuBack;
+
     //other variables
     GameSave gameSave;
-    bool startGameOnce = false;
+    bool loadOnce = false;
     CanvasGroup currentMenu;
+    NetworkManager networkManager;
 
     //constants
-    const float MENU_SWITCH_FADE_DURATION = 0.5f;
+    const float MENU_SWITCH_FADE_DURATION = 0.3f;
     const float TITLE_TEXT_FADE_DURATION = 5f;
     const float TITLE_TEXT_RISE_DURATION = 10f;
     const float START_GAME_FADE_DURATION = 1f / 0.4f;
@@ -81,20 +87,6 @@ public class MainMenu : MonoBehaviour {
         StartCoroutine(FadeInCoroutine(goToHighScoresButton, START_GAME_FADE_DURATION));
     }
 
-    public void StartLevelsGame() {
-        if (startGameOnce == false) {
-            //Set settings
-            PlayerPrefs.SetInt("Level", 1);
-            PlayerPrefs.SetInt("Score", 0);
-            PlayerPrefs.SetInt("Mode", 0);
-
-            //Set opposite to alpha of 0
-            startSurvivalButton.alpha = 0;
-
-            StartCoroutine(LoadNextSceneCoroutine());
-        }
-    }
-
     public void ShowHighScoreMenu() {
         StartCoroutine(SwitchMenuCoroutine(highScoreMenu));
 
@@ -118,15 +110,12 @@ public class MainMenu : MonoBehaviour {
         StartCoroutine(SwitchMenuCoroutine(levelsMenu));
     }
 
-    private IEnumerator LoadNextSceneCoroutine() {
-        startGameOnce = true;
-        while (blackScreen.alpha < 1) {
-            blackScreen.alpha += Time.deltaTime * 0.5f;
-            mainMenu.alpha -= Time.deltaTime * 0.7f; //slightly faster so stars stay in background longer
-            backgroundMusic.volume -= Time.deltaTime * 0.5f;
-            yield return null;
-        }
-        SceneManager.LoadScene("Main Game");
+    public void ShowHelpMenu() {
+        StartCoroutine(SwitchMenuCoroutine(helpMenu));
+    }
+
+    public void ShowMultiplayerMenu() {
+        StartCoroutine(LoadNextSceneCoroutine("Lobby Scene"));
     }
 
     /*
@@ -147,7 +136,7 @@ public class MainMenu : MonoBehaviour {
     }
 
     private void StartSurvivalGame(int level, CanvasGroup selectedButton) {
-        if (startGameOnce == false) {
+        if (loadOnce == false) {
             //Set settings
             PlayerPrefs.SetInt("Level", level);
             PlayerPrefs.SetInt("Score", 0);
@@ -165,7 +154,7 @@ public class MainMenu : MonoBehaviour {
             }
 
             //Start next level
-            StartCoroutine(LoadNextSceneCoroutine());
+            StartCoroutine(LoadNextSceneCoroutine("Main Game"));
         }
     }
 
@@ -182,7 +171,7 @@ public class MainMenu : MonoBehaviour {
     }
 
     private void StartLevelsGame(int level, CanvasGroup selectedButton) {
-        if (startGameOnce == false) {
+        if (loadOnce == false) {
             //Set settings
             PlayerPrefs.SetInt("Level", level);
             PlayerPrefs.SetInt("Score", 0);
@@ -200,13 +189,14 @@ public class MainMenu : MonoBehaviour {
             }
 
             //Start next level
-            StartCoroutine(LoadNextSceneCoroutine());
+            StartCoroutine(LoadNextSceneCoroutine("Main Game"));
         }
     }
 
 
     /*
     * Helper fading coroutines
+    * Also copied to NetworkMultiplayer
     */
 
     private IEnumerator FadeInCoroutine(CanvasGroup canvas, float duration) {
@@ -254,4 +244,16 @@ public class MainMenu : MonoBehaviour {
         target.blocksRaycasts = true;
         currentMenu = target;
     }
+
+    private IEnumerator LoadNextSceneCoroutine(string sceneName) {
+        loadOnce = true;
+        while (blackScreen.alpha < 1) {
+            blackScreen.alpha += Time.deltaTime * 1f;
+            currentMenu.alpha -= Time.deltaTime * 1.4f; //slightly faster so stars stay in background longer
+            backgroundMusic.volume -= Time.deltaTime * 1f;
+            yield return null;
+        }
+        SceneManager.LoadScene(sceneName);
+    }
+
 }

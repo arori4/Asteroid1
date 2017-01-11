@@ -57,7 +57,7 @@ public class Spawner : MonoBehaviour {
         }
         else if (PlayerPrefs.GetInt("Mode") == SURVIVAL_MODE) {
             mode = SURVIVAL_MODE;
-            SetLevel(1);
+            SetLevel(PlayerPrefs.GetInt("Level"));
             largeText.text = "Survive";
             StartCoroutine(IncreaseLevels());
         }
