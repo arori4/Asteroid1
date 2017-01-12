@@ -9,7 +9,7 @@ using System.Collections;
 /**
  * Handles multiplayer lobby
  */
- [RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(AudioSource))]
 public class LobbyManager : NetworkLobbyManager {
 
     static short MsgKicked = MsgType.Highest + 1; //what the hell is this?
@@ -24,12 +24,13 @@ public class LobbyManager : NetworkLobbyManager {
 
     [Header("Multiplayer Menu")]
     public CanvasGroup multiplayerMenu;
-    public CanvasGroup multiplayerMenuBack;
     public CanvasGroup multiplayerStart;
     public CanvasGroup multiplayerHelp;
 
     [Header("Info Panel")]
-    public Text infoPanel;
+    public Text infoText;
+    public Button serverModeButton;
+    public Button clientModeButton;
 
     [Header("Players")]
     public CanvasGroup player1Canvas;
@@ -37,10 +38,13 @@ public class LobbyManager : NetworkLobbyManager {
     public CanvasGroup player2Canvas;
     public Text player2Text;
 
+    [Header("Help Menu")]
+    public CanvasGroup helpMenu;
+
     bool loadOnce = false;
     CanvasGroup currentMenu;
     AudioSource backgroundMusic;
-    
+    bool isServer = true; //initially server mode
 
     //Client numPlayers from NetworkManager is always 0, so we count (throught connect/destroy in LobbyPlayer) the number
     //of players, so that even client know how many player there is.
@@ -60,20 +64,43 @@ public class LobbyManager : NetworkLobbyManager {
     //constants
     const float MENU_SWITCH_FADE_DURATION = 0.3f;
 
-    void Start () {
+    void Start() {
+        print("Log");
+
         backgroundMusic = GetComponent<AudioSource>();
 
         s_Singleton = this;
         lobbyHook = GetComponent<LobbyHook>();
-        currentMenu = multiplayerMenu;
-
-        DontDestroyOnLoad(gameObject);
+        
+        //DontDestroyOnLoad(gameObject); removed bc makes too much
     }
-	
-	void Update () {
-	
-	}
-    
+
+    void Update() {
+
+    }
+
+    /**
+     * Delegate for OnSceneLoaded
+     */
+    void Awake() {
+        SceneManager.sceneLoaded += SceneLoaded;
+    }
+    void SceneLoaded(Scene scene, LoadSceneMode mode) {
+        //Load scene
+        multiplayerMenu.alpha = 0;
+        currentMenu = blackScreen;//done to allow showMainMenu to work
+        currentMenu.alpha = 1;
+        ShowMultiplayerMenu();
+
+        //Set correct buttons
+        serverModeButton.interactable = false;
+        clientModeButton.interactable = true;
+        infoText.text = "Currently host";
+
+        //Deregister delegate
+        SceneManager.sceneLoaded -= SceneLoaded;
+    }
+
 
     /*
      * Server management
@@ -123,7 +150,7 @@ public class LobbyManager : NetworkLobbyManager {
 
 
     public void KickedMessageHandler(NetworkMessage netMsg) {
-        infoPanel.text = "Kicked by server";
+        infoText.text = "Kicked by server";
         netMsg.conn.Disconnect();
     }
 
@@ -277,9 +304,45 @@ public class LobbyManager : NetworkLobbyManager {
     }
 
     public override void OnClientError(NetworkConnection conn, int errorCode) {
-        infoPanel.text = "Cient error : " + (errorCode == 6 ? "timeout" : errorCode.ToString());
+        infoText.text = "Cient error : " + (errorCode == 6 ? "timeout" : errorCode.ToString());
     }
 
+
+    /**
+     * UI management
+     */
+
+    public void SetServerMode() {
+        Debug.Assert(isServer == false, "Already set to server mode");
+
+        serverModeButton.interactable = false;
+        clientModeButton.interactable = true;
+        isServer = true;
+
+        infoText.text = "Currently host";
+    }
+
+    public void SetClientMode() {
+        Debug.Assert(isServer == true, "Already set to client mode");
+
+        serverModeButton.interactable = true;
+        clientModeButton.interactable = false;
+        isServer = false;
+
+        infoText.text = "Currently client";
+    }
+    
+    public void ShowHelpMenu() {
+        StartCoroutine(SwitchMenuCoroutine(helpMenu));
+    }
+
+    public void ShowMultiplayerMenu() {
+        StartCoroutine(SwitchMenuCoroutine(multiplayerMenu));
+    }
+
+    public void ShowMainMenu() {
+        StartCoroutine(LoadNextSceneCoroutine("Main Menu"));
+    }
 
     /*
      * Helper fading coroutines
@@ -313,10 +376,10 @@ public class LobbyManager : NetworkLobbyManager {
     private IEnumerator SwitchMenuCoroutine(CanvasGroup target) {
         //debug checks
         if (currentMenu.alpha < 1f) {
-            Debug.Log("MainMenu SwitchMenuCoroutine: current canvas is not fully opaque");
+            Debug.Log("LobbyManager SwitchMenuCoroutine: current canvas is not fully opaque");
         }
         if (target.alpha > 0f) {
-            Debug.Log("MainMenu SwitchMenuCoroutine: target canvas is not starting fully transparent");
+            Debug.Log("LobbyManager SwitchMenuCoroutine: target canvas is not starting fully transparent");
         }
 
         //Fade out and fade in the target menus, and set interaction settings

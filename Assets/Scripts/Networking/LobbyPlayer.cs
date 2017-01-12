@@ -5,18 +5,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-//Player entry in the lobby. Handle selecting color/setting name & getting ready for the game
-//Any LobbyHook can then grab it and pass those value to the game player prefab (see the Pong Example in the Samples Scenes)
+/**
+ * Defines a player to use in the lobby
+ */
 public class LobbyPlayer : NetworkLobbyPlayer {
-    static Color[] Colors = new Color[] { Color.magenta, Color.red, Color.cyan, Color.blue, Color.green, Color.yellow };
-    //used on server to avoid assigning the same color to two player
-    static List<int> _colorInUse = new List<int>();
-
-    public Button colorButton;
+    
     public InputField nameInput;
-    public Button readyButton;
-    public Button waitingPlayerButton;
-    public Button removePlayerButton;
+
+    [Header("Info")]
+    public Image playerIcon;
+    public Button changeNameButton;
+    public Text playerNameText;
+    public Toggle readyToggle;
+    public Dropdown colorDropdown;
+    public Button kickButton;
 
     public GameObject localIcone;
     public GameObject remoteIcone;
@@ -24,8 +26,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
     //OnMyName function will be invoked on clients when server change the value of playerName
     [SyncVar(hook = "OnMyName")]
     public string playerName = "";
-    [SyncVar(hook = "OnMyColor")]
-    public Color playerColor = Color.white;
 
     static Color JoinColor = new Color(255.0f / 255.0f, 0.0f, 101.0f / 255.0f, 1.0f);
     static Color NotReadyColor = new Color(34.0f / 255.0f, 44 / 255.0f, 55.0f / 255.0f, 1.0f);
@@ -51,7 +51,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         //setup the player data on UI. The value are SyncVar so the player
         //will be created with the right value currently on server
         OnMyName(playerName);
-        OnMyColor(playerColor);
     }
 
     public override void OnStartAuthority() {
@@ -74,7 +73,7 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 
     void SetupOtherPlayer() {
         nameInput.interactable = false;
-        removePlayerButton.interactable = NetworkServer.active;
+        kickButton.interactable = NetworkServer.active;
 
         ChangeReadyButtonColor(NotReadyColor);
 
@@ -91,9 +90,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
 
         CheckRemoveButton();
 
-        if (playerColor == Color.white)
-            CmdColorChange();
-
         ChangeReadyButtonColor(JoinColor);
 
         readyButton.transform.GetChild(0).GetComponent<Text>().text = "JOIN";
@@ -104,14 +100,10 @@ public class LobbyPlayer : NetworkLobbyPlayer {
             CmdNameChanged("Player" + (LobbyPlayerList._instance.playerListContentTransform.childCount - 1));
 
         //we switch from simple name display to name input
-        colorButton.interactable = true;
         nameInput.interactable = true;
 
         nameInput.onEndEdit.RemoveAllListeners();
         nameInput.onEndEdit.AddListener(OnNameChanged);
-
-        colorButton.onClick.RemoveAllListeners();
-        colorButton.onClick.AddListener(OnColorClicked);
 
         readyButton.onClick.RemoveAllListeners();
         readyButton.onClick.AddListener(OnReadyClicked);
@@ -130,7 +122,7 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         foreach (PlayerController p in ClientScene.localPlayers)
             localPlayerCount += (p == null || p.playerControllerId == -1) ? 0 : 1;
 
-        removePlayerButton.interactable = localPlayerCount > 1;
+        kickButton.interactable = localPlayerCount > 1;
     }
 
     public override void OnClientReady(bool readyState) {
@@ -141,7 +133,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
             textComponent.text = "READY";
             textComponent.color = ReadyColor;
             readyButton.interactable = false;
-            colorButton.interactable = false;
             nameInput.interactable = false;
         }
         else {
@@ -151,13 +142,8 @@ public class LobbyPlayer : NetworkLobbyPlayer {
             textComponent.text = isLocalPlayer ? "JOIN" : "...";
             textComponent.color = Color.white;
             readyButton.interactable = isLocalPlayer;
-            colorButton.interactable = isLocalPlayer;
             nameInput.interactable = isLocalPlayer;
         }
-    }
-
-    public void OnPlayerListChanged(int idx) {
-        //change color?
     }
 
     ///===== callback from sync var
@@ -167,18 +153,7 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         nameInput.text = playerName;
     }
 
-    public void OnMyColor(Color newColor) {
-        playerColor = newColor;
-        colorButton.GetComponent<Image>().color = newColor;
-    }
-
     //===== UI Handler
-
-    //Note that those handler use Command function, as we need to change the value on the server not locally
-    //so that all client get the new value throught syncvar
-    public void OnColorClicked() {
-        CmdColorChange();
-    }
 
     public void OnReadyClicked() {
         SendReadyToBeginMessage();
@@ -194,7 +169,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         }
         else if (isServer)
             LobbyManager.s_Singleton.KickPlayer(connectionToClient);
-
     }
 
     public void ToggleJoinButton(bool enabled) {
@@ -216,39 +190,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
     //====== Server Command
 
     [Command]
-    public void CmdColorChange() {
-        int idx = System.Array.IndexOf(Colors, playerColor);
-
-        int inUseIdx = _colorInUse.IndexOf(idx);
-
-        if (idx < 0) idx = 0;
-
-        idx = (idx + 1) % Colors.Length;
-
-        bool alreadyInUse = false;
-
-        do {
-            alreadyInUse = false;
-            for (int i = 0; i < _colorInUse.Count; ++i) {
-                if (_colorInUse[i] == idx) {//that color is already in use
-                    alreadyInUse = true;
-                    idx = (idx + 1) % Colors.Length;
-                }
-            }
-        }
-        while (alreadyInUse);
-
-        if (inUseIdx >= 0) {//if we already add an entry in the colorTabs, we change it
-            _colorInUse[inUseIdx] = idx;
-        }
-        else {//else we add it
-            _colorInUse.Add(idx);
-        }
-
-        playerColor = Colors[idx];
-    }
-
-    [Command]
     public void CmdNameChanged(string name) {
         playerName = name;
     }
@@ -257,18 +198,6 @@ public class LobbyPlayer : NetworkLobbyPlayer {
     public void OnDestroy() {
         LobbyPlayerList._instance.RemovePlayer(this);
         if (LobbyManager.s_Singleton != null) LobbyManager.s_Singleton.OnPlayersNumberModified(-1);
-
-        int idx = System.Array.IndexOf(Colors, playerColor);
-
-        if (idx < 0)
-            return;
-
-        for (int i = 0; i < _colorInUse.Count; ++i) {
-            if (_colorInUse[i] == idx) {//that color is already in use
-                _colorInUse.RemoveAt(i);
-                break;
-            }
-        }
 
     }
 }

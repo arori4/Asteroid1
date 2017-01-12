@@ -17,6 +17,7 @@ public class MainMenu : MonoBehaviour {
     public CanvasGroup startLevelsButton;
     public CanvasGroup startSurvivalButton;
     public CanvasGroup startMultiplayerButton;
+    public CanvasGroup startHelpButton;
     public CanvasGroup goToHighScoresButton;
     AudioSource backgroundMusic;
 
@@ -66,9 +67,11 @@ public class MainMenu : MonoBehaviour {
         startLevelsButton.alpha = 0;
         startSurvivalButton.alpha = 0;
         startMultiplayerButton.alpha = 0;
-        mainMenu.alpha = 1;
-        highScoreMenu.alpha = 0;
         goToHighScoresButton.alpha = 0;
+        startHelpButton.alpha = 0;
+        //Hard set main menu
+        mainMenu.alpha = 1;
+        mainMenu.interactable = true;
 
         //Components
         backgroundMusic = GetComponent<AudioSource>();
@@ -85,6 +88,7 @@ public class MainMenu : MonoBehaviour {
         StartCoroutine(FadeInCoroutine(startSurvivalButton, START_GAME_FADE_DURATION));
         StartCoroutine(FadeInCoroutine(startMultiplayerButton, START_GAME_FADE_DURATION));
         StartCoroutine(FadeInCoroutine(goToHighScoresButton, START_GAME_FADE_DURATION));
+        StartCoroutine(FadeInCoroutine(startHelpButton, START_GAME_FADE_DURATION));
     }
 
     public void ShowHighScoreMenu() {
