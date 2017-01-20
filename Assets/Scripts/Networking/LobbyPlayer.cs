@@ -20,26 +20,32 @@ public class LobbyPlayer : NetworkLobbyPlayer {
     public Dropdown colorDropdown;
     public Button kickButton;
 
-    public GameObject localIcone;
-    public GameObject remoteIcone;
-
     //OnMyName function will be invoked on clients when server change the value of playerName
     [SyncVar(hook = "OnMyName")]
     public string playerName = "";
+    public bool playerReady = false;
 
     static Color JoinColor = new Color(255.0f / 255.0f, 0.0f, 101.0f / 255.0f, 1.0f);
     static Color NotReadyColor = new Color(34.0f / 255.0f, 44 / 255.0f, 55.0f / 255.0f, 1.0f);
     static Color ReadyColor = new Color(0.0f, 204.0f / 255.0f, 204.0f / 255.0f, 1.0f);
     static Color TransparentColor = new Color(0, 0, 0, 0);
 
+    private void Awake() {
+        //set toggle button override
+        readyToggle.onValueChanged.AddListener(OnToggleChange);
+        Debug.Log("Its me");
+    }
 
+    /**
+     * Sets up the player upon entering the lobby.
+     */
     public override void OnClientEnterLobby() {
         base.OnClientEnterLobby();
 
-        if (LobbyManager.s_Singleton != null) LobbyManager.s_Singleton.OnPlayersNumberModified(1);
+        if (LobbyManager.instance != null) LobbyManager.instance.OnPlayersNumberModified(1);
 
         LobbyPlayerList._instance.AddPlayer(this);
-        LobbyPlayerList._instance.DisplayDirectServerWarning(isServer && LobbyManager.s_Singleton.matchMaker == null);
+        LobbyPlayerList._instance.DisplayDirectServerWarning(isServer && LobbyManager.instance.matchMaker == null);
 
         if (isLocalPlayer) {
             SetupLocalPlayer();
@@ -57,43 +63,34 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         base.OnStartAuthority();
 
         //if we return from a game, color of text can still be the one for "Ready"
-        readyButton.transform.GetChild(0).GetComponent<Text>().color = Color.white;
+        readyToggle.transform.GetChild(0).GetComponent<Text>().color = Color.white;
 
         SetupLocalPlayer();
     }
 
-    void ChangeReadyButtonColor(Color c) {
-        ColorBlock b = readyButton.colors;
-        b.normalColor = c;
-        b.pressedColor = c;
-        b.highlightedColor = c;
-        b.disabledColor = c;
-        readyButton.colors = b;
-    }
-
+    /**
+     * Sets up the prefab for a different player
+     */
     void SetupOtherPlayer() {
         nameInput.interactable = false;
         kickButton.interactable = NetworkServer.active;
 
-        ChangeReadyButtonColor(NotReadyColor);
-
-        readyButton.transform.GetChild(0).GetComponent<Text>().text = "...";
-        readyButton.interactable = false;
+        readyToggle.transform.GetChild(0).GetComponent<Text>().text = "...";
+        readyToggle.interactable = false;
 
         OnClientReady(false);
     }
 
+    /**
+     * Sets up the prefab for the current player
+     */
     void SetupLocalPlayer() {
         nameInput.interactable = true;
-        remoteIcone.gameObject.SetActive(false);
-        localIcone.gameObject.SetActive(true);
 
         CheckRemoveButton();
 
-        ChangeReadyButtonColor(JoinColor);
-
-        readyButton.transform.GetChild(0).GetComponent<Text>().text = "JOIN";
-        readyButton.interactable = true;
+        readyToggle.transform.GetChild(0).GetComponent<Text>().text = "JOIN";
+        readyToggle.interactable = true;
 
         //have to use child count of player prefab already setup as "this.slot" is not set yet
         if (playerName == "")
@@ -105,12 +102,12 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         nameInput.onEndEdit.RemoveAllListeners();
         nameInput.onEndEdit.AddListener(OnNameChanged);
 
-        readyButton.onClick.RemoveAllListeners();
-        readyButton.onClick.AddListener(OnReadyClicked);
+        //readyToggle.onClick.RemoveAllListeners();
+        //readyToggle.onClick.AddListener(OnReadyClicked);
 
         //when OnClientEnterLobby is called, the loval PlayerController is not yet created, so we need to redo that here to disable
         //the add button if we reach maxLocalPlayer. We pass 0, as it was already counted on OnClientEnterLobby
-        if (LobbyManager.s_Singleton != null) LobbyManager.s_Singleton.OnPlayersNumberModified(0);
+        if (LobbyManager.instance != null) LobbyManager.instance.OnPlayersNumberModified(0);
     }
 
     //This enable/disable the remove button depending on if that is the only local player or not
@@ -125,23 +122,23 @@ public class LobbyPlayer : NetworkLobbyPlayer {
         kickButton.interactable = localPlayerCount > 1;
     }
 
+    /**
+     * Sets the ready state of the clients.
+     */
     public override void OnClientReady(bool readyState) {
-        if (readyState) {
-            ChangeReadyButtonColor(TransparentColor);
+        playerReady = readyState;
 
-            Text textComponent = readyButton.transform.GetChild(0).GetComponent<Text>();
-            textComponent.text = "READY";
+        if (readyState) {
+            Text textComponent = readyToggle.transform.GetChild(0).GetComponent<Text>();
+            textComponent.text = "Ready";
             textComponent.color = ReadyColor;
-            readyButton.interactable = false;
             nameInput.interactable = false;
         }
         else {
-            ChangeReadyButtonColor(isLocalPlayer ? JoinColor : NotReadyColor);
-
-            Text textComponent = readyButton.transform.GetChild(0).GetComponent<Text>();
-            textComponent.text = isLocalPlayer ? "JOIN" : "...";
-            textComponent.color = Color.white;
-            readyButton.interactable = isLocalPlayer;
+            Text textComponent = readyToggle.transform.GetChild(0).GetComponent<Text>();
+            textComponent.text = "Not Ready";
+            textComponent.color = NotReadyColor;
+            readyToggle.interactable = isLocalPlayer;
             nameInput.interactable = isLocalPlayer;
         }
     }
@@ -168,18 +165,26 @@ public class LobbyPlayer : NetworkLobbyPlayer {
             RemovePlayer();
         }
         else if (isServer)
-            LobbyManager.s_Singleton.KickPlayer(connectionToClient);
+            LobbyManager.instance.KickPlayer(connectionToClient);
     }
 
-    public void ToggleJoinButton(bool enabled) {
-        readyButton.gameObject.SetActive(enabled);
-        waitingPlayerButton.gameObject.SetActive(!enabled);
+    /**
+     * Listener to toggle button
+     */
+    void OnToggleChange(bool val) {
+        Debug.Log("Hello world!");
+        if (val) {
+            SendReadyToBeginMessage();
+        }
+        else {
+            SendNotReadyToBeginMessage();
+        }
     }
 
     [ClientRpc]
     public void RpcUpdateCountdown(int countdown) {
-        //LobbyManager.s_Singleton.countdownPanel.UIText.text = "Match Starting in " + countdown;
-        //LobbyManager.s_Singleton.countdownPanel.gameObject.SetActive(countdown != 0);
+        //LobbyManager.instance.countdownPanel.UIText.text = "Match Starting in " + countdown;
+        //LobbyManager.instance.countdownPanel.gameObject.SetActive(countdown != 0);
     }
 
     [ClientRpc]
@@ -197,7 +202,7 @@ public class LobbyPlayer : NetworkLobbyPlayer {
     //Cleanup thing when get destroy (which happen when client kick or disconnect)
     public void OnDestroy() {
         LobbyPlayerList._instance.RemovePlayer(this);
-        if (LobbyManager.s_Singleton != null) LobbyManager.s_Singleton.OnPlayersNumberModified(-1);
+        if (LobbyManager.instance != null) LobbyManager.instance.OnPlayersNumberModified(-1);
 
     }
 }

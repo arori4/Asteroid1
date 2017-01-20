@@ -7,44 +7,16 @@ using UnityEngine.UI;
 using System.Collections;
 
 /**
- * Handles multiplayer lobby
+ * Handles multiplayer lobby, when activated
  */
-[RequireComponent(typeof(AudioSource))]
 public class LobbyManager : NetworkLobbyManager {
 
     static short MsgKicked = MsgType.Highest + 1; //what the hell is this?
-    static public LobbyManager s_Singleton;
+    static public LobbyManager instance;
 
     [Header("Unity UI Lobby")]
     [Tooltip("Time in second between all players ready & match start")]
     public float prematchCountdown = 5.0f;
-
-    [Header("General")]
-    public CanvasGroup blackScreen;
-
-    [Header("Multiplayer Menu")]
-    public CanvasGroup multiplayerMenu;
-    public CanvasGroup multiplayerStart;
-    public CanvasGroup multiplayerHelp;
-
-    [Header("Info Panel")]
-    public Text infoText;
-    public Button serverModeButton;
-    public Button clientModeButton;
-
-    [Header("Players")]
-    public CanvasGroup player1Canvas;
-    public Text player1Text;
-    public CanvasGroup player2Canvas;
-    public Text player2Text;
-
-    [Header("Help Menu")]
-    public CanvasGroup helpMenu;
-
-    bool loadOnce = false;
-    CanvasGroup currentMenu;
-    AudioSource backgroundMusic;
-    bool isServer = true; //initially server mode
 
     //Client numPlayers from NetworkManager is always 0, so we count (throught connect/destroy in LobbyPlayer) the number
     //of players, so that even client know how many player there is.
@@ -61,15 +33,9 @@ public class LobbyManager : NetworkLobbyManager {
 
     protected LobbyHook lobbyHook;
 
-    //constants
-    const float MENU_SWITCH_FADE_DURATION = 0.3f;
 
     void Start() {
-        print("Log");
-
-        backgroundMusic = GetComponent<AudioSource>();
-
-        s_Singleton = this;
+        instance = this;
         lobbyHook = GetComponent<LobbyHook>();
         
         //DontDestroyOnLoad(gameObject); removed bc makes too much
@@ -79,34 +45,10 @@ public class LobbyManager : NetworkLobbyManager {
 
     }
 
-    /**
-     * Delegate for OnSceneLoaded
-     */
-    void Awake() {
-        SceneManager.sceneLoaded += SceneLoaded;
-    }
-    void SceneLoaded(Scene scene, LoadSceneMode mode) {
-        //Load scene
-        multiplayerMenu.alpha = 0;
-        currentMenu = blackScreen;//done to allow showMainMenu to work
-        currentMenu.alpha = 1;
-        ShowMultiplayerMenu();
-
-        //Set correct buttons
-        serverModeButton.interactable = false;
-        clientModeButton.interactable = true;
-        infoText.text = "Currently host";
-
-        //Deregister delegate
-        SceneManager.sceneLoaded -= SceneLoaded;
-    }
-
 
     /*
      * Server management
      */
-
-    // ----------------- Server management
 
     public void AddLocalPlayer() {
         TryToAddPlayer();
@@ -145,12 +87,9 @@ public class LobbyManager : NetworkLobbyManager {
     public void KickPlayer(NetworkConnection conn) {
         conn.Send(MsgKicked, new KickMsg());
     }
-
-
-
-
+    
     public void KickedMessageHandler(NetworkMessage netMsg) {
-        infoText.text = "Kicked by server";
+        LobbyUIController.instance.SetStatusText("Kicked by server");
         netMsg.conn.Disconnect();
     }
 
@@ -189,10 +128,10 @@ public class LobbyManager : NetworkLobbyManager {
     //we want to disable the button JOIN if we don't have enough player
     //But OnLobbyClientConnect isn't called on hosting player. So we override the lobbyPlayer creation
     public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId) {
-        GameObject obj = Instantiate(lobbyPlayerPrefab.gameObject) as GameObject;
 
+        GameObject obj = Instantiate(lobbyPlayerPrefab.gameObject) as GameObject;
         LobbyPlayer newPlayer = obj.GetComponent<LobbyPlayer>();
-        newPlayer.ToggleJoinButton(numPlayers + 1 >= minPlayers);
+        //newPlayer.ToggleJoinButton(numPlayers + 1 >= minPlayers);
 
 
         for (int i = 0; i < lobbySlots.Length; ++i) {
@@ -200,7 +139,7 @@ public class LobbyManager : NetworkLobbyManager {
 
             if (p != null) {
                 p.RpcUpdateRemoveButton();
-                p.ToggleJoinButton(numPlayers + 1 >= minPlayers);
+                //p.ToggleJoinButton(numPlayers + 1 >= minPlayers);
             }
         }
 
@@ -213,7 +152,7 @@ public class LobbyManager : NetworkLobbyManager {
 
             if (p != null) {
                 p.RpcUpdateRemoveButton();
-                p.ToggleJoinButton(numPlayers + 1 >= minPlayers);
+                //p.ToggleJoinButton(numPlayers + 1 >= minPlayers);
             }
         }
     }
@@ -225,7 +164,7 @@ public class LobbyManager : NetworkLobbyManager {
 
             if (p != null) {
                 p.RpcUpdateRemoveButton();
-                p.ToggleJoinButton(numPlayers >= minPlayers);
+                //p.ToggleJoinButton(numPlayers >= minPlayers);
             }
         }
 
@@ -304,106 +243,8 @@ public class LobbyManager : NetworkLobbyManager {
     }
 
     public override void OnClientError(NetworkConnection conn, int errorCode) {
-        infoText.text = "Cient error : " + (errorCode == 6 ? "timeout" : errorCode.ToString());
+        LobbyUIController.instance.SetStatusText("Cient error : " + (errorCode == 6 ? "timeout" : errorCode.ToString()));
     }
 
-
-    /**
-     * UI management
-     */
-
-    public void SetServerMode() {
-        Debug.Assert(isServer == false, "Already set to server mode");
-
-        serverModeButton.interactable = false;
-        clientModeButton.interactable = true;
-        isServer = true;
-
-        infoText.text = "Currently host";
-    }
-
-    public void SetClientMode() {
-        Debug.Assert(isServer == true, "Already set to client mode");
-
-        serverModeButton.interactable = true;
-        clientModeButton.interactable = false;
-        isServer = false;
-
-        infoText.text = "Currently client";
-    }
-    
-    public void ShowHelpMenu() {
-        StartCoroutine(SwitchMenuCoroutine(helpMenu));
-    }
-
-    public void ShowMultiplayerMenu() {
-        StartCoroutine(SwitchMenuCoroutine(multiplayerMenu));
-    }
-
-    public void ShowMainMenu() {
-        StartCoroutine(LoadNextSceneCoroutine("Main Menu"));
-    }
-
-    /*
-     * Helper fading coroutines
-     * Also copied to MainMenu
-     */
-
-    private IEnumerator FadeInCoroutine(CanvasGroup canvas, float duration) {
-        float lambda = 1f / duration;
-
-        while (canvas.alpha < 1f) {
-            canvas.alpha += Time.deltaTime * lambda;
-            yield return null;
-        }
-
-        //lock at final value
-        canvas.alpha = 1f;
-    }
-
-    private IEnumerator FadeOutCoroutine(CanvasGroup canvas, float duration) {
-        float lambda = 1f / duration;
-
-        while (canvas.alpha > 0) {
-            canvas.alpha -= Time.deltaTime * lambda;
-            yield return null;
-        }
-
-        //lock at final value
-        canvas.alpha = 0;
-    }
-
-    private IEnumerator SwitchMenuCoroutine(CanvasGroup target) {
-        //debug checks
-        if (currentMenu.alpha < 1f) {
-            Debug.Log("LobbyManager SwitchMenuCoroutine: current canvas is not fully opaque");
-        }
-        if (target.alpha > 0f) {
-            Debug.Log("LobbyManager SwitchMenuCoroutine: target canvas is not starting fully transparent");
-        }
-
-        //Fade out and fade in the target menus, and set interaction settings
-        StartCoroutine(FadeOutCoroutine(currentMenu, MENU_SWITCH_FADE_DURATION));
-        currentMenu.interactable = false; //set before fade out completes so we remove any extraneous inputs
-        currentMenu.blocksRaycasts = false;
-        yield return new WaitForSeconds(MENU_SWITCH_FADE_DURATION);
-
-        StartCoroutine(FadeInCoroutine(target, MENU_SWITCH_FADE_DURATION));
-        yield return new WaitForSeconds(MENU_SWITCH_FADE_DURATION);
-        target.interactable = true; //set after fade in completes so we remove any extraneous inputs
-        target.blocksRaycasts = true;
-        currentMenu = target;
-    }
-
-    private IEnumerator LoadNextSceneCoroutine(string sceneName) {
-        loadOnce = true;
-        while (blackScreen.alpha < 1) {
-            blackScreen.alpha += Time.deltaTime * 1f;
-            currentMenu.alpha -= Time.deltaTime * 1.4f; //slightly faster so stars stay in background longer
-            backgroundMusic.volume -= Time.deltaTime * 1f;
-            yield return null;
-        }
-        SceneManager.LoadScene(sceneName);
-    }
 
 }

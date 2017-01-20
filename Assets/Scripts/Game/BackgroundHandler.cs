@@ -42,10 +42,14 @@ public class BackgroundHandler : MonoBehaviour {
         lights.light3.color = backgrounds[chosenIndex].light3Color;
 
         //set star colors
-        stars.mainStars.startColor = backgrounds[chosenIndex].mainLightColor;
-        stars.stars1.startColor = backgrounds[chosenIndex].light1Color;
-        stars.stars2.startColor = backgrounds[chosenIndex].light2Color;
-        stars.stars3.startColor = backgrounds[chosenIndex].light3Color;
+        var mainStarsMain = stars.mainStars.main;
+        mainStarsMain.startColor = backgrounds[chosenIndex].mainLightColor;
+        var stars1Main = stars.stars1.main;
+        stars1Main.startColor = backgrounds[chosenIndex].light1Color;
+        var stars2Main = stars.stars2.main;
+        stars2Main.startColor = backgrounds[chosenIndex].light2Color;
+        var stars3Main = stars.stars3.main;
+        stars3Main.startColor = backgrounds[chosenIndex].light3Color;
     }
     
     void Update() {
@@ -53,6 +57,7 @@ public class BackgroundHandler : MonoBehaviour {
         tile1.transform.position = tile1Start + Vector3.left * newXPosition;
         tile2.transform.position = tile2Start + Vector3.left * newXPosition;
     }
+   
 }
 
 [System.Serializable]
