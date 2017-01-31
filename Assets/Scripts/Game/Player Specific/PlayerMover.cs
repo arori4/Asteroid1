@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.Networking;
 
 /**
  * Defines movement only for the player
  */
-public class PlayerMover : MonoBehaviour {
+public class PlayerMover : NetworkBehaviour {
 
     public Boundary boundary;
     public float speed;
@@ -29,8 +30,16 @@ public class PlayerMover : MonoBehaviour {
             keyboardInput = true;
         }
     }
-	
-	void Update () {
+
+    public override void OnStartLocalPlayer() {
+        //GetComponent<MeshRenderer>().material.color = Color.blue;
+    }
+
+    void Update () {
+        //check if local player
+        if (!isLocalPlayer) {
+            return;
+        }
         //get input
         if (keyboardInput) {
             inputHoriz = Input.GetAxis("Horizontal") * speed;

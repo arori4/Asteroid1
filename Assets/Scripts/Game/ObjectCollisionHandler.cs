@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,10 +7,11 @@ using System.Collections.Generic;
  * Handles all collisions.
  * Also has behavior for death.
  */
-public class ObjectCollisionHandler : MonoBehaviour {
+public class ObjectCollisionHandler : NetworkBehaviour {
 
     //collision and game health
     public CanCollideWith collideDefinition;
+    [SyncVar]
     public float maxHealth = 10;
     public float damageAmount;
 
@@ -62,11 +64,21 @@ public class ObjectCollisionHandler : MonoBehaviour {
         lastColliderTag = "";
         dropList.Clear();
 
-        //calculate drops
+        //calculate drops only on server
+        /*
+        if (!isServer) {
+           return;
+        }*/
+
         StartCoroutine(CalculateDropsCoroutine());
     }
 
     void OnTriggerEnter(Collider other) {
+
+        //Only run on server
+        if (!isServer) {
+            return;
+        }
 
         //ignore detectors
         if (CompareTag("Player Detector")) {
@@ -148,6 +160,10 @@ public class ObjectCollisionHandler : MonoBehaviour {
 
 
     public void AddHealth(float health) {
+        if (!isServer) {
+            return;
+        }
+
         currentHealth = Mathf.Min(currentHealth + health, maxHealth);
     }
 
@@ -156,6 +172,10 @@ public class ObjectCollisionHandler : MonoBehaviour {
     }
 
     public void Damage(float amount, string otherTag) {
+        if (!isServer) {
+            return;
+        }
+
         currentHealth -= amount;
         lastColliderTag = otherTag;
     }

@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
 /**
  * Controls the player's weapons, shields, and missiles
  */
-public class PlayerWeapons : MonoBehaviour {
+public class PlayerWeapons : NetworkBehaviour {
     
     public float maxEnergy = 100;
     public float rechargeRate = 1f;
+    public CanvasGroup regularUI;
+    [SyncVar]
     float energy;
     ObjectCollisionHandler playerCollision;
 
@@ -67,7 +70,6 @@ public class PlayerWeapons : MonoBehaviour {
     private const float ENERGY_SLIDER_BACK_SMOOTH = 1f;
     private const float HEALTH_SLIDER_FRONT_SMOOTH = 0.7f;
     private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
-    private const float SLIDER_SIZE_DIVIDER = 200f;
 
     void Start () {
         //Set player variables
@@ -86,6 +88,13 @@ public class PlayerWeapons : MonoBehaviour {
         weaponNextFire = Time.time;
         energy = maxEnergy;
         
+        //Set UI Elements
+        if (isLocalPlayer) {
+            //move UI to a new parent
+
+            
+        }
+
         //Set weapons
         ChangeShip(shipType);
         ChangeWeapon(weaponType, false);
@@ -96,8 +105,12 @@ public class PlayerWeapons : MonoBehaviour {
     }
 	
 	void Update () {
+        if (!isLocalPlayer) {
+            return;
+        }
+
         //weapon input
-	    if (Input.GetKey(KeyCode.Space) || weaponButtonPressed) {
+        if (Input.GetKey(KeyCode.Space) || weaponButtonPressed) {
             WeaponFire();
         }
 
@@ -117,7 +130,7 @@ public class PlayerWeapons : MonoBehaviour {
         //Update Energy to maximum energy
         energy += rechargeRate * Time.deltaTime;
         energy = Mathf.Min(maxEnergy, energy);
-        
+
         //handle health bar
         sliders.health.value = Mathf.SmoothDamp(sliders.health.value,
             playerCollision.GetCurrentHealth() / SLIDER_SIZE_DIVIDER,
