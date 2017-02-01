@@ -51,7 +51,7 @@ public class UIButtonGroup : MonoBehaviour {
         //add in new child
         GameObject newWeaponIcon = GameObject.Instantiate(newMesh,
             parentObject.transform.position, new Quaternion(45, 90, 250, 0)) as GameObject;
-        newWeaponIcon.transform.parent = parentObject.transform;
+        //newWeaponIcon.transform.parent = transform;
     }
 
     public void SetText(string nextText) {

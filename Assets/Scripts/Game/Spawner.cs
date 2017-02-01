@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -317,6 +318,7 @@ public class Spawner : MonoBehaviour {
         Vector3 spawnPosition = new Vector3(spawnXZLocation.x, spawnXZLocation.y,
             Random.Range(spawnVerticalLocation.x, spawnVerticalLocation.y));
         GameObject spawnedObj = Pools.Initialize(obj, spawnPosition, Quaternion.identity);
+        NetworkServer.Spawn(spawnedObj);
 
         return spawnedObj;
     }

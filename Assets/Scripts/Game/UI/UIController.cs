@@ -9,15 +9,25 @@ using UnityEngine.SceneManagement;
  */
 public class UIController : MonoBehaviour {
 
-    //regular UI
+    [Header("Regular UI")]
     public CanvasGroup regularUI;
     public Text scoreText;
-
-    //Game over UI
+    public UIButtonGroup weaponUIGroup;
+    public UIButtonGroup shieldUIGroup;
+    public UIButtonGroup missileUIGroup;
+    public UISliderGroup healthSlider;
+    public UISliderGroup energySlider;
+    public UISliderGroup shieldSlider;
+    
+    [Header("Hit Canvas")]
+    public CanvasGroup hitCanvas;
+    bool hitCanvasActivated; //lock
+    
+    [Header("Game Over")]
     public CanvasGroup gameOverGUI;
     public Text gameOverScoreText;
-
-    //Overlays
+    
+    [Header("Overlays")]
     public CanvasGroup blackFader;
 
     //Game States
@@ -135,6 +145,71 @@ public class UIController : MonoBehaviour {
         StartCoroutine(FadeInUI(blackFader, 0.5f));
         yield return new WaitForSeconds(2.5f);
         SceneManager.LoadScene("Main Menu");
+    }
+
+    public IEnumerator HitCanvasFader(float damage) {
+        if (!hitCanvasActivated) {
+            hitCanvasActivated = true;
+            //cap damage to highest amount
+            damage = Mathf.Min(damage, 49.99f);
+
+            //Does not use provided methods because there is a different alpha
+            while (hitCanvas.alpha < damage / 50.0f) {
+                hitCanvas.alpha += Time.deltaTime * 70.0f / damage;
+                yield return null;
+            }
+
+            while (hitCanvas.alpha > 0) {
+                hitCanvas.alpha -= Time.deltaTime * 35.0f / damage;
+                yield return null;
+            }
+
+            hitCanvasActivated = false;
+        }
+    }
+
+    /*
+     * Recharge the shield when it has been destroyed
+     */
+    public IEnumerator RechargeShield(float rechargeTime, PlayerWeapons caller) {
+        shieldUIGroup.Hide();
+
+        shieldSlider.gameObject.SetActive(true);
+        shieldSlider.val = 0f;
+
+        caller.shieldRecharging = true;
+
+        //TODO: move this to an option in UISLiderGroup later
+        while (shieldSlider.val < 1) {
+            shieldSlider.val += Time.deltaTime / rechargeTime;
+            yield return null;
+        }
+
+        //keep shield bar up for a second before removing it
+        CanvasGroup shieldBarCanvas = shieldSlider.gameObject.GetComponent<CanvasGroup>();
+        for (int index = 0; index < 2; index++) {
+            while (shieldBarCanvas.alpha > 0) {
+                shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+                yield return null;
+            }
+            while (shieldBarCanvas.alpha < 1) {
+                shieldBarCanvas.alpha += Time.deltaTime / 0.25f;
+                yield return null;
+            }
+
+        }
+
+        //finallly fade the shield bar
+        while (shieldBarCanvas.alpha > 0) {
+            shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
+            yield return null;
+        }
+        //set alpha back to 1 so that when we need it again, it appears
+        shieldBarCanvas.alpha = 1;
+        shieldSlider.gameObject.SetActive(false);
+
+        shieldUIGroup.Show();
+        caller.shieldRecharging = false;
     }
 
 }

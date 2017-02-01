@@ -11,15 +11,14 @@ public class PlayerWeapons : NetworkBehaviour {
     
     public float maxEnergy = 100;
     public float rechargeRate = 1f;
-    public CanvasGroup regularUI;
     [SyncVar]
     float energy;
     ObjectCollisionHandler playerCollision;
+    UIController ui;
 
     //weapons
     [Header("Weapon Settings")]
     public GameObject weaponType;
-    public UIButtonGroup weaponUIGroup;
     WeaponInfo weaponInfo;
     float weaponNextFire;
     float weaponCurrentCharge;
@@ -28,16 +27,15 @@ public class PlayerWeapons : NetworkBehaviour {
     //shield
     [Header("Shield Settings")]
     public GameObject shieldType;
-    public UIButtonGroup shieldUIGroup;
     ShieldInfo shieldInfo;
     bool shieldActivated;
-    bool shieldRecharging;
+    [HideInInspector]
+    public bool shieldRecharging;
     bool shieldButtonPressed;
 
     //missile
     [Header("Missile Settings")]
     public GameObject missileType;
-    public UIButtonGroup missileUIGroup;
     MissileInfo missileInfo;
     int missileCount;
     bool missileButtonPressed;
@@ -53,47 +51,17 @@ public class PlayerWeapons : NetworkBehaviour {
     public GameObject gunQuad;
     public GameObject turretModel;
 
-    //UI
-    [Header("UI")]
-    public Sliders sliders;
-
-    //red hit canvas
-    public CanvasGroup hitCanvas;
-    bool hitCanvasActivated; //lock
-
-    //Constants and single use variables
-    private float healthSliderVelocityFront;
-    private float energySliderVelocityFront;
-    private float healthSliderVelocityBack;
-    private float energySliderVelocityBack;
-    private const float ENERGY_SLIDER_FRONT_SMOOTH = 0.3f;
-    private const float ENERGY_SLIDER_BACK_SMOOTH = 1f;
-    private const float HEALTH_SLIDER_FRONT_SMOOTH = 0.7f;
-    private const float HEALTH_SLIDER_BACK_SMOOTH = 1.5f;
-
+    
     void Start () {
         //Set player variables
         playerCollision = GetComponent<ObjectCollisionHandler>();
-
-        //Set UI
-        sliders.shield.gameObject.SetActive(false);
-        hitCanvasActivated = false;
-        hitCanvas.alpha = 0;
-
-        //Post Start
     }
 
     void OnEnable() {
+        ui = GameObject.FindGameObjectWithTag("GameController").GetComponent<UIController>();
         //Set ship stats
         weaponNextFire = Time.time;
         energy = maxEnergy;
-        
-        //Set UI Elements
-        if (isLocalPlayer) {
-            //move UI to a new parent
-
-            
-        }
 
         //Set weapons
         ChangeShip(shipType);
@@ -131,23 +99,9 @@ public class PlayerWeapons : NetworkBehaviour {
         energy += rechargeRate * Time.deltaTime;
         energy = Mathf.Min(maxEnergy, energy);
 
-        //handle health bar
-        sliders.health.value = Mathf.SmoothDamp(sliders.health.value,
-            playerCollision.GetCurrentHealth() / SLIDER_SIZE_DIVIDER,
-            ref healthSliderVelocityFront, HEALTH_SLIDER_FRONT_SMOOTH);
-        sliders.healthBack.value = Mathf.SmoothDamp(sliders.healthBack.value,
-            playerCollision.GetCurrentHealth() / SLIDER_SIZE_DIVIDER,
-            ref healthSliderVelocityBack, HEALTH_SLIDER_BACK_SMOOTH);
-        //force back slider to be over or at the regular health slider amount
-        sliders.healthBack.value = Mathf.Max(sliders.health.value, sliders.healthBack.value);
-
-        //handle energy bar
-        sliders.energy.value = Mathf.SmoothDamp(sliders.energy.value, energy / SLIDER_SIZE_DIVIDER,
-            ref energySliderVelocityFront, ENERGY_SLIDER_FRONT_SMOOTH);
-        sliders.energyBack.value = Mathf.SmoothDamp(sliders.energyBack.value, energy / SLIDER_SIZE_DIVIDER,
-            ref energySliderVelocityBack, ENERGY_SLIDER_BACK_SMOOTH);
-        //force back slider up
-        sliders.energyBack.value = Mathf.Max(sliders.energy.value, sliders.energyBack.value);
+        //handle health and energy bar
+        ui.healthSlider.val = playerCollision.GetCurrentHealth();
+        ui.energySlider.val = energy;
 	}
 
     public void WeaponFire() {
@@ -186,9 +140,9 @@ public class PlayerWeapons : NetworkBehaviour {
             missileCount--;
 
             //Set ui to show lower missileCount
-            missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
+            ui.missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
             if (missileCount == 0) {
-                missileUIGroup.Hide();
+                ui.missileUIGroup.Hide();
             }
         }
     }
@@ -223,11 +177,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //Set weapon UI
         if (duringGame) {
-            weaponUIGroup.ChangeObjectDuringGame(weaponInfo.weaponIcon, weaponInfo.weaponName);
+            ui.weaponUIGroup.ChangeObjectDuringGame(weaponInfo.weaponIcon, weaponInfo.weaponName);
         }
         else {
-            weaponUIGroup.SetModel(weaponInfo.weaponIcon);
-            weaponUIGroup.SetText(weaponInfo.weaponName);
+            ui.weaponUIGroup.SetModel(weaponInfo.weaponIcon);
+            ui.weaponUIGroup.SetText(weaponInfo.weaponName);
         }
     }
 
@@ -247,11 +201,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //Set shield UI
         if (duringGame) {
-            shieldUIGroup.ChangeObjectDuringGame(shieldInfo.shieldIcon, shieldInfo.shieldName);
+            ui.shieldUIGroup.ChangeObjectDuringGame(shieldInfo.shieldIcon, shieldInfo.shieldName);
         }
         else {
-            shieldUIGroup.SetModel(shieldInfo.shieldIcon);
-            shieldUIGroup.SetText(shieldInfo.shieldName);
+            ui.shieldUIGroup.SetModel(shieldInfo.shieldIcon);
+            ui.shieldUIGroup.SetText(shieldInfo.shieldName);
         }
     }
 
@@ -271,11 +225,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //Set missile UI
         if (duringGame) {
-            missileUIGroup.ChangeObjectDuringGame(missileInfo.missileIcon, missileInfo.missileName);
+            ui.missileUIGroup.ChangeObjectDuringGame(missileInfo.missileIcon, missileInfo.missileName);
         }
         else {
-            missileUIGroup.SetModel(missileInfo.missileIcon);
-            missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
+           ui.missileUIGroup.SetModel(missileInfo.missileIcon);
+           ui.missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
         }
     }
 
@@ -354,10 +308,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
-                StartCoroutine(RechargeShield());
+                DeactivateShield();
+                StartCoroutine(ui.RechargeShield(shieldInfo.rechargeTime, this));
                 float retval = -energy;
                 energy = 0;
-                StartCoroutine(HitCanvasFader(retval));
+                StartCoroutine(ui.HitCanvasFader(retval));
                 return retval;
             }
             else {
@@ -366,76 +321,11 @@ public class PlayerWeapons : NetworkBehaviour {
         }
 
         else {
-            StartCoroutine(HitCanvasFader(amount));
+            StartCoroutine(ui.HitCanvasFader(amount));
             return amount;
         }
     }
 
-    private IEnumerator HitCanvasFader(float damage) {
-        if (!hitCanvasActivated) {
-            hitCanvasActivated = true;
-            //cap damage to highest amount
-            damage = Mathf.Min(damage, 49.99f);
-
-            //Does not use provided methods because there is a different alpha
-            while (hitCanvas.alpha < damage / 50.0f) {
-                hitCanvas.alpha += Time.deltaTime * 70.0f / damage;
-                yield return null;
-            }
-
-            while (hitCanvas.alpha > 0) {
-                hitCanvas.alpha -= Time.deltaTime * 35.0f / damage;
-                yield return null;
-            }
-
-            hitCanvasActivated = false;
-        }
-    }
-
-    /*
-     * Recharge the shield when it has been destroyed
-     */
-    private IEnumerator RechargeShield() {
-        DeactivateShield();
-        shieldUIGroup.Hide();
-
-        sliders.shield.gameObject.SetActive(true);
-        sliders.shield.value = 0f;
-   
-        shieldRecharging = true;
-
-        while (sliders.shield.value < 1) {
-            sliders.shield.value += Time.deltaTime / shieldInfo.rechargeTime;
-            yield return null;
-        }
-
-        //keep shield bar up for a second before removing it
-        CanvasGroup shieldBarCanvas = sliders.shield.gameObject.GetComponent<CanvasGroup>();
-        for (int index = 0; index < 2; index++) {
-            while (shieldBarCanvas.alpha > 0) {
-                shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
-                yield return null;
-            }
-            while (shieldBarCanvas.alpha < 1) {
-                shieldBarCanvas.alpha += Time.deltaTime / 0.25f;
-                yield return null;
-            }
-
-        }
-
-        //finallly fade the shield bar
-        while (shieldBarCanvas.alpha > 0) {
-            shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
-            yield return null;
-        }
-        //set alpha back to 1 so that when we need it again, it appears
-        shieldBarCanvas.alpha = 1;
-        sliders.shield.gameObject.SetActive(false);
-
-        shieldUIGroup.Show();
-        shieldRecharging = false;
-    }
-    
     public void AddEnergy(float add) {
         energy = Mathf.Min(maxEnergy, energy + add);
     }
@@ -458,16 +348,15 @@ public class PlayerWeapons : NetworkBehaviour {
 
     void OnDisable() {
         //hide the ui buttons
-        weaponUIGroup.Deactivate();
-        shieldUIGroup.Deactivate();
-        missileUIGroup.Deactivate();
+        ui.weaponUIGroup.Deactivate();
+        ui.shieldUIGroup.Deactivate();
+        ui.missileUIGroup.Deactivate();
 
         //set the hit background to 0
-        hitCanvas.alpha = 0;
+        ui.hitCanvas.alpha = 0;
 
         //set slider values to 0
-        sliders.health.value = 0;
-        sliders.healthBack.value = 0;
+        ui.healthSlider.val = 0;
     }
 
 
@@ -490,13 +379,4 @@ public class PlayerWeapons : NetworkBehaviour {
     public void onMissileButtonUp() {
         missileButtonPressed = false;
     }
-}
-
-[System.Serializable]
-public struct Sliders {
-    public Slider health;
-    public Slider healthBack;
-    public Slider energy;
-    public Slider energyBack;
-    public Slider shield;
 }

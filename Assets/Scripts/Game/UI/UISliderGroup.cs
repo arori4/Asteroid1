@@ -19,11 +19,13 @@ public class UISliderGroup : MonoBehaviour {
     private float backVelocity;
 
     public float SLIDER_SIZE_DIVIDER = 200f;
-    
+
+    bool hasBack;
+
     void Start () {
 
         //Error checks
-        if ()
+        hasBack = (backSlider != null);
 
     }
 	
@@ -32,7 +34,7 @@ public class UISliderGroup : MonoBehaviour {
             val / SLIDER_SIZE_DIVIDER,
             ref frontVelocity, FRONT_SMOOTH);
 
-        if (backSlider != null) {
+        if (hasBack) {
             backSlider.value = Mathf.SmoothDamp(backSlider.value,
                 val / SLIDER_SIZE_DIVIDER,
                 ref backVelocity, BACK_SMOOTH);
