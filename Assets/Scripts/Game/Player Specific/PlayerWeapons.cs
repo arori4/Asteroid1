@@ -309,10 +309,10 @@ public class PlayerWeapons : NetworkBehaviour {
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
                 DeactivateShield();
-                StartCoroutine(ui.RechargeShield(shieldInfo.rechargeTime, this));
+                ui.ShieldRecharge(shieldInfo.rechargeTime, this);
                 float retval = -energy;
                 energy = 0;
-                StartCoroutine(ui.HitCanvasFader(retval));
+                ui.RegisterHit(retval);
                 return retval;
             }
             else {
@@ -321,24 +321,13 @@ public class PlayerWeapons : NetworkBehaviour {
         }
 
         else {
-            StartCoroutine(ui.HitCanvasFader(amount));
+            ui.RegisterHit(amount);
             return amount;
         }
     }
 
     public void AddEnergy(float add) {
         energy = Mathf.Min(maxEnergy, energy + add);
-    }
-
-    /**
-     * Fades the canvas out to an alpha of 0.
-     * Canvas will be transparent
-     */
-    private IEnumerator FadeOutUI(CanvasGroup canvas, float smoothing) {
-        while (canvas.alpha > 0) {
-            canvas.alpha -= Time.deltaTime * smoothing;
-            yield return null;
-        }
     }
 
     private IEnumerator OnPostStart() {

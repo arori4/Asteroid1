@@ -5,7 +5,7 @@ using System.Collections;
  * Code for the background.
  * Includes scroller and setting lighting.
  */
-public class BackgroundHandler : MonoBehaviour {
+public class BackgroundController : MonoBehaviour {
 
     public GameObject tile1;
     public GameObject tile2;

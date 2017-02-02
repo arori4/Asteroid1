@@ -89,9 +89,7 @@ public class LobbyUIController : MonoBehaviour {
         statusText.text = "Currently client";
     }
 
-    /**
-     * Sets the status text
-     */
+    
     public void SetStatusText(string newText) {
         statusText.text = newText;
     }

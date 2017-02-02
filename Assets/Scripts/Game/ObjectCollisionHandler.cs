@@ -41,11 +41,10 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     //Scripts
     GameObject gameController;
     UIController ui;
-    Spawner objectSpawner;
+    NetworkController networkController;
 
     //Constants
     const float MAX_X_COLLIDE = 10f;
-
 
     void Start() {
         //find first game object with tag 
@@ -53,7 +52,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
         //Set scripts from game handler
         ui = gameController.GetComponent<UIController>();
-        objectSpawner = gameController.GetComponent<Spawner>();
+        networkController = gameController.GetComponent<NetworkController>();
     }
 
     void OnEnable() {
@@ -65,10 +64,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
         dropList.Clear();
 
         //calculate drops only on server
-        /*
         if (!isServer) {
            return;
-        }*/
+        }
 
         StartCoroutine(CalculateDropsCoroutine());
     }
@@ -191,13 +189,13 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             }
             else {
                 int amount = scoreInfo.score;
-                ui.AddScore(amount);
+                networkController.AddScore(amount);
             }
         }
 
         //handle if player dies. more stuff right now is handled by other scripts
         if (tag.CompareTo("Player") == 0) {
-            objectSpawner.StopAllCoroutines();
+            networkController.StopAllCoroutines();
             ui.GameOver();
         }
 

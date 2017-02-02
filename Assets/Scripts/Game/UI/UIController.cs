@@ -4,8 +4,7 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 
 /**
- * Controls some UI elements
- * Might be deprecated
+ * Controls all UI elements during the game
  */
 public class UIController : MonoBehaviour {
 
@@ -22,16 +21,19 @@ public class UIController : MonoBehaviour {
     [Header("Hit Canvas")]
     public CanvasGroup hitCanvas;
     bool hitCanvasActivated; //lock
-    
+
+    //UI Elements
+    [Header("UI")]
+    public CanvasGroup largeTextCanvas;
+    public Text largeText;
+
     [Header("Game Over")]
     public CanvasGroup gameOverGUI;
     public Text gameOverScoreText;
     
-    [Header("Overlays")]
+    [Header("Other Overlays")]
     public CanvasGroup blackFader;
 
-    //Game States
-    int score;
     bool gameOverButtonPressed;
 
     void Start () {
@@ -42,52 +44,22 @@ public class UIController : MonoBehaviour {
         gameOverGUI.alpha = 0;
         regularUI.alpha = 1;
 
-        //Set score
-        if (PlayerPrefs.HasKey("Score")) {
-            AddScore(PlayerPrefs.GetInt("Score")); //score starts at 0
-        }
-        else {
-            PlayerPrefs.SetInt("Score", 0);
-            AddScore(0);
-        }
-
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
         gameOverButtonPressed = false;
 
         //start the game and fade up
-        StartCoroutine(FadeOutUI(blackFader, 0.4f));
+        StartCoroutine(FadeOutCoroutine(blackFader, 0.4f));
 	}
-    
-    public void ButtonRestartGame () {
-        if (!gameOverButtonPressed) {
-            StopAllCoroutines();
-            gameOverButtonPressed = true;
-            StartCoroutine(RestartGameCoroutine());
-        }
-    }
-    
-    public void ButtonMainMenu() {
-        if (!gameOverButtonPressed) {
-            StopAllCoroutines();
-            gameOverButtonPressed = true;
-            StartCoroutine(MainMenuCoroutine());
-        }
-    }
 
-    public void AddScore(int scoreToAdd) {
-        score += scoreToAdd;
+
+    public void SetScoreText(int score) {
         scoreText.text = "Score: " + score;
     }
 
     public void GameOver() {
-        gameOverScoreText.text = "Score: " + score;
+        gameOverScoreText.text = "Score: " + scoreText.text;
         gameOverGUI.interactable = true;
-        GetComponent<GameSave>().SaveHighScore(score, 1); //for now, only 1 level
-
-        //set the level back to 1
-        PlayerPrefs.SetInt("Level", 1);
-        PlayerPrefs.SetInt("Score", 0);
 
         StartCoroutine(GameOverFadeUI());
     }
@@ -97,57 +69,50 @@ public class UIController : MonoBehaviour {
     }
 
     private IEnumerator GameOverFadeUI() {
-        StartCoroutine(FadeInUI(gameOverGUI, 0.5f));
+        StartCoroutine(FadeInCoroutine(gameOverGUI, 0.5f));
         yield return new WaitForSeconds(1);
-        StartCoroutine(FadeOutUI(regularUI, 1));
+        StartCoroutine(FadeOutCoroutine(regularUI, 1));
     }
 
     /**
-     * Fades the canvas in to an alpha of 1
-     * Canvas will be opaque
+     * Large Text
      */
-    private IEnumerator FadeInUI(CanvasGroup canvas, float smoothing) {
-        while (canvas.alpha < 1) {
-            canvas.alpha += Time.deltaTime * smoothing;
-            yield return null;
+
+    public void ShowLargeText(string text, float duration) {
+        largeTextCanvas.alpha = 1;
+        largeText.text = "text";
+        StartCoroutine(FadeOutCoroutine(largeTextCanvas, 0.3f));
+    }
+
+    /**
+     * Buttons
+     */
+     
+    public void ButtonRestartGame() {
+        if (!gameOverButtonPressed) {
+            StopAllCoroutines();
+            gameOverButtonPressed = true;
+            StartCoroutine(RestartGameCoroutine());
+        }
+    }
+
+    public void ButtonMainMenu() {
+        if (!gameOverButtonPressed) {
+            StopAllCoroutines();
+            gameOverButtonPressed = true;
+            StartCoroutine(MainMenuCoroutine());
         }
     }
 
     /**
-     * Fades the canvas out to an alpha of 0.
-     * Canvas will be transparent
+     * Local Player usage
      */
-    private IEnumerator FadeOutUI(CanvasGroup canvas, float smoothing) {
-        while (canvas.alpha > 0) {
-            canvas.alpha -= Time.deltaTime * smoothing;
-            yield return null;
-        }
+
+    public void RegisterHit(float damage) {
+        StartCoroutine(HitCanvasFader(damage));
     }
 
-    private IEnumerator AdvanceLevelCoroutine() {
-        StartCoroutine(FadeInUI(blackFader, 0.4f));
-        yield return new WaitForSeconds(4.0f);
-
-        //Add level and score
-        PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-        PlayerPrefs.SetInt("Score", score);
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
-    private IEnumerator RestartGameCoroutine() {
-        StartCoroutine(FadeInUI(blackFader, 0.5f));
-        yield return new WaitForSeconds(2.5f);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
-    private IEnumerator MainMenuCoroutine() {
-        StartCoroutine(FadeInUI(blackFader, 0.5f));
-        yield return new WaitForSeconds(2.5f);
-        SceneManager.LoadScene("Main Menu");
-    }
-
-    public IEnumerator HitCanvasFader(float damage) {
+    private IEnumerator HitCanvasFader(float damage) {
         if (!hitCanvasActivated) {
             hitCanvasActivated = true;
             //cap damage to highest amount
@@ -168,10 +133,11 @@ public class UIController : MonoBehaviour {
         }
     }
 
-    /*
-     * Recharge the shield when it has been destroyed
-     */
-    public IEnumerator RechargeShield(float rechargeTime, PlayerWeapons caller) {
+    public void ShieldRecharge(float rechargeTime, PlayerWeapons caller) {
+        StartCoroutine(RechargeShield(rechargeTime, caller));
+    }
+    
+    private IEnumerator RechargeShield(float rechargeTime, PlayerWeapons caller) {
         shieldUIGroup.Hide();
 
         shieldSlider.gameObject.SetActive(true);
@@ -188,22 +154,15 @@ public class UIController : MonoBehaviour {
         //keep shield bar up for a second before removing it
         CanvasGroup shieldBarCanvas = shieldSlider.gameObject.GetComponent<CanvasGroup>();
         for (int index = 0; index < 2; index++) {
-            while (shieldBarCanvas.alpha > 0) {
-                shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
-                yield return null;
-            }
-            while (shieldBarCanvas.alpha < 1) {
-                shieldBarCanvas.alpha += Time.deltaTime / 0.25f;
-                yield return null;
-            }
-
+            StartCoroutine(FadeInCoroutine(shieldBarCanvas, 4f));
+            yield return new WaitForSeconds(0.25f);
+            StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 4f));
+            yield return new WaitForSeconds(0.25f);
         }
 
-        //finallly fade the shield bar
-        while (shieldBarCanvas.alpha > 0) {
-            shieldBarCanvas.alpha -= Time.deltaTime / 0.25f;
-            yield return null;
-        }
+        StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 4f));
+        yield return new WaitForSeconds(0.25f);
+        
         //set alpha back to 1 so that when we need it again, it appears
         shieldBarCanvas.alpha = 1;
         shieldSlider.gameObject.SetActive(false);
@@ -212,4 +171,56 @@ public class UIController : MonoBehaviour {
         caller.shieldRecharging = false;
     }
 
+
+    /**
+     * Menu Usage
+     */
+
+    private IEnumerator AdvanceLevelCoroutine() {
+        StartCoroutine(FadeInCoroutine(blackFader, 0.4f));
+        yield return new WaitForSeconds(4.0f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private IEnumerator RestartGameCoroutine() {
+        StartCoroutine(FadeInCoroutine(blackFader, 0.5f));
+        yield return new WaitForSeconds(2.5f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private IEnumerator MainMenuCoroutine() {
+        StartCoroutine(FadeInCoroutine(blackFader, 0.5f));
+        yield return new WaitForSeconds(2.5f);
+        SceneManager.LoadScene("Main Menu");
+    }
+
+
+    /*
+    * Helper fading coroutines
+    * Also copied to NetworkMultiplayer
+    */
+
+    private IEnumerator FadeInCoroutine(CanvasGroup canvas, float duration) {
+        float lambda = 1f / duration;
+
+        while (canvas.alpha < 1f) {
+            canvas.alpha += Time.deltaTime * lambda;
+            yield return null;
+        }
+
+        //lock at final value
+        canvas.alpha = 1f;
+    }
+
+    private IEnumerator FadeOutCoroutine(CanvasGroup canvas, float duration) {
+        float lambda = 1f / duration;
+
+        while (canvas.alpha > 0) {
+            canvas.alpha -= Time.deltaTime * lambda;
+            yield return null;
+        }
+
+        //lock at final value
+        canvas.alpha = 0;
+    }
 }

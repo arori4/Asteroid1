@@ -7,14 +7,17 @@ using System.Collections.Generic;
 /**
  * Handles spawning and level
  */
-public class Spawner : MonoBehaviour {
+public class NetworkController : NetworkBehaviour {
+
+    //Syncs
+    int score;
+    public int mode = 0;
+    public int level = 1;
 
     //game mode
     [Header("Game Modes")]
     const int LEVEL_MODE = 0;
     const int SURVIVAL_MODE = 1;
-    public int mode = 0;
-    public int level = 1;
     public float survivalLevelTime = 20f;
 
     //Spawn Location
@@ -40,39 +43,43 @@ public class Spawner : MonoBehaviour {
     //Powerups
     public SpawnClass powerupClass;
 
-    //UI Elements
-    [Header("UI")]
-    public CanvasGroup largeTextCanvas;
-    public Text largeText;
-
     //Locks
     bool recalculationFinished;
 
+    //Local use
+    UIController ui;
+
     void Start() {
+        ui = GameObject.FindGameObjectWithTag("UI").GetComponent<UIController>();
+
+        //Set score
+        if (PlayerPrefs.HasKey("Score")) {
+            AddScore(PlayerPrefs.GetInt("Score")); //score starts at 0
+        }
+        else {
+            PlayerPrefs.SetInt("Score", 0);
+            AddScore(0);
+        }
 
         //initiate game mode and level
         if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
             mode = LEVEL_MODE;
             SetLevel(PlayerPrefs.GetInt("Level"));
-            largeText.text = "Level " + level;
+            ui.ShowLargeText("Level" + level, 0.4f);
         }
         else if (PlayerPrefs.GetInt("Mode") == SURVIVAL_MODE) {
             mode = SURVIVAL_MODE;
             SetLevel(PlayerPrefs.GetInt("Level"));
-            largeText.text = "Survive";
+            ui.ShowLargeText("Survive" + level, 0.4f);
             StartCoroutine(IncreaseLevels());
         }
         else {
             print("Mode is invalid, game will be set to survival mode by default. " + mode);
             mode = SURVIVAL_MODE;
             SetLevel(1);
-            largeText.text = "Survive";
+            ui.ShowLargeText("Survive" + level, 0.4f);
             StartCoroutine(IncreaseLevels());
         }
-
-        //Show text and fade it
-        largeTextCanvas.alpha = 1;
-        StartCoroutine(FadeOutText(largeTextCanvas, 0.4f));
 
         //Start level
         recalculationFinished = false;
@@ -149,6 +156,24 @@ public class Spawner : MonoBehaviour {
 
     }
 
+    public void AddScore(int scoreToAdd) {
+        score += scoreToAdd;
+    }
+
+    public void AdvanceLevel() {
+        //Add level and score
+        PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
+        PlayerPrefs.SetInt("Score", score);
+    }
+
+    public void GameOver() {
+        GetComponent<GameSave>().SaveHighScore(score, 1); //for now, only 1 level
+
+        //set the level back to 1
+        PlayerPrefs.SetInt("Level", 1);
+        PlayerPrefs.SetInt("Score", 0);
+    }
+
     private IEnumerator SpawnEnemiesCoroutine() {
         yield return new WaitForSeconds(spawnBeginningWait);
 
@@ -202,11 +227,7 @@ public class Spawner : MonoBehaviour {
         continueSpawningAsteroids = false;
         yield return new WaitForSeconds(5);
 
-        largeTextCanvas.alpha = 1;
-        largeText.text = "Clear";
-        //TODO: special effect
-
-        StartCoroutine(FadeOutText(largeTextCanvas, 0.3f));
+        ui.ShowLargeText("Clear", 0.3f);
 
         GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
 
@@ -287,19 +308,6 @@ public class Spawner : MonoBehaviour {
         yield return null;
 
         recalculationFinished = true;
-    }
-
-    /**
-     * Fades the canvas out to an alpha of 0.
-     * Canvas will be transparent
-     */
-    private IEnumerator FadeOutText(CanvasGroup canvas, float smoothing) {
-        yield return new WaitForSeconds(0.8f);
-
-        while (canvas.alpha > 0) {
-            canvas.alpha -= Time.deltaTime * smoothing;
-            yield return null;
-        }
     }
 
     /**
