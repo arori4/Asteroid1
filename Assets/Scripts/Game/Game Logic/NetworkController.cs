@@ -50,7 +50,7 @@ public class NetworkController : NetworkBehaviour {
     UIController ui;
 
     void Start() {
-        ui = GameObject.FindGameObjectWithTag("UI").GetComponent<UIController>();
+        ui = GameObject.FindGameObjectWithTag("UI Controller").GetComponent<UIController>();
 
         //Set score
         if (PlayerPrefs.HasKey("Score")) {
@@ -312,22 +312,27 @@ public class NetworkController : NetworkBehaviour {
 
     /**
      * Spawns an object with a random material
+     * 
+     * TODO: change name to SpawnInWave, overload method?
      */
     private GameObject SpawnRngMaterial(GameObject obj, List<Material> materials) {
         GameObject spawnedObj = SpawnInWave(obj);
+
         spawnedObj.GetComponentInChildren<Renderer>().material =
             materials[Random.Range(0, materials.Count)];
 
         return spawnedObj;
     }
 
+    /**
+     * Spawns the object
+     */
     private GameObject SpawnInWave(GameObject obj) {
 
         Vector3 spawnPosition = new Vector3(spawnXZLocation.x, spawnXZLocation.y,
             Random.Range(spawnVerticalLocation.x, spawnVerticalLocation.y));
         GameObject spawnedObj = Pools.Initialize(obj, spawnPosition, Quaternion.identity);
-        NetworkServer.Spawn(spawnedObj);
-
+        
         return spawnedObj;
     }
 

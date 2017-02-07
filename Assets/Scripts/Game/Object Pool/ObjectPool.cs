@@ -11,14 +11,41 @@ public class ObjectPool {
 
     private List<GameObject> pool = new List<GameObject>();
 
+    /**
+     * Constructor
+     * Note that this isn't a MonoBehaviour or NetworkBehaviour
+     */
     public ObjectPool(GameObject obj) {
         if (obj == null) {
-            Debug.Log("ObjectPool initiate with a null object.");
+            Debug.Log("ObjectPool initiated with a null object.");
         }
 
         sourceObject = obj;
     }
-    
+
+
+    public IEnumerator InitializeCoroutine(int amount) {
+        //Add amount objects to the pool
+        for (int index = 0; index < amount; index++) {
+            CreateObject();
+            yield return null;
+        }
+    }
+
+    public GameObject CreateObject() { //this now returns gameObject to be used to register client spawn handler in poolmemember
+        GameObject newClone = GameObject.Instantiate(sourceObject);
+
+        //add object to pool and set member
+        PoolMember member = newClone.AddComponent<PoolMember>();
+        member.CancelInvoke(); //cancels the onEnable invoke
+        member.pool = this;
+
+        //Set object to inactive (also adds it to pool)
+        newClone.SetActive(false);
+
+        return newClone;
+    }
+
     public GameObject nextObject {
 
         get {
@@ -53,53 +80,8 @@ public class ObjectPool {
         }
 
     }
-    
-    void CreateObject() {
-        //create object
-        GameObject newClone = GameObject.Instantiate(sourceObject);
 
-        //add object to pool and set member
-        PoolMember member = newClone.AddComponent<PoolMember>();
-        member.pool = this;
 
-        //Set object to inactive (also adds it to pool)
-        newClone.SetActive(false);
-    }
 
-    public IEnumerator InitializeCoroutine(int amount) {
-        //Add amount objects to the pool
-        for (int index = 0; index < amount; index++) {
-            CreateObject();
-            yield return null;
-        }
-    }
-    
-}
 
-[System.Serializable]
-public class PoolMember : MonoBehaviour {
-
-    public ObjectPool pool;
-
-    ParticleSystem particles;
-
-    void Start() {
-        //check for different components
-        particles = GetComponent<ParticleSystem>();
-    }
-
-    void OnEnable() {
-        if (particles != null) {
-            ParticleSystem.EmissionModule emission = particles.emission;
-            emission.enabled = true;
-        }
-    }
-
-    void OnDisable() {
-        pool.nextObject = gameObject; //calls set
-        if (particles != null) {
-            ParticleSystem.EmissionModule emission = particles.emission;
-            emission.enabled = false;
-        }
-    }
 }

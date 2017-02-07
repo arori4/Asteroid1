@@ -58,7 +58,7 @@ public class UIController : MonoBehaviour {
     }
 
     public void GameOver() {
-        gameOverScoreText.text = "Score: " + scoreText.text;
+        gameOverScoreText.text = scoreText.text;
         gameOverGUI.interactable = true;
 
         StartCoroutine(GameOverFadeUI());

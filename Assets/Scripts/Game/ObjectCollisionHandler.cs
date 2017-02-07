@@ -11,7 +11,6 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
     //collision and game health
     public CanCollideWith collideDefinition;
-    [SyncVar]
     public float maxHealth = 10;
     public float damageAmount;
 
@@ -35,11 +34,11 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     //States
     bool dropCalculationDone;
     bool startedDeathCoroutine;
+    [SyncVar]
     float currentHealth;
     string lastColliderTag = ""; //for keeping tab of score right now
 
     //Scripts
-    GameObject gameController;
     UIController ui;
     NetworkController networkController;
 
@@ -47,12 +46,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     const float MAX_X_COLLIDE = 10f;
 
     void Start() {
-        //find first game object with tag 
-        gameController = GameObject.FindWithTag("GameController");
-
         //Set scripts from game handler
-        ui = gameController.GetComponent<UIController>();
-        networkController = gameController.GetComponent<NetworkController>();
+        ui = GameObject.FindWithTag("UI Controller").GetComponent<UIController>();
+        //networkController = GameObject.FindWithTag("GameController").GetComponent<NetworkController>();
     }
 
     void OnEnable() {
@@ -63,20 +59,10 @@ public class ObjectCollisionHandler : NetworkBehaviour {
         lastColliderTag = "";
         dropList.Clear();
 
-        //calculate drops only on server
-        if (!isServer) {
-           return;
-        }
-
         StartCoroutine(CalculateDropsCoroutine());
     }
 
     void OnTriggerEnter(Collider other) {
-
-        //Only run on server
-        if (!isServer) {
-            return;
-        }
 
         //ignore detectors
         if (CompareTag("Player Detector")) {
@@ -93,7 +79,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             if (other.CompareTag("Powerup")) {
                 other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
             }
-            dealDamage(other.gameObject);
+            DealDamage(other.gameObject);
 
             //create contact effects, if any
             if (contactEffectList.Length > 0) {
@@ -122,7 +108,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
      * Deals damage to both objects on collision, by definition
      * Handles death when needed
      */
-    private void dealDamage(GameObject other) {
+    private void DealDamage(GameObject other) {
         //Get reference to collider
         ObjectCollisionHandler otherCollider = other.GetComponent<ObjectCollisionHandler>();
 
@@ -170,10 +156,6 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     }
 
     public void Damage(float amount, string otherTag) {
-        if (!isServer) {
-            return;
-        }
-
         currentHealth -= amount;
         lastColliderTag = otherTag;
     }
@@ -189,13 +171,13 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             }
             else {
                 int amount = scoreInfo.score;
-                networkController.AddScore(amount);
+                //networkController.AddScore(amount);
             }
         }
 
         //handle if player dies. more stuff right now is handled by other scripts
         if (tag.CompareTo("Player") == 0) {
-            networkController.StopAllCoroutines();
+            //networkController.StopAllCoroutines();
             ui.GameOver();
         }
 
@@ -240,7 +222,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             }
             yield return null;
         }
-
+        
         //finally kill object
         gameObject.SetActive(false);
     }
@@ -304,8 +286,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             yield return null;
         }
 
-        //finally, indicate that routine is done
+        //finally, indicate that routine is done, and make sure death corutine is now false
         dropCalculationDone = true;
+        startedDeathCoroutine = false;
     }
 
 } //end class

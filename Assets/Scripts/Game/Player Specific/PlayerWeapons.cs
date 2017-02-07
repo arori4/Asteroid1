@@ -58,7 +58,7 @@ public class PlayerWeapons : NetworkBehaviour {
     }
 
     void OnEnable() {
-        ui = GameObject.FindGameObjectWithTag("GameController").GetComponent<UIController>();
+        ui = GameObject.FindGameObjectWithTag("UI Controller").GetComponent<UIController>();
         //Set ship stats
         weaponNextFire = Time.time;
         energy = maxEnergy;
