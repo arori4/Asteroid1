@@ -97,9 +97,6 @@ public class Pools : NetworkBehaviour {
 
             if (shouldExistALready) {
                 print(obj + " should have a pool already.");
-                if (singleton.isServer) {
-                    print("ALSO A FCKIN SERVER");
-                }
             }
         }
 
@@ -158,9 +155,15 @@ public class Pools : NetworkBehaviour {
      */
     public static void Terminate(GameObject obj) {
         if (!singleton.isServer) { return; }
-        if (obj == null) { print("Terminate on a null object"); return; }
+        if (obj == null) {
+            print("Terminate on a null object");
+            return; }
         if (obj.GetComponent<PoolMember>() == null) {
-            print("Terminate on a non pool member"); return;
+            print("Terminate on a non pool member");
+            return;
+        }
+        if (obj.GetComponent<PoolMember>().isObjectActive == false) {
+            print("Terminate on an already deactivated object"); return;
         }
 
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());

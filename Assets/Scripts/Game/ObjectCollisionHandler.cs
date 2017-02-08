@@ -77,7 +77,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             
             //special consideration for powerups
             if (other.CompareTag("Powerup")) {
-                other.transform.root.gameObject.GetComponent<PowerUpHandler>().activate();
+                other.transform.parent.gameObject.GetComponent<PowerUpHandler>().Activate(gameObject);
             }
             DealDamage(other.gameObject);
 

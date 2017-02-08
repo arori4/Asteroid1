@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
  * Defines and handles powerups.
  */
-public class PowerUpHandler : MonoBehaviour {
+public class PowerUpHandler : NetworkBehaviour {
 
     public HealthPowerup healthDef;
     public EnergyPowerup energyDef;
@@ -13,23 +14,12 @@ public class PowerUpHandler : MonoBehaviour {
     public SpawnObject spawnObjectDef;
     public SpawnTurret spawnTurretDef;
     public SpawnGun spawnGunDef;
+    
 
-    GameObject player;
-    ObjectCollisionHandler playerCollisionHandler;
-    PlayerWeapons playerWeapons;
+    public void Activate(GameObject player) {
+        ObjectCollisionHandler playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
+        PlayerWeapons playerWeapons = player.GetComponent<PlayerWeapons>();
 
-    //KEEP THIS AS START
-	void Start () {
-        //find player, if it exists. this can run when the player dies, which is a nullptr
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null) {
-            player = player.transform.root.gameObject;
-            playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
-            playerWeapons = player.GetComponent<PlayerWeapons>();
-        }
-	}
-
-    public void activate() {
         if (healthDef.activated) {
             if (healthDef.increaseMax) {
                 playerCollisionHandler.maxHealth += healthDef.amount;

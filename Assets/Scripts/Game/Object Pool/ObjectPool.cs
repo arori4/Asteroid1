@@ -5,6 +5,7 @@ using UnityEngine.Networking;
 
 /**
  * Defines an object pool for efficient creation
+ * Note: this is not a monobehaviour.
  */ 
 public class ObjectPool {
 
@@ -34,7 +35,6 @@ public class ObjectPool {
         }
     }
 
-    //this now returns gameObject to be used to register client spawn handler in poolmemember
     public GameObject CreateObject() {
         GameObject newClone = GameObject.Instantiate(sourceObject);
 
@@ -42,14 +42,18 @@ public class ObjectPool {
         PoolMember member = newClone.AddComponent<PoolMember>();
         member.pool = this;
 
-        //Set object to inactive (also adds it to pool)
+        //Set object to inactive
         member.SetObjectInactive();
+
+        //Add object to pool
+        nextObject = newClone;
 
         //If server, register the spawn
         if (isServer) {
             NetworkServer.Spawn(newClone);
         }
 
+        //returns gameObject to be used to register client spawn handler in poolmemember
         return newClone;
     }
 
@@ -57,8 +61,6 @@ public class ObjectPool {
 
         get {
             if (!isServer) { return null; }
-
-            //if object is null, tell us
             if (sourceObject == null) {
                 Debug.Log("Source object is null.");
                 return null;
@@ -87,9 +89,7 @@ public class ObjectPool {
             if (isServer) {
                 pool.Add(value);
             }
-
         }
-
     }
 
 

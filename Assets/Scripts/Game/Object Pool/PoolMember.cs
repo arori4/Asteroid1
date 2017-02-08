@@ -5,6 +5,7 @@ using UnityEngine.Networking;
 
 /**
  * A networked pool object
+ * Script is attached to pool objects upon creation
  */
 public class PoolMember : NetworkBehaviour {
 
@@ -63,10 +64,6 @@ public class PoolMember : NetworkBehaviour {
      * Active
      */
 
-    void OnEnable() {
-        //print("OnEnable should never be called");
-    }
-
     public void SetObjectActive() {
         ChangeComponentActive(true);
 
@@ -90,10 +87,6 @@ public class PoolMember : NetworkBehaviour {
     /**
      * Inactive
      */
-
-    void OnDisable() {
-        //print("OnDisable should never be called");
-    }
 
     public void SetObjectInactive() {
         ChangeComponentActive(false);
@@ -122,6 +115,7 @@ public class PoolMember : NetworkBehaviour {
     private void ChangeComponentActive(bool active) {
         Component[] comps = GetComponents<Component>();
 
+        //TODO: cache this information
         for (int i = 0; i < comps.Length; i++) {
             if (comps[i] != this && comps[i].GetType() != typeof(NetworkIdentity)) {
                 if (comps[i].GetType().IsSubclassOf(typeof(MonoBehaviour)))
@@ -143,11 +137,6 @@ public class PoolMember : NetworkBehaviour {
         }
 
         locallyActive = active; //this was true always before...why?
-
-        if (!active) {
-            //put back in pool
-            pool.nextObject = gameObject;
-        }
     }
 
 }
