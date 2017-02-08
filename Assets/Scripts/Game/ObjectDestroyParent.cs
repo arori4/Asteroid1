@@ -6,7 +6,9 @@ using System.Collections;
  */
 public class ObjectDestroyParent : MonoBehaviour {
 
+    /* Deactivated cuz we don't use OnDisable anymore
 	void OnDisable() {
-        transform.root.gameObject.SetActive(false);
+        Pools.Terminate(transform.root.gameObject);
     }
+    */
 }

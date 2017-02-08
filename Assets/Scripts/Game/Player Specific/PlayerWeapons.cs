@@ -246,7 +246,7 @@ public class PlayerWeapons : NetworkBehaviour {
         }
 
         //Remove old ship
-        shipType.SetActive(false);
+        Pools.Terminate(shipType.gameObject);
 
         //Set ship parent
         shipType = Instantiate(ship, gameObject.transform.position, gameObject.transform.rotation) as GameObject;
@@ -266,6 +266,8 @@ public class PlayerWeapons : NetworkBehaviour {
     }
 
     public void AddGuns(int gunsToAdd) {
+        if (!isServer) { return; }
+
         //Find the maximum amount of guns to add
         int maxGunsAllowed = Mathf.Min(currentShipInfo.gunLocations.Count, gunLocations.Count + gunsToAdd);
 

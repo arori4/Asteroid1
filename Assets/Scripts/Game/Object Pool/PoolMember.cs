@@ -9,8 +9,8 @@ using UnityEngine.Networking;
 public class PoolMember : NetworkBehaviour {
 
     [SyncVar]
-    public bool isObjectActive = true;
-    bool locallyActive = true;
+    public bool isObjectActive;
+    bool locallyActive;
     public ObjectPool pool; //pool this object belongs to
 
     ParticleSystem particles;
@@ -23,6 +23,7 @@ public class PoolMember : NetworkBehaviour {
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
         if (NetworkServer.active && !isServer) {
+
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
             }
@@ -30,6 +31,7 @@ public class PoolMember : NetworkBehaviour {
                 SetObjectInactive();
             }
         }
+        
     }
 
 
@@ -37,7 +39,7 @@ public class PoolMember : NetworkBehaviour {
     * Network stuff
     * Cuffently don't know what this is for
     */
-
+    
     GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
         var go = pool.CreateObject();
         return go;
@@ -50,18 +52,22 @@ public class PoolMember : NetworkBehaviour {
     void Awake() {
         ClientScene.RegisterSpawnHandler(
             gameObject.GetComponent<NetworkIdentity>().assetId, ClientSpawnHandler, ClientUnSpawnHandler);
-    }
+        ClientScene.RegisterPrefab(gameObject);
 
+        isObjectActive = false;
+        locallyActive = true;
+    }
+    
 
     /**
      * Active
      */
 
     void OnEnable() {
-        SetObjectActive();
+        //print("OnEnable should never be called");
     }
 
-    private void SetObjectActive() {
+    public void SetObjectActive() {
         ChangeComponentActive(true);
 
         if (particles != null) {
@@ -77,7 +83,6 @@ public class PoolMember : NetworkBehaviour {
 
     [ClientRpc]
     void RpcSetObjectActive() {
-        print("ClientRPC Set Object active");
         ChangeComponentActive(true);
     }
 
@@ -87,7 +92,7 @@ public class PoolMember : NetworkBehaviour {
      */
 
     void OnDisable() {
-        Invoke("SetObjectInactive", 0.01f);
+        //print("OnDisable should never be called");
     }
 
     public void SetObjectInactive() {

@@ -31,46 +31,49 @@ public class Pools : NetworkBehaviour {
     bool started = false;
     static Pools singleton;
 
+    int numFinished = 0;
+    int numNeededToStart = 0;
+
     void Start() {
         //check for single instance
         if (started) {
-            print("More than one instance of class Pools was created. This one in object " + gameObject);
+            print("More than one instance of class Pools was created. " +
+                "This one in object " + gameObject);
             return;
         }
 
-        //create pools for everything
-        singleton = this;
+        if (NetworkServer.active) {
 
-        //signify started so it only starts once
-        started = true;
+            //create pools for everything
+            singleton = this;
 
-        //add all the lists to the large list
-        startingObjectArrays.Add(aliens);
-        startingObjectArrays.Add(alienWeapons);
-        startingObjectArrays.Add(asteroids);
-        startingObjectArrays.Add(barriers);
-        startingObjectArrays.Add(friends);
-        startingObjectArrays.Add(mine);
-        startingObjectArrays.Add(playerWeapons);
-        startingObjectArrays.Add(powerups);
+            //signify started so it only starts once
+            started = true;
 
-        startingObjectArrays.Add(explosions);
-        startingObjectArrays.Add(audios);
+            //add all the lists to the large list
+            startingObjectArrays.Add(aliens);
+            startingObjectArrays.Add(alienWeapons);
+            startingObjectArrays.Add(asteroids);
+            startingObjectArrays.Add(barriers);
+            startingObjectArrays.Add(friends);
+            startingObjectArrays.Add(mine);
+            startingObjectArrays.Add(playerWeapons);
+            startingObjectArrays.Add(powerups);
 
-        //initialize all pools
-        for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
-            GameObject[] currentArray = startingObjectArrays[outer];
+            startingObjectArrays.Add(explosions);
+            startingObjectArrays.Add(audios);
 
-            for (int inner = 0; inner < currentArray.Length; inner++) {
-                StartCoroutine(EnumerateType(currentArray[inner]));
+            //initialize all pools
+            for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
+                GameObject[] currentArray = startingObjectArrays[outer];
+                numNeededToStart++;
+
+                for (int inner = 0; inner < currentArray.Length; inner++) {
+                    ObjectPool objPool = GetObjectPool(currentArray[inner], false);
+                    StartCoroutine(objPool.InitializeCoroutine(NUM_START));
+                }
             }
         }
-    }
-
-    private IEnumerator EnumerateType(GameObject obj) {
-        yield return null;
-        ObjectPool objPool = GetObjectPool(obj, false);
-        StartCoroutine(objPool.InitializeCoroutine(NUM_START));
     }
 
     private static ObjectPool GetObjectPool(GameObject obj, bool shouldExistALready) {
@@ -81,7 +84,7 @@ public class Pools : NetworkBehaviour {
                 objPool = singleton.pools[index];
 
                 if (!shouldExistALready) {
-                    print("Object " + obj + " should not exist already, but it already has a pool.");
+                    print(obj + " should not have a pool yet.");
                 }
                 break;
             }
@@ -89,52 +92,83 @@ public class Pools : NetworkBehaviour {
 
         //if it doesn't exist, create a new object pool and add it
         if (objPool == null) {
-            objPool = new ObjectPool(obj);
+            objPool = new ObjectPool(obj, singleton.isServer);
             singleton.pools.Add(objPool);
 
             if (shouldExistALready) {
-                print("Object " + obj + " should exist already but did not have a pool.");
+                print(obj + " should have a pool already.");
+                if (singleton.isServer) {
+                    print("ALSO A FCKIN SERVER");
+                }
             }
-            
         }
 
         return objPool;
+    }
+
+    private static ObjectPool GetObjectPool(GameObject obj, PoolMember member) {
+        if (member == null) {
+            return GetObjectPool(obj, true);
+        }
+
+        return member.pool;
+
     }
 
 
     /**
      * Initializes a game object and returns it.
      * If a Game Object doesn't exist, then add it
+     * Overloaded for similarity to Instantiate
      */
     public static GameObject Initialize(GameObject obj) {
         if (!singleton.isServer) { return null; }
-
-        ObjectPool objPool = GetObjectPool(obj, true);
-        GameObject nextObj = objPool.nextObject;
-        nextObj.transform.parent = singleton.parentTransform;
-
-        return nextObj;
+        return Initialize(obj, Vector3.zero, Quaternion.identity, singleton.parentTransform);
     }
 
     public static GameObject Initialize(GameObject obj, Transform parent) {
         if (!singleton.isServer) { return null; }
-
-        GameObject newObj = Initialize(obj);
-        newObj.transform.parent = parent;
-
-        return newObj;
+        return Initialize(obj, Vector3.zero, Quaternion.identity, parent);
     }
 
     public static GameObject Initialize(GameObject obj, Vector3 position, Quaternion rotation) {
         if (!singleton.isServer) { return null; }
-
-        GameObject newObj = Initialize(obj);
-        newObj.transform.position = position;
-        newObj.transform.rotation = rotation;
-
-        return newObj;
+        return Initialize(obj, position, rotation, singleton.parentTransform);
     }
-    
+
+    public static GameObject Initialize(
+        GameObject obj, Vector3 position, Quaternion rotation, Transform parent) {
+        if (!singleton.isServer) { return null; }
+        if (obj == null) { print("Initialize on a null object"); return null;  }
+
+        //Get Object
+        ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());
+        GameObject nextObj = objPool.nextObject;
+
+        //Set variables
+        nextObj.transform.parent = singleton.parentTransform;
+        nextObj.transform.position = position;
+        nextObj.transform.rotation = rotation;
+        
+        return nextObj;
+    }
+
+    /**
+     * Terminates an object and sends it back into the pool.
+     */
+    public static void Terminate(GameObject obj) {
+        if (!singleton.isServer) { return; }
+        if (obj == null) { print("Terminate on a null object"); return; }
+        if (obj.GetComponent<PoolMember>() == null) {
+            print("Terminate on a non pool member"); return;
+        }
+
+        ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());
+        obj.GetComponent<PoolMember>().SetObjectInactive();
+        objPool.nextObject = obj;
+    }
+
+
 
     void OnDestroy() {
         //clear all lists

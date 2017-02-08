@@ -33,7 +33,7 @@ public class WeaponChainLightningHandler : MonoBehaviour {
 
         //Destroy if the collider reaches max radius and hasn't found an object to jump to
         if (hitsPerformed > numHitTotal || detector.radius > maxRadius) {
-            gameObject.SetActive(false);
+            Pools.Terminate(gameObject);
         }
     }
 

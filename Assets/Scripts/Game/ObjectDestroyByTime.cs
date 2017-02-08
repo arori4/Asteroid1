@@ -12,6 +12,6 @@ public class ObjectDestroyByTime : MonoBehaviour {
     IEnumerator Disable() {
         yield return new WaitForSeconds(lifetime);
 
-        gameObject.SetActive(false);
+        Pools.Terminate(gameObject);
     }
 }

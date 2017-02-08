@@ -20,7 +20,7 @@ public class ObjectDamageExplosion : MonoBehaviour {
             yield return null;
         }
 
-        gameObject.SetActive(false);
+        Pools.Terminate(gameObject);
     }
     
 }

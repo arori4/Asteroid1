@@ -99,7 +99,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
     void OnTriggerExit(Collider other) {
         if (other.CompareTag("GameBoundary")) {
-            gameObject.SetActive(false);
+            Pools.Terminate(gameObject);
         }
     }
 
@@ -162,6 +162,8 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
 
     private IEnumerator DeathCoroutine() {
+        print(gameObject + " started death coroutine");
+
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
@@ -222,9 +224,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             }
             yield return null;
         }
-        
+
         //finally kill object
-        gameObject.SetActive(false);
+        Pools.Terminate(gameObject);
     }
     
 

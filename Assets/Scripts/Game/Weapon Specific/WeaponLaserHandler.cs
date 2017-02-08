@@ -40,6 +40,6 @@ public class WeaponLaserHandler : MonoBehaviour {
             yield return null;
         }
 
-        gameObject.SetActive(false);
+        Pools.Terminate(gameObject);
     }
 }
