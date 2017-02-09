@@ -26,10 +26,9 @@ public class ObjectPool {
         sourceObject = obj;
         isServer = server;
         
-        Debug.Log(ClientScene.ready);
-        Debug.Log(sourceObject);
-        Debug.Log(sourceObject.GetComponent<NetworkIdentity>());
-        Debug.Log(sourceObject.GetComponent<NetworkIdentity>().assetId);
+        Debug.Log(sourceObject + " " +
+            sourceObject.GetComponent<NetworkIdentity>().assetId + " " +
+            sourceObject.GetComponent<NetworkIdentity>().netId);
 
         ClientScene.RegisterSpawnHandler(
             sourceObject.GetComponent<NetworkIdentity>().assetId, ClientSpawnHandler, ClientUnSpawnHandler);
@@ -38,7 +37,7 @@ public class ObjectPool {
     public IEnumerator InitializeCoroutine(int amount) {
         //Add amount objects to the pool
         for (int index = 0; index < amount; index++) {
-            CreateObject();
+            nextObject = CreateObject();
             yield return null;
         }
     }
@@ -52,9 +51,6 @@ public class ObjectPool {
 
         //Set object to inactive
         member.SetObjectInactive();
-
-        //Add object to pool
-        nextObject = newClone;
 
         //If server, register the spawn
         if (isServer) {
@@ -76,7 +72,7 @@ public class ObjectPool {
 
             //create new object if there are none available
             if (pool.Count < 1) {
-                CreateObject();
+                nextObject = CreateObject();
             }
 
             int indexToClaim = pool.Count - 1;

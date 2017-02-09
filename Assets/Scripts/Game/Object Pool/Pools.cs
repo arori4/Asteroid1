@@ -20,6 +20,7 @@ public class Pools : NetworkBehaviour {
     public GameObject[] mine;
     public GameObject[] playerWeapons;
     public GameObject[] powerups;
+    public GameObject[] ships;
 
     [Header("Other Objects")]
     public GameObject[] explosions;
@@ -57,6 +58,7 @@ public class Pools : NetworkBehaviour {
         startingObjectArrays.Add(mine);
         startingObjectArrays.Add(playerWeapons);
         startingObjectArrays.Add(powerups);
+        startingObjectArrays.Add(ships);
 
         startingObjectArrays.Add(explosions);
         startingObjectArrays.Add(audios);

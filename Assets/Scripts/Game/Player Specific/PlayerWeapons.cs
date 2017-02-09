@@ -85,7 +85,7 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //weapon input
         if (Input.GetKey(KeyCode.Space) || weaponButtonPressed) {
-            WeaponFire();
+            CmdWeaponFire();
         }
 
         //shield input
@@ -98,7 +98,7 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //missile input
         if (Input.GetKey(KeyCode.LeftControl) || missileButtonPressed) {
-            MissileFire();
+            CmdMissileFire();
         }
 
         //Update Energy to maximum energy
@@ -108,9 +108,10 @@ public class PlayerWeapons : NetworkBehaviour {
         //handle health and energy bar
         ui.healthSlider.val = playerCollision.GetCurrentHealth();
         ui.energySlider.val = energy;
-	}
+    }
 
-    public void WeaponFire() {
+    [Command]
+    public void CmdWeaponFire() {
         //increase charge time
         weaponCurrentCharge += Time.deltaTime;
 
@@ -133,7 +134,8 @@ public class PlayerWeapons : NetworkBehaviour {
         }
     }
 
-    public void MissileFire() {
+    [Command]
+    public void CmdMissileFire() {
         //only fire after a certain time quantum and amount of energy
         if (Time.time >= missileNextFire && missileCount > 0) {
 

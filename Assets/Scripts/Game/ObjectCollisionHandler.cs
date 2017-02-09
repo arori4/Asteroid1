@@ -137,8 +137,10 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     void Update() {
         //kill when current health <= 0
         if (currentHealth <= 0 && !startedDeathCoroutine) {
-            StartCoroutine(DeathCoroutine());
             startedDeathCoroutine = true;
+            if (isServer) {
+                StartCoroutine(DeathCoroutine());
+            }
         }
     }
 

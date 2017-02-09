@@ -12,6 +12,7 @@ public class PoolMember : NetworkBehaviour {
     [SyncVar]
     public bool isObjectActive;
     bool locallyActive;
+
     public ObjectPool pool; //pool this object belongs to
 
     ParticleSystem particles;
@@ -26,7 +27,8 @@ public class PoolMember : NetworkBehaviour {
 
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
-        if (NetworkServer.active && !isServer) {
+
+        if (!isServer) {
 
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
@@ -83,6 +85,7 @@ public class PoolMember : NetworkBehaviour {
 
     [ClientRpc]
     void RpcSetObjectInactive() {
+        print("called");
         ChangeComponentActive(false);
     }
     
