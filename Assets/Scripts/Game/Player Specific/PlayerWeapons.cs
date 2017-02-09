@@ -63,16 +63,22 @@ public class PlayerWeapons : NetworkBehaviour {
         weaponNextFire = Time.time;
         energy = maxEnergy;
 
+        StartCoroutine(OnPostStart());
+    }
+
+    private IEnumerator OnPostStart() {
+        yield return new WaitForSeconds(0.3f);
         //Set weapons
         ChangeShip(shipType);
         ChangeWeapon(weaponType, false);
         ChangeShield(shieldType, false);
         ChangeMissile(missileType, 5, false);
 
-        StartCoroutine(OnPostStart());
+        AddGuns(numStartingGuns);
+
     }
-	
-	void Update () {
+
+    void Update () {
         if (!isLocalPlayer) {
             return;
         }
@@ -330,11 +336,6 @@ public class PlayerWeapons : NetworkBehaviour {
 
     public void AddEnergy(float add) {
         energy = Mathf.Min(maxEnergy, energy + add);
-    }
-
-    private IEnumerator OnPostStart() {
-        yield return new WaitForSeconds(0.2f);
-        AddGuns(numStartingGuns);
     }
 
     void OnDisable() {

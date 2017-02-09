@@ -25,6 +25,14 @@ public class ObjectPool {
 
         sourceObject = obj;
         isServer = server;
+        
+        Debug.Log(ClientScene.ready);
+        Debug.Log(sourceObject);
+        Debug.Log(sourceObject.GetComponent<NetworkIdentity>());
+        Debug.Log(sourceObject.GetComponent<NetworkIdentity>().assetId);
+
+        ClientScene.RegisterSpawnHandler(
+            sourceObject.GetComponent<NetworkIdentity>().assetId, ClientSpawnHandler, ClientUnSpawnHandler);
     }
 
     public IEnumerator InitializeCoroutine(int amount) {
@@ -56,7 +64,7 @@ public class ObjectPool {
         //returns gameObject to be used to register client spawn handler in poolmemember
         return newClone;
     }
-
+    
     public GameObject nextObject {
 
         get {
@@ -93,6 +101,18 @@ public class ObjectPool {
     }
 
 
+    /**
+     * Network stuff
+     * Cuffently don't know what this is for
+     */
 
+    GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
+        var go = CreateObject();
+        return go;
+    }
+
+    void ClientUnSpawnHandler(GameObject spawned) {
+        spawned.GetComponent<PoolMember>().SetObjectInactive();
+    }
 
 }

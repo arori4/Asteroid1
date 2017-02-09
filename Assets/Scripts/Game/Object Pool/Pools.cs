@@ -42,36 +42,33 @@ public class Pools : NetworkBehaviour {
             return;
         }
 
-        if (NetworkServer.active) {
+        //create pools for everything
+        singleton = this;
 
-            //create pools for everything
-            singleton = this;
+        //signify started so it only starts once
+        started = true;
 
-            //signify started so it only starts once
-            started = true;
+        //add all the lists to the large list
+        startingObjectArrays.Add(aliens);
+        startingObjectArrays.Add(alienWeapons);
+        startingObjectArrays.Add(asteroids);
+        startingObjectArrays.Add(barriers);
+        startingObjectArrays.Add(friends);
+        startingObjectArrays.Add(mine);
+        startingObjectArrays.Add(playerWeapons);
+        startingObjectArrays.Add(powerups);
 
-            //add all the lists to the large list
-            startingObjectArrays.Add(aliens);
-            startingObjectArrays.Add(alienWeapons);
-            startingObjectArrays.Add(asteroids);
-            startingObjectArrays.Add(barriers);
-            startingObjectArrays.Add(friends);
-            startingObjectArrays.Add(mine);
-            startingObjectArrays.Add(playerWeapons);
-            startingObjectArrays.Add(powerups);
+        startingObjectArrays.Add(explosions);
+        startingObjectArrays.Add(audios);
 
-            startingObjectArrays.Add(explosions);
-            startingObjectArrays.Add(audios);
+        //initialize all pools
+        for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
+            GameObject[] currentArray = startingObjectArrays[outer];
+            numNeededToStart++;
 
-            //initialize all pools
-            for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
-                GameObject[] currentArray = startingObjectArrays[outer];
-                numNeededToStart++;
-
-                for (int inner = 0; inner < currentArray.Length; inner++) {
-                    ObjectPool objPool = GetObjectPool(currentArray[inner], false);
-                    StartCoroutine(objPool.InitializeCoroutine(NUM_START));
-                }
+            for (int inner = 0; inner < currentArray.Length; inner++) {
+                ObjectPool objPool = GetObjectPool(currentArray[inner], false);
+                StartCoroutine(objPool.InitializeCoroutine(NUM_START));
             }
         }
     }
@@ -136,7 +133,7 @@ public class Pools : NetworkBehaviour {
     public static GameObject Initialize(
         GameObject obj, Vector3 position, Quaternion rotation, Transform parent) {
         if (!singleton.isServer) { return null; }
-        if (obj == null) { print("Initialize on a null object"); return null;  }
+        if (obj == null) { print("Initialize on a null object"); return null; }
 
         //Get Object
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());
@@ -146,7 +143,7 @@ public class Pools : NetworkBehaviour {
         nextObj.transform.parent = singleton.parentTransform;
         nextObj.transform.position = position;
         nextObj.transform.rotation = rotation;
-        
+
         return nextObj;
     }
 
@@ -157,13 +154,14 @@ public class Pools : NetworkBehaviour {
         if (!singleton.isServer) { return; }
         if (obj == null) {
             print("Terminate on a null object");
-            return; }
+            return;
+        }
         if (obj.GetComponent<PoolMember>() == null) {
-            print("Terminate on a non pool member");
+            print("Terminate on a non pool member " + obj);
             return;
         }
         if (obj.GetComponent<PoolMember>().isObjectActive == false) {
-            print("Terminate on an already deactivated object"); return;
+            print("Terminate on an already deactivated object " + obj); return;
         }
 
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());

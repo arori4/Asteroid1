@@ -19,6 +19,9 @@ public class PoolMember : NetworkBehaviour {
     void Start() {
         //check for different components
         particles = GetComponent<ParticleSystem>();
+
+        isObjectActive = false;
+        locallyActive = true;
     }
 
     void Update() {
@@ -33,30 +36,6 @@ public class PoolMember : NetworkBehaviour {
             }
         }
         
-    }
-
-
-    /**
-    * Network stuff
-    * Cuffently don't know what this is for
-    */
-    
-    GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
-        var go = pool.CreateObject();
-        return go;
-    }
-
-    void ClientUnSpawnHandler(GameObject spawned) {
-        spawned.GetComponent<PoolMember>().SetObjectInactive();
-    }
-
-    void Awake() {
-        ClientScene.RegisterSpawnHandler(
-            gameObject.GetComponent<NetworkIdentity>().assetId, ClientSpawnHandler, ClientUnSpawnHandler);
-        ClientScene.RegisterPrefab(gameObject);
-
-        isObjectActive = false;
-        locallyActive = true;
     }
     
 
@@ -129,7 +108,12 @@ public class PoolMember : NetworkBehaviour {
 
                 if (comps[i].GetType().IsSubclassOf(typeof(Renderer)))
                     ((Renderer)comps[i]).enabled = active;
+
+                if (comps[i].GetType().IsSubclassOf(typeof(AudioSource)))
+                    ((AudioSource)comps[i]).enabled = active;
             }
+
+
         }
 
         for (int i = 0; i < transform.childCount; i++) {
