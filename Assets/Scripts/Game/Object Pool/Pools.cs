@@ -12,28 +12,18 @@ public class Pools : NetworkBehaviour {
     public Transform parentTransform;
 
     [Header("Game Objects")]
-    public GameObject[] aliens;
-    public GameObject[] alienWeapons;
-    public GameObject[] asteroids;
-    public GameObject[] barriers;
-    public GameObject[] friends;
-    public GameObject[] mine;
-    public GameObject[] playerWeapons;
-    public GameObject[] powerups;
-    public GameObject[] ships;
+    public GameObject[] poolObjects;
 
-    [Header("Other Objects")]
-    public GameObject[] explosions;
-    public GameObject[] audios;
-
-    const int NUM_START = 5;
-    List<GameObject[]> startingObjectArrays = new List<GameObject[]>();
-    List<ObjectPool> pools = new List<ObjectPool>();
-    bool started = false;
+    static List<ObjectPool> pools = new List<ObjectPool>();
+    static readonly int NUM_START = 5;
+    static bool started = false;
     static Pools singleton;
 
-    int numFinished = 0;
-    int numNeededToStart = 0;
+    private void Awake() {
+        for (int index = 0; index < poolObjects.Length; index++) {
+            pools.Add(new ObjectPool(poolObjects[index]));
+        }
+    }
 
     void Start() {
         //check for single instance
@@ -42,35 +32,15 @@ public class Pools : NetworkBehaviour {
                 "This one in object " + gameObject);
             return;
         }
-
-        //create pools for everything
         singleton = this;
 
         //signify started so it only starts once
         started = true;
 
-        //add all the lists to the large list
-        startingObjectArrays.Add(aliens);
-        startingObjectArrays.Add(alienWeapons);
-        startingObjectArrays.Add(asteroids);
-        startingObjectArrays.Add(barriers);
-        startingObjectArrays.Add(friends);
-        startingObjectArrays.Add(mine);
-        startingObjectArrays.Add(playerWeapons);
-        startingObjectArrays.Add(powerups);
-        startingObjectArrays.Add(ships);
-
-        startingObjectArrays.Add(explosions);
-        startingObjectArrays.Add(audios);
-
-        //initialize all pools
-        for (int outer = 0; outer < startingObjectArrays.Count; outer++) {
-            GameObject[] currentArray = startingObjectArrays[outer];
-            numNeededToStart++;
-
-            for (int inner = 0; inner < currentArray.Length; inner++) {
-                ObjectPool objPool = GetObjectPool(currentArray[inner], false);
-                StartCoroutine(objPool.InitializeCoroutine(NUM_START));
+        if (NetworkServer.active) {
+            //initialize all pools
+            for (int index = 0; index < poolObjects.Length; index++) {
+                StartCoroutine(pools[index].InitializeCoroutine(NUM_START, isServer));
             }
         }
     }
@@ -78,9 +48,9 @@ public class Pools : NetworkBehaviour {
     private static ObjectPool GetObjectPool(GameObject obj, bool shouldExistALready) {
         //find object in pools, if it exists already
         ObjectPool objPool = null;
-        for (int index = 0; index < singleton.pools.Count; index++) {
-            if (singleton.pools[index].sourceObject.Equals(obj)) {
-                objPool = singleton.pools[index];
+        for (int index = 0; index < pools.Count; index++) {
+            if (pools[index].sourceObject.Equals(obj)) {
+                objPool = pools[index];
 
                 if (!shouldExistALready) {
                     print(obj + " should not have a pool yet.");
@@ -91,12 +61,10 @@ public class Pools : NetworkBehaviour {
 
         //if it doesn't exist, create a new object pool and add it
         if (objPool == null) {
-            objPool = new ObjectPool(obj, singleton.isServer);
-            singleton.pools.Add(objPool);
-
-            if (shouldExistALready) {
-                print(obj + " should have a pool already.");
-            }
+            objPool = new ObjectPool(obj);
+            singleton.StartCoroutine(objPool.InitializeCoroutine(NUM_START, singleton.isServer));
+            pools.Add(objPool);
+            print(obj + " should have a pool already.");
         }
 
         return objPool;
@@ -132,8 +100,7 @@ public class Pools : NetworkBehaviour {
         return Initialize(obj, position, rotation, singleton.parentTransform);
     }
 
-    public static GameObject Initialize(
-        GameObject obj, Vector3 position, Quaternion rotation, Transform parent) {
+    public static GameObject Initialize( GameObject obj, Vector3 position, Quaternion rotation, Transform parent) {
         if (!singleton.isServer) { return null; }
         if (obj == null) { print("Initialize on a null object"); return null; }
 
@@ -175,20 +142,14 @@ public class Pools : NetworkBehaviour {
 
     void OnDestroy() {
         //clear all lists
-        pools.Clear();
+        //pools.Clear();
     }
 
     [ContextMenu("Sort all by name")]
     void SortArrays() {
-        System.Array.Sort(aliens, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(alienWeapons, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(asteroids, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(barriers, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(friends, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(mine, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(playerWeapons, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(powerups, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(explosions, (a, b) => a.name.CompareTo(b.name));
-        System.Array.Sort(audios, (a, b) => a.name.CompareTo(b.name));
+        System.Array.Sort(poolObjects, (a, b) => a.name.CompareTo(b.name));
     }
+    
+
+
 }

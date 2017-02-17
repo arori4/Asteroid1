@@ -21,14 +21,14 @@ public class PoolMember : NetworkBehaviour {
         //check for different components
         particles = GetComponent<ParticleSystem>();
 
-        isObjectActive = false;
+        isObjectActive = true;
         locallyActive = true;
     }
 
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
-
-        if (!isServer) {
+        
+        if (NetworkServer.active && !isServer) {
 
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
@@ -37,7 +37,6 @@ public class PoolMember : NetworkBehaviour {
                 SetObjectInactive();
             }
         }
-        
     }
     
 
@@ -115,15 +114,13 @@ public class PoolMember : NetworkBehaviour {
                 if (comps[i].GetType().IsSubclassOf(typeof(AudioSource)))
                     ((AudioSource)comps[i]).enabled = active;
             }
-
-
         }
 
         for (int i = 0; i < transform.childCount; i++) {
             transform.GetChild(i).gameObject.SetActive(active);
         }
 
-        locallyActive = active; //this was true always before...why?
+        locallyActive = true; //this was true always before...why?
     }
 
 }

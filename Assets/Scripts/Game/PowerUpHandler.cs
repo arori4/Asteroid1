@@ -15,8 +15,8 @@ public class PowerUpHandler : NetworkBehaviour {
     public SpawnTurret spawnTurretDef;
     public SpawnGun spawnGunDef;
     
-
-    public void Activate(GameObject player) {
+    [Command]
+    public void CmdActivate(GameObject player) {
         ObjectCollisionHandler playerCollisionHandler = player.GetComponent<ObjectCollisionHandler>();
         PlayerWeapons playerWeapons = player.GetComponent<PlayerWeapons>();
 

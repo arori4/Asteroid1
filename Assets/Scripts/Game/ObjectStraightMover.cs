@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
@@ -6,7 +7,7 @@ using System.Collections;
  * Has extra behavior on drop.
  * Movement is only for 'dumb' objects.
  */
-public class ObjectStraightMover : MonoBehaviour {
+public class ObjectStraightMover : NetworkBehaviour{
 
     public Vector3 finalDirection;
     public float finalAngle;

@@ -7,34 +7,49 @@ using UnityEngine.Networking;
  * Defines an object pool for efficient creation
  * Note: this is not a monobehaviour.
  */ 
-public class ObjectPool {
+public class ObjectPool{
 
-    public readonly GameObject sourceObject;
-    private List<GameObject> pool = new List<GameObject>();
+    public GameObject sourceObject;
+    public NetworkHash128 sourceObjectHash;
 
-    bool isServer;
-
-    /**
-     * Constructor
-     * Note that this isn't a MonoBehaviour or NetworkBehaviour
-     */
-    public ObjectPool(GameObject obj, bool server) {
+    private Stack<GameObject> pool = new Stack<GameObject>();
+    private bool isServer;
+    
+    public ObjectPool(GameObject obj) {
         if (obj == null) {
             Debug.Log("ObjectPool initiated with a null object.");
         }
 
         sourceObject = obj;
-        isServer = server;
+        sourceObjectHash = obj.GetComponent<NetworkIdentity>().assetId;
         
-        Debug.Log(sourceObject + " " +
-            sourceObject.GetComponent<NetworkIdentity>().assetId + " " +
-            sourceObject.GetComponent<NetworkIdentity>().netId);
-
-        ClientScene.RegisterSpawnHandler(
-            sourceObject.GetComponent<NetworkIdentity>().assetId, ClientSpawnHandler, ClientUnSpawnHandler);
+        ClientScene.RegisterSpawnHandler(sourceObjectHash, ClientSpawnHandler, ClientUnSpawnHandler);
     }
 
-    public IEnumerator InitializeCoroutine(int amount) {
+    /**
+     * Network stuff
+     * Cuffently don't know what this is for
+     */
+
+    GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
+        var go = CreateObject();
+        pool.Push(go);
+        Debug.LogError("ClientSpawn:  " + go.GetInstanceID());
+        return go;
+    }
+
+    void ClientUnSpawnHandler(GameObject spawned) {
+        Debug.LogError("ClientUnSpawn:" + spawned.GetInstanceID());
+        spawned.GetComponent<PoolMember>().SetObjectInactive();
+    }
+
+    /**
+     * Coroutine to initialize stuff
+     * We set server here because constructor is set on awake.
+     */
+    public IEnumerator InitializeCoroutine(int amount, bool server) {
+        isServer = server;
+
         //Add amount objects to the pool
         for (int index = 0; index < amount; index++) {
             nextObject = CreateObject();
@@ -42,13 +57,13 @@ public class ObjectPool {
         }
     }
 
-    public GameObject CreateObject() {
-        GameObject newClone = GameObject.Instantiate(sourceObject);
-
+    GameObject CreateObject() {
+        GameObject newClone = GameObject.Instantiate(sourceObject) as GameObject;
+        
         //add object to pool and set member
         PoolMember member = newClone.AddComponent<PoolMember>();
         member.pool = this;
-
+        
         //Set object to inactive
         member.SetObjectInactive();
 
@@ -64,7 +79,7 @@ public class ObjectPool {
     public GameObject nextObject {
 
         get {
-            if (!isServer) { return null; }
+            if (!isServer) {return null; }
             if (sourceObject == null) {
                 Debug.Log("Source object is null.");
                 return null;
@@ -75,15 +90,14 @@ public class ObjectPool {
                 nextObject = CreateObject();
             }
 
-            int indexToClaim = pool.Count - 1;
-            GameObject clone = pool[indexToClaim];
+            //Pop an object off the pool
+            GameObject clone = pool.Pop();
 
             //debug check
             if (clone.GetComponent<PoolMember>().isObjectActive) {
                 Debug.Log(clone.name + " in pool was still active upon initialization.");
             }
-
-            pool.Remove(clone);
+            
             clone.GetComponent<PoolMember>().SetObjectActive();
             return clone;
         }
@@ -91,24 +105,12 @@ public class ObjectPool {
         //Add new member back on disable
         set {
             if (isServer) {
-                pool.Add(value);
+                pool.Push(value);
             }
         }
     }
 
 
-    /**
-     * Network stuff
-     * Cuffently don't know what this is for
-     */
 
-    GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
-        var go = CreateObject();
-        return go;
-    }
-
-    void ClientUnSpawnHandler(GameObject spawned) {
-        spawned.GetComponent<PoolMember>().SetObjectInactive();
-    }
 
 }

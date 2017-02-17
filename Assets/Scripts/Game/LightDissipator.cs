@@ -1,26 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/**
+ * Disappates a lightSource object that appeared
+ */
 public class LightDissipator : MonoBehaviour {
 
-    new Light light;
+    Light lightSource;
     public float duration;
 
     float startingIntensity;
     float currentVelocity;
     
 	void Start () {
-        light = GetComponent<Light>();
-        startingIntensity = light.intensity;
+        lightSource = GetComponent<Light>();
+        startingIntensity = lightSource.intensity;
     }
     
 	void Update () {
-        light.intensity = Mathf.SmoothDamp(light.intensity, 0, ref currentVelocity, duration / 2);
+        lightSource.intensity = Mathf.SmoothDamp(lightSource.intensity, 0, ref currentVelocity, duration / 2);
 	}
 
-    void OnDisable() {
-        if (light != null) {
-            light.intensity = startingIntensity;
+    void OnDisable() { //TODO: change onDisable behaviour to a differet
+        if (lightSource != null) {
+            lightSource.intensity = startingIntensity;
         }
     }
 }
