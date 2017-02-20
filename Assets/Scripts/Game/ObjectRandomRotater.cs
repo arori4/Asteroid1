@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
  * Randomly rotates the object based on the rotate speed
+ * TODO: simplify variables?
  */
-public class ObjectRandomRotater : MonoBehaviour {
+public class ObjectRandomRotater : NetworkBehaviour {
+
+    public Transform target;
 
     public float rotateSpeed = 30;
     public bool exactSpeed;
@@ -12,49 +16,41 @@ public class ObjectRandomRotater : MonoBehaviour {
     public bool xRotate = true;
     public bool yRotate = true;
     public bool zRotate = true;
-
-    float xRotateSpeed;
-    float yRotateSpeed;
-    float zRotateSpeed;
     
+    [SyncVar]
     Vector3 rotateAmount;
-    Quaternion qRotate;
 
 	void OnEnable () {
+        if (!isServer) { return; }
         rotateAmount = new Vector3(0, 0, 0);
 
         if (xRotate) {
             if (exactSpeed) {
-                xRotateSpeed = rotateSpeed;
+                rotateAmount.x = rotateSpeed;
             }
             else {
-                xRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+                rotateAmount.x = Random.Range(-rotateSpeed, rotateSpeed);
             }
         }
         if (yRotate) {
             if (exactSpeed) {
-                yRotateSpeed = rotateSpeed;
+                rotateAmount.y = rotateSpeed;
             }
             else {
-                yRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+                rotateAmount.y = Random.Range(-rotateSpeed, rotateSpeed);
             }
         }
         if (zRotate) {
             if (exactSpeed) {
-                zRotateSpeed = rotateSpeed;
+                rotateAmount.z = rotateSpeed;
             }
             else {
-                zRotateSpeed = Random.Range(-rotateSpeed, rotateSpeed);
+                rotateAmount.z = Random.Range(-rotateSpeed, rotateSpeed);
             }
         }
-
-        //Set rotation amount
-        rotateAmount.x = xRotateSpeed * Time.deltaTime;
-        rotateAmount.y = yRotateSpeed * Time.deltaTime;
-        rotateAmount.z = zRotateSpeed * Time.deltaTime;
     }
 	
 	void Update () {
-        transform.Rotate(rotateAmount);
+        target.Rotate(rotateAmount);
     }
 }

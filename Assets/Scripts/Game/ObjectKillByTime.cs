@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
@@ -6,12 +7,14 @@ using System.Collections;
  * Must have ObjectCollisionHandler to use
  */
  [RequireComponent(typeof(ObjectCollisionHandler))]
-public class ObjectKillByTime : MonoBehaviour {
+public class ObjectKillByTime : NetworkBehaviour {
 
     public Vector2 time;
     ObjectCollisionHandler handler;
 
     void OnEnable () {
+        if (!isServer) { return; }
+
         handler = GetComponent<ObjectCollisionHandler>();
         StartCoroutine(KillObject());
 	}

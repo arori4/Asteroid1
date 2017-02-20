@@ -21,7 +21,7 @@ public class PoolMember : NetworkBehaviour {
         //check for different components
         particles = GetComponent<ParticleSystem>();
 
-        isObjectActive = true;
+        isObjectActive = false;
         locallyActive = true;
     }
 
@@ -84,7 +84,6 @@ public class PoolMember : NetworkBehaviour {
 
     [ClientRpc]
     void RpcSetObjectInactive() {
-        print("called");
         ChangeComponentActive(false);
     }
     
@@ -120,7 +119,7 @@ public class PoolMember : NetworkBehaviour {
             transform.GetChild(i).gameObject.SetActive(active);
         }
 
-        locallyActive = true; //this was true always before...why?
+        locallyActive = active; //this was true always before...why?
     }
 
 }

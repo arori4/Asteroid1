@@ -34,7 +34,7 @@ public class ObjectPool{
     GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
         var go = CreateObject();
         pool.Push(go);
-        Debug.LogError("ClientSpawn:  " + go.GetInstanceID());
+        Debug.LogError("ClientSpawn:  " + go + " " + go.GetInstanceID());
         return go;
     }
 

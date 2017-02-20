@@ -23,6 +23,7 @@ public class Pools : NetworkBehaviour {
         for (int index = 0; index < poolObjects.Length; index++) {
             pools.Add(new ObjectPool(poolObjects[index]));
         }
+        singleton = this;
     }
 
     void Start() {
@@ -32,7 +33,6 @@ public class Pools : NetworkBehaviour {
                 "This one in object " + gameObject);
             return;
         }
-        singleton = this;
 
         //signify started so it only starts once
         started = true;

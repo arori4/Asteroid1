@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
-public class ObjectDamageExplosion : MonoBehaviour {
+public class ObjectDamageExplosion : NetworkBehaviour {
 
     public float maxRadius;
     public float expandTime;

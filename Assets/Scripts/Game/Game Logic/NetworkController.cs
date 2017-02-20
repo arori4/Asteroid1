@@ -81,6 +81,9 @@ public class NetworkController : NetworkBehaviour {
             StartCoroutine(IncreaseLevels());
         }
 
+        SetLevel(1);
+        print("Setting level to 1 by debug");
+
         //Start level
         recalculationFinished = false;
         continueSpawningAsteroids = true;

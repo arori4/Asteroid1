@@ -6,23 +6,33 @@ using System.Collections;
  * Moves an object straight.
  * Has extra behavior on drop.
  * Movement is only for 'dumb' objects.
+ * 
+ * Only use on server object
  */
 public class ObjectStraightMover : NetworkBehaviour{
-
+    
     public Vector3 finalDirection;
     public float finalAngle;
     public float speed;
 
+    [SyncVar]
     public bool dropMoveAway;
+    [SyncVar]
     public float dropSpeed;
     public float dropTime = 1;
     public bool wasDropped = false;
 
+    [SyncVar]
     Vector3 currentVelocity;
+    [SyncVar]
     Vector3 finalVelocity;
+    [SyncVar]
     float velocityLerpCounter;
 
     void OnEnable () {
+        //Server computes these values
+        if (!isServer) { return; }
+
         //Reset variables
         currentVelocity = Vector3.zero;
         finalVelocity = Vector3.zero;
@@ -52,6 +62,7 @@ public class ObjectStraightMover : NetworkBehaviour{
     }
 
     public void SetFinalDirection(Vector3 newFinalDirection) {
+        if (!isServer) { return; }
         finalDirection = newFinalDirection;
         Quaternion finalRotation = Quaternion.Euler(0, Random.Range(-finalAngle, finalAngle), 0);
         finalVelocity = finalRotation * Vector3.Normalize(finalDirection) * speed;
