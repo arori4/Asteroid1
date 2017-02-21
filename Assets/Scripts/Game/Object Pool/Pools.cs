@@ -134,15 +134,13 @@ public class Pools : NetworkBehaviour {
         }
 
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());
-        obj.GetComponent<PoolMember>().SetObjectInactive();
         objPool.nextObject = obj;
     }
 
 
 
     void OnDestroy() {
-        //clear all lists
-        //pools.Clear();
+        pools.Clear();
     }
 
     [ContextMenu("Sort all by name")]

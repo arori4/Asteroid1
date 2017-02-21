@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 [RequireComponent(typeof(SphereCollider))]
-public class TurretTracker : MonoBehaviour {
+public class TurretTracker : NetworkBehaviour {
 
     public float trackSpeed;
     public float trackRadius;
@@ -34,21 +35,31 @@ public class TurretTracker : MonoBehaviour {
     }
 
     void OnTriggerEnter(Collider other) {
+        if (!isServer) { return; }
+
         //Set target only if the current target is no longer active and definitions allow
-        if ((currentTarget == null  || !currentTarget.activeSelf) && 
+        if ((currentTarget == null  || 
+            !currentTarget.activeSelf) && 
             collideDefinitions.collidesWith(other)) {
-            currentTarget = other.transform.root.gameObject;
+            RpcSetTarget(other.gameObject);
             print("Tracking enemy " + other);
         }
 
     }
 
     void OnTriggerExit(Collider other) {
+        if (!isServer) { return; }
+
         //remove tracking if no longer in range
-        if (other.transform.root.gameObject == currentTarget) {
-            currentTarget = null;
-            print("No longer tracking " + other.transform.root.gameObject);
+        if (other.gameObject == currentTarget) {
+            RpcSetTarget(null);
+            print("No longer tracking " + other.gameObject);
         }
+    }
+
+    [ClientRpc]
+    void RpcSetTarget(GameObject newTarget) {
+        currentTarget = newTarget;
     }
 
 }

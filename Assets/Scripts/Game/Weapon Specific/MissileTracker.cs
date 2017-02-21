@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
  * Handles the missile tracking and homing on different targets
  */
  [RequireComponent(typeof(SphereCollider))]
-public class MissileTracker : MonoBehaviour {
+public class MissileTracker : NetworkBehaviour {
 
     public float trackingRange;
     public float acceleration;
@@ -25,7 +26,7 @@ public class MissileTracker : MonoBehaviour {
         trackingCollider.radius = trackingRange;
 
         //Set parent
-        parentTransform = transform.root;
+        parentTransform = transform.parent;
     }
 
 	void OnEnable () {
@@ -64,13 +65,25 @@ public class MissileTracker : MonoBehaviour {
 
     }
 
+    /**
+     * Tracking methods
+     */
+
     void OnTriggerEnter(Collider other) {
         //Track an alien only if we haven't started
-        if (target == null && other.transform.root.gameObject.tag.CompareTo("Alien") == 0) {
-            target = other.transform.root.gameObject;
+        if (target == null && other.tag.CompareTo("Alien") == 0 && isServer) {
+            RpcSetTarget(other.gameObject);
         }
     }
 
+    [ClientRpc]
+    void RpcSetTarget(GameObject newTarget) {
+        target = newTarget;
+    }
+
+    /**
+     * Turns off tracking after a set amount of time.
+     */
     private IEnumerator TurnOffTracking() {
         yield return new WaitForSeconds(trackingTime);
         tracking = false;

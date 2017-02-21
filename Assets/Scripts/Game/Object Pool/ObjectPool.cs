@@ -52,20 +52,21 @@ public class ObjectPool{
 
         //Add amount objects to the pool
         for (int index = 0; index < amount; index++) {
-            nextObject = CreateObject();
+            nextObject = CreateObject(); //also sets object inactive
             yield return null;
         }
     }
 
+    /**
+     * Creates an object
+     */
     GameObject CreateObject() {
         GameObject newClone = GameObject.Instantiate(sourceObject) as GameObject;
         
         //add object to pool and set member
         PoolMember member = newClone.AddComponent<PoolMember>();
         member.pool = this;
-        
-        //Set object to inactive
-        member.SetObjectInactive();
+        member.Initialize();
 
         //If server, register the spawn
         if (isServer) {
@@ -76,6 +77,9 @@ public class ObjectPool{
         return newClone;
     }
     
+    /**
+     * Sets the next object on the stack.
+     */
     public GameObject nextObject {
 
         get {
@@ -84,6 +88,8 @@ public class ObjectPool{
                 Debug.Log("Source object is null.");
                 return null;
             }
+
+            Debug.Log("obj pool " + pool.Count);
 
             //create new object if there are none available
             if (pool.Count < 1) {
@@ -97,7 +103,8 @@ public class ObjectPool{
             if (clone.GetComponent<PoolMember>().isObjectActive) {
                 Debug.Log(clone.name + " in pool was still active upon initialization.");
             }
-            
+
+            clone.GetComponent<PoolMember>().Initialize();
             clone.GetComponent<PoolMember>().SetObjectActive();
             return clone;
         }
@@ -105,6 +112,7 @@ public class ObjectPool{
         //Add new member back on disable
         set {
             if (isServer) {
+                value.GetComponent<PoolMember>().SetObjectInactive();
                 pool.Push(value);
             }
         }

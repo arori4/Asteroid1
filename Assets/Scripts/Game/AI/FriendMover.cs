@@ -13,6 +13,7 @@ public class FriendMover : NetworkBehaviour {
     public float speed;
     public float tiltSide;
     public float tiltFront;
+    public SphereCollider tracker;
 
     public Vector2 dodgeTime;
     public Vector2 switchDirectionsTime;
@@ -44,7 +45,7 @@ public class FriendMover : NetworkBehaviour {
         if (!isServer) { return; }
 
         StartCoroutine(RandomDirection());
-        StartCoroutine(ChooseDodgeTarget());
+        //StartCoroutine(ChooseDodgeTarget());
         StartCoroutine(MoveToMiddle());
     }
 
@@ -66,12 +67,14 @@ public class FriendMover : NetworkBehaviour {
         rootTransform.rotation = Quaternion.Euler(currentVelocity.z * tiltSide, 0.0f, currentVelocity.x * -tiltFront);
     }
 
+    
+    /*
     void OnTriggerEnter(Collider other) {
         //only evaluates for the detection collider
         if (dodgeDefinitions.collidesWith(other)) {
-            dodgeList.Add(other.transform.root.gameObject);
+            dodgeList.Add(other.gameObject);
         }
-    }
+    }*/
 
     IEnumerator RandomDirection() {
 
@@ -92,6 +95,7 @@ public class FriendMover : NetworkBehaviour {
         }
     }
 
+    //deprecated
     IEnumerator ChooseDodgeTarget() {
         
         while (true) {

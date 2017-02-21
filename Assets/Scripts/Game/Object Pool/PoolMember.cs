@@ -12,6 +12,7 @@ public class PoolMember : NetworkBehaviour {
     [SyncVar]
     public bool isObjectActive;
     bool locallyActive;
+    bool justStarted;
 
     public ObjectPool pool; //pool this object belongs to
 
@@ -21,15 +22,19 @@ public class PoolMember : NetworkBehaviour {
         //check for different components
         particles = GetComponent<ParticleSystem>();
 
-        isObjectActive = true;
+        isObjectActive = false;
         locallyActive = true;
+    }
+
+    public void Initialize() {
+        justStarted = true;
     }
 
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
         
-        if (!isServer) {
-
+        if (NetworkServer.active || !isServer) {
+            
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
             }
@@ -52,9 +57,13 @@ public class PoolMember : NetworkBehaviour {
             emission.enabled = true;
         }
 
-        if (isServer) {
+        if (isServer || justStarted) {
+            print("ran setObjectActive " + justStarted + " " + netId);
             isObjectActive = true;
             RpcSetObjectActive();
+
+            //Set just started now to false: it should have gone through already 1 cycle of off/on
+            justStarted = false;
         }
     }
 
@@ -76,7 +85,8 @@ public class PoolMember : NetworkBehaviour {
             emission.enabled = false;
         }
 
-        if (isServer) {
+        if (isServer || justStarted) {
+            print("ran setObjectInactive " + justStarted + " " + netId);
             isObjectActive = false;
             RpcSetObjectInactive();
         }
