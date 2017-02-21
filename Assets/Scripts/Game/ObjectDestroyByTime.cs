@@ -12,6 +12,7 @@ public class ObjectDestroyByTime : NetworkBehaviour {
 
     void OnEnable() {
         if (!isServer) { return; }
+
         StartCoroutine(Disable());
     }
 

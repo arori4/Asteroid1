@@ -21,14 +21,14 @@ public class PoolMember : NetworkBehaviour {
         //check for different components
         particles = GetComponent<ParticleSystem>();
 
-        isObjectActive = false;
+        isObjectActive = true;
         locallyActive = true;
     }
 
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
         
-        if (NetworkServer.active && !isServer) {
+        if (!isServer) {
 
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();

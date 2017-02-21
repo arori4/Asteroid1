@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,7 +7,7 @@ using System.Collections.Generic;
  * Describes the movement of a friend ship.
  * Requires an ObjectCollisionHandler in the parent
  */
-public class FriendMover : MonoBehaviour {
+public class FriendMover : NetworkBehaviour {
 
     public Boundary boundary;
     public float speed;
@@ -18,10 +19,15 @@ public class FriendMover : MonoBehaviour {
     public Vector2 moveToMiddleTime;
 
     Transform rootTransform;
-    Vector3 newVelocity;
     Vector3 currentVelocity;
     float turningTime;
+
+    //These variables are set by the server
+    [SyncVar]
+    Vector3 newVelocity;
+    [SyncVar]
     bool isDodgingTargets;
+    [SyncVar]
     bool isMovingToMiddle;
 
     //Dodging
@@ -34,6 +40,8 @@ public class FriendMover : MonoBehaviour {
 
 	void OnEnable () {
         rootTransform = transform.root;
+
+        if (!isServer) { return; }
 
         StartCoroutine(RandomDirection());
         StartCoroutine(ChooseDodgeTarget());

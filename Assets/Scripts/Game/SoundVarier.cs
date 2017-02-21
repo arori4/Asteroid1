@@ -30,6 +30,7 @@ public class SoundVarier : MonoBehaviour {
         if (playOnAwake && source != null) {
             source.pitch = pitch + Random.Range(pitchShift.x, pitchShift.y);
             source.volume = volume + Random.Range(volumeShift.x, volumeShift.y);
+            source.enabled = true;
             source.Play();
         }
     }

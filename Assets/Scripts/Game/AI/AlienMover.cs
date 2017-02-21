@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /**
  * Defines AI for alien movement
  */
-public class AlienMover : MonoBehaviour {
+public class AlienMover : NetworkBehaviour {
 
     public Vector3 initialDirection = Vector3.left;
     public float speed;
@@ -16,11 +17,16 @@ public class AlienMover : MonoBehaviour {
     public MoveSideways moveSideways;
     public MoveToCenter moveToCenter;
     public TargetPlayer targetPlayer;
-    
+
+    Vector3 currentVelocity; //calculated on client
+
+    [SyncVar]
     float targetX;
+    [SyncVar]
     float targetZ;
+    [SyncVar]
     float smoothing;
-    Vector3 currentVelocity;
+    [SyncVar]
     Transform player;
 
     void OnEnable () {
@@ -30,6 +36,9 @@ public class AlienMover : MonoBehaviour {
         targetX = -speed;
         targetZ = 0;
         smoothing = Random.Range(smoothingBounds.x, smoothingBounds.y);
+
+        //Run coroutines only on server, and sync target to player
+        if (!isServer) { return; }
 
         if (moveBackwards.activated) {
             StartCoroutine(Backwards());
@@ -127,12 +136,12 @@ public class AlienMover : MonoBehaviour {
 }
 
 
-
 [System.Serializable]
 public class Setting {
     public bool activated;
     public Vector2 startTimeRange;
 }
+
 
 [System.Serializable]
 public class MoveBackwards : Setting {

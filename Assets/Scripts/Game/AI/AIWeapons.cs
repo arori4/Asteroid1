@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 /*
  * Defines behaviour for alien weapons and shields (in the future)
  */
-public class AIWeapons : MonoBehaviour {
+public class AIWeapons : NetworkBehaviour {
     
     public GunDefinition[] guns;
     
@@ -13,7 +14,9 @@ public class AIWeapons : MonoBehaviour {
             print("AI weapon defined with no available guns.");
         }
 
-        //Start fire coroutine for each gun
+        if (!isServer) { return; }
+
+        //Start fire coroutine for each gun, on server
         for (int index = 0; index < guns.Length; index++) {
             guns[index].Initialize();
             StartCoroutine(FireSequence(guns[index]));
