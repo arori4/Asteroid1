@@ -81,7 +81,9 @@ public class NetworkController : NetworkBehaviour {
             StartCoroutine(IncreaseLevels());
         }
 
+        mode = SURVIVAL_MODE;
         SetLevel(1);
+        StartCoroutine(IncreaseLevels());
         print("Setting level to 1 by debug");
 
         //Start level
@@ -191,6 +193,7 @@ public class NetworkController : NetworkBehaviour {
 
             for (int index = 0; index < numEnemiesToSpawn; index++) {
 
+                //Choose enemy to spawn
                 GameObject enemyToSpawn = enemyClass.NextObject();
                 yield return null;
 
@@ -224,15 +227,15 @@ public class NetworkController : NetworkBehaviour {
 
                 yield return new WaitForSeconds(enemyClass.NextWaitTime()); //pause
             }
-
         }
+
         //advance when no more enemies exist
         continueSpawningAsteroids = false;
         yield return new WaitForSeconds(5);
 
         ui.ShowLargeText("Clear", 0.3f);
 
-        GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
+        //GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
 
         yield return new WaitForSeconds(20);
     }
@@ -277,7 +280,7 @@ public class NetworkController : NetworkBehaviour {
             int numAsteroidsToSpawn = Random.Range(1, maxAsteroidsSpawnAtTime);
             for (int index = 0; index < numAsteroidsToSpawn; index++){
                 //Spawn asteroid
-                GameObject spawnedEnemy = SpawnRngMaterial(asteroidClass.NextObject(), asteroidMaterials);
+                GameObject spawnedEnemy = SpawnInWave(asteroidClass.NextObject(), asteroidMaterials);
                 spawnedEnemy.GetComponent<ObjectStraightMover>().speed = asteroidSpeed;
                 yield return null;
             }
@@ -313,19 +316,7 @@ public class NetworkController : NetworkBehaviour {
         recalculationFinished = true;
     }
 
-    /**
-     * Spawns an object with a random material
-     * 
-     * TODO: change name to SpawnInWave, overload method?
-     */
-    private GameObject SpawnRngMaterial(GameObject obj, List<Material> materials) {
-        GameObject spawnedObj = SpawnInWave(obj);
 
-        spawnedObj.GetComponentInChildren<Renderer>().material =
-            materials[Random.Range(0, materials.Count)];
-
-        return spawnedObj;
-    }
 
     /**
      * Spawns the object
@@ -338,6 +329,19 @@ public class NetworkController : NetworkBehaviour {
         
         return spawnedObj;
     }
+
+    /**
+     * Spawns an object with a random material
+     */
+    private GameObject SpawnInWave(GameObject obj, List<Material> materials) {
+        GameObject spawnedObj = SpawnInWave(obj);
+
+        spawnedObj.GetComponentInChildren<Renderer>().material =
+            materials[Random.Range(0, materials.Count)];
+
+        return spawnedObj;
+    }
+
 
     [ContextMenu("Sort by Level Appearance")]
     void SortEnemies() {
@@ -368,10 +372,14 @@ public class SpawnObjDef {
 public class SpawnClass {
 
     public List<SpawnObjDef> originalList;
+
     Vector2 waitTime = new Vector2();
     List<SpawnObjDef> currentList = new List<SpawnObjDef>();
     int totalFrequency = 0;
 
+    /**
+     * Sets the wait time for the next object
+     */
     public void SetWaitTime(float min, float max) {
         waitTime.x = min;
         waitTime.y = max;
@@ -395,7 +403,6 @@ public class SpawnClass {
      * Recalculates frequencies for the list
      */
     public void Recalculate(int currentLevel) {
-
         //Clear old list
         currentList.Clear();
         totalFrequency = 0;

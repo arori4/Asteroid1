@@ -24,6 +24,10 @@ public class AIWeapons : NetworkBehaviour {
         
     }
 
+    void OnDisable() {
+        StopAllCoroutines();
+    }
+
     IEnumerator FireSequence(GunDefinition gun) {
         while (true) {
             yield return new WaitForSecondsRealtime(gun.GetNextFire());

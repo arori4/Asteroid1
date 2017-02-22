@@ -79,6 +79,14 @@ public class PlayerWeapons : NetworkBehaviour {
     }
 
     void Update () {
+        //Update Energy to maximum energy
+        energy += rechargeRate * Time.deltaTime;
+        energy = Mathf.Min(maxEnergy, energy);
+
+        //handle health and energy bar
+        ui.healthSlider.val = playerCollision.GetCurrentHealth();
+        ui.energySlider.val = energy;
+
         if (!isLocalPlayer) {
             return;
         }
@@ -100,14 +108,6 @@ public class PlayerWeapons : NetworkBehaviour {
         if (Input.GetKey(KeyCode.LeftControl) || missileButtonPressed) {
             CmdMissileFire();
         }
-
-        //Update Energy to maximum energy
-        energy += rechargeRate * Time.deltaTime;
-        energy = Mathf.Min(maxEnergy, energy);
-
-        //handle health and energy bar
-        ui.healthSlider.val = playerCollision.GetCurrentHealth();
-        ui.energySlider.val = energy;
     }
 
     [Command]

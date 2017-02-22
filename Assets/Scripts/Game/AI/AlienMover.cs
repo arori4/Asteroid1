@@ -54,6 +54,10 @@ public class AlienMover : NetworkBehaviour {
         }
     }
 
+    void OnDisable() {
+        StopAllCoroutines();
+    }
+
     void Update() {
         //Set movement
         currentVelocity.x = Mathf.MoveTowards(currentVelocity.x, targetX, Time.deltaTime * smoothing);

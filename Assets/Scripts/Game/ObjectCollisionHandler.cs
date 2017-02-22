@@ -59,6 +59,8 @@ public class ObjectCollisionHandler : NetworkBehaviour {
         lastColliderTag = "";
         dropList.Clear();
 
+        if (!isServer) { return; }
+
         StartCoroutine(CalculateDropsCoroutine());
     }
 
@@ -164,8 +166,8 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
 
     private IEnumerator DeathCoroutine() {
-        print(gameObject + " started death coroutine");
-
+//        print(gameObject + " started death coroutine");
+           //only run on server
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now

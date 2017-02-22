@@ -33,13 +33,11 @@ public class ObjectPool{
 
     GameObject ClientSpawnHandler(Vector3 position, NetworkHash128 assetId) {
         var go = CreateObject();
-        pool.Push(go);
-        Debug.LogError("ClientSpawn:  " + go + " " + go.GetInstanceID());
+        go.GetComponent<PoolMember>().SetObjectInactive();
         return go;
     }
 
     void ClientUnSpawnHandler(GameObject spawned) {
-        Debug.LogError("ClientUnSpawn:" + spawned.GetInstanceID());
         spawned.GetComponent<PoolMember>().SetObjectInactive();
     }
 
@@ -87,8 +85,6 @@ public class ObjectPool{
                 Debug.Log("Source object is null.");
                 return null;
             }
-
-            Debug.Log("obj pool " + pool.Count);
 
             //create new object if there are none available
             if (pool.Count < 1) {

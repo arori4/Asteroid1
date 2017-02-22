@@ -25,7 +25,7 @@ public class PoolMember : NetworkBehaviour {
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
         
-        if (NetworkServer.active && !isServer) {
+        if (NetworkServer.active || !isServer) {
             
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
@@ -43,11 +43,6 @@ public class PoolMember : NetworkBehaviour {
 
     public void SetObjectActive() {
         ChangeComponentActive(true);
-
-        if (particles != null) {
-            ParticleSystem.EmissionModule emission = particles.emission;
-            emission.enabled = true;
-        }
 
         if (isServer) {
             isObjectActive = true;
@@ -67,11 +62,6 @@ public class PoolMember : NetworkBehaviour {
 
     public void SetObjectInactive() {
         ChangeComponentActive(false);
-
-        if (particles != null) {
-            ParticleSystem.EmissionModule emission = particles.emission;
-            emission.enabled = false;
-        }
 
         if (isServer) {
             isObjectActive = false;
@@ -95,26 +85,45 @@ public class PoolMember : NetworkBehaviour {
         //TODO: cache this information
         for (int i = 0; i < comps.Length; i++) {
             if (comps[i] != this && comps[i].GetType() != typeof(NetworkIdentity)) {
-                if (comps[i].GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                if (comps[i].GetType().IsSubclassOf(typeof(MonoBehaviour))) {
                     ((MonoBehaviour)comps[i]).enabled = active;
+                }
 
-                if (comps[i].GetType().IsSubclassOf(typeof(Collider)))
+                if (comps[i].GetType().IsSubclassOf(typeof(Collider))) {
                     ((Collider)comps[i]).enabled = active;
+                }
 
-                if (comps[i].GetType().IsSubclassOf(typeof(Collider2D)))
+                if (comps[i].GetType().IsSubclassOf(typeof(Collider2D))) {
                     ((Collider2D)comps[i]).enabled = active;
+                }
 
-                if (comps[i].GetType().IsSubclassOf(typeof(Renderer)))
+                if (comps[i].GetType().IsSubclassOf(typeof(Renderer)) ||
+                    comps[i].GetType() == typeof(Renderer)) {
                     ((Renderer)comps[i]).enabled = active;
+                }
+                
+                if (comps[i].GetType() == typeof(Light)) {
+                    ((Light)comps[i]).enabled = active;
+                }
 
-                if (comps[i].GetType().IsSubclassOf(typeof(AudioSource)))
+                if (comps[i].GetType() == typeof(AudioSource)) {
                     ((AudioSource)comps[i]).enabled = active;
+                }
+                
             }
         }
 
+        //We deactivate children because there shouldn't be any networking on children.
         for (int i = 0; i < transform.childCount; i++) {
             transform.GetChild(i).gameObject.SetActive(active);
         }
+
+        if (particles != null) {
+            ParticleSystem.EmissionModule emission = particles.emission;
+            particles.time = 0f;
+            emission.enabled = active;
+        }
+
 
         locallyActive = active; //this was true always before...why?
     }
