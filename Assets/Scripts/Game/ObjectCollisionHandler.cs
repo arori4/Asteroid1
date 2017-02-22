@@ -37,18 +37,13 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     [SyncVar]
     float currentHealth;
     string lastColliderTag = ""; //for keeping tab of score right now
-
-    //Scripts
-    UIController ui;
-    NetworkController networkController;
-
+    
     //Constants
     const float MAX_X_COLLIDE = 10f;
 
     void Start() {
         //Set scripts from game handler
-        ui = GameObject.FindWithTag("UI Controller").GetComponent<UIController>();
-        //networkController = GameObject.FindWithTag("GameController").GetComponent<NetworkController>();
+        //ui = GameObject.FindWithTag("UI Controller").GetComponent<UIController>();
     }
 
     void OnEnable() {
@@ -57,14 +52,17 @@ public class ObjectCollisionHandler : NetworkBehaviour {
         startedDeathCoroutine = false;
         currentHealth = maxHealth;
         lastColliderTag = "";
-        dropList.Clear();
 
         if (!isServer) { return; }
 
+        dropList.Clear();
         StartCoroutine(CalculateDropsCoroutine());
     }
 
     void OnTriggerEnter(Collider other) {
+
+        //only run on server
+        if (!isServer) { return; }
 
         //ignore detectors
         if (CompareTag("Player Detector")) {
@@ -100,7 +98,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     }
 
     void OnTriggerExit(Collider other) {
-        if (other.CompareTag("GameBoundary")) {
+        if (isServer && other.CompareTag("GameBoundary")) {
             Pools.Terminate(gameObject);
         }
     }
@@ -138,11 +136,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
     void Update() {
         //kill when current health <= 0
-        if (currentHealth <= 0 && !startedDeathCoroutine) {
+        if (isServer && currentHealth <= 0 && !startedDeathCoroutine) {
             startedDeathCoroutine = true;
-            if (isServer) {
-                StartCoroutine(DeathCoroutine());
-            }
+            StartCoroutine(DeathCoroutine());
         }
     }
 
@@ -167,7 +163,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
     private IEnumerator DeathCoroutine() {
 //        print(gameObject + " started death coroutine");
-           //only run on server
+        //only run on server
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
             lastColliderTag.CompareTo("Player Missile Detector") == 0) { //easy fix for now
@@ -179,12 +175,6 @@ public class ObjectCollisionHandler : NetworkBehaviour {
                 int amount = scoreInfo.score;
                 //networkController.AddScore(amount);
             }
-        }
-
-        //handle if player dies. more stuff right now is handled by other scripts
-        if (tag.CompareTo("Player") == 0) {
-            //networkController.StopAllCoroutines();
-            ui.GameOver();
         }
 
         //Play explosion, if there are any

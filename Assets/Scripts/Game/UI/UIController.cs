@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
+using System.Collections;
 
 /**
  * Controls all UI elements during the game
  */
-public class UIController : MonoBehaviour {
+public class UIController : NetworkBehaviour {
 
     [Header("Regular UI")]
     public CanvasGroup regularUI;
@@ -21,8 +22,7 @@ public class UIController : MonoBehaviour {
     [Header("Hit Canvas")]
     public CanvasGroup hitCanvas;
     bool hitCanvasActivated; //lock
-
-    //UI Elements
+    
     [Header("UI")]
     public CanvasGroup largeTextCanvas;
     public Text largeText;
@@ -36,13 +36,17 @@ public class UIController : MonoBehaviour {
 
     bool gameOverButtonPressed;
 
+    public PlayerWeapons player;
+
     void Start () {
         Application.targetFrameRate = 60;
 
         //set alphas
-        blackFader.alpha = 1;
-        gameOverGUI.alpha = 0;
         regularUI.alpha = 1;
+        blackFader.alpha = 1;
+        hitCanvas.alpha = 0;
+        largeTextCanvas.alpha = 0;
+        gameOverGUI.alpha = 0;
 
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
@@ -52,26 +56,30 @@ public class UIController : MonoBehaviour {
         StartCoroutine(FadeOutCoroutine(blackFader, 0.4f));
 	}
 
-
-    public void SetScoreText(int score) {
+    [ClientRpc]
+    public void RpcSetScoreText(int score) {
         scoreText.text = "Score: " + score;
     }
 
-    public void GameOver() {
+    /**
+     * Game Over
+     */
+    [ClientRpc]
+    public void RpcGameOver() {
         gameOverScoreText.text = scoreText.text;
         gameOverGUI.interactable = true;
 
         StartCoroutine(GameOverFadeUI());
     }
-
-    public void AdvanceLevel() {
-        StartCoroutine(AdvanceLevelCoroutine());
-    }
-
     private IEnumerator GameOverFadeUI() {
         StartCoroutine(FadeInCoroutine(gameOverGUI, 0.5f));
         yield return new WaitForSeconds(1);
         StartCoroutine(FadeOutCoroutine(regularUI, 1));
+    }
+
+    [ClientRpc]
+    public void RpcAdvanceLevel() {
+        StartCoroutine(AdvanceLevelCoroutine());
     }
 
     /**
@@ -85,33 +93,11 @@ public class UIController : MonoBehaviour {
     }
 
     /**
-     * Buttons
-     */
-     
-    public void ButtonRestartGame() {
-        if (!gameOverButtonPressed) {
-            StopAllCoroutines();
-            gameOverButtonPressed = true;
-            StartCoroutine(RestartGameCoroutine());
-        }
-    }
-
-    public void ButtonMainMenu() {
-        if (!gameOverButtonPressed) {
-            StopAllCoroutines();
-            gameOverButtonPressed = true;
-            StartCoroutine(MainMenuCoroutine());
-        }
-    }
-
-    /**
      * Local Player usage
      */
-
     public void RegisterHit(float damage) {
         StartCoroutine(HitCanvasFader(damage));
     }
-
     private IEnumerator HitCanvasFader(float damage) {
         if (!hitCanvasActivated) {
             hitCanvasActivated = true;
@@ -136,7 +122,6 @@ public class UIController : MonoBehaviour {
     public void ShieldRecharge(float rechargeTime, PlayerWeapons caller) {
         StartCoroutine(RechargeShield(rechargeTime, caller));
     }
-    
     private IEnumerator RechargeShield(float rechargeTime, PlayerWeapons caller) {
         shieldUIGroup.Hide();
 
@@ -173,7 +158,7 @@ public class UIController : MonoBehaviour {
 
 
     /**
-     * Menu Usage
+     * Changing Scenes
      */
 
     private IEnumerator AdvanceLevelCoroutine() {
@@ -222,5 +207,41 @@ public class UIController : MonoBehaviour {
 
         //lock at final value
         canvas.alpha = 0;
+    }
+
+    //For UI Use
+    public void onFireButtonDown() {
+        player.weaponButtonPressed = true;
+    }
+    public void onFireButtonUp() {
+        player.weaponButtonPressed = false;
+    }
+    public void onShieldButtonDown() {
+        player.shieldButtonPressed = true;
+    }
+    public void onShieldButtonUp() {
+        player.shieldButtonPressed = false;
+    }
+    public void onMissileButtonDown() {
+        player.missileButtonPressed = true;
+    }
+    public void onMissileButtonUp() {
+        player.missileButtonPressed = false;
+    }
+
+    public void ButtonRestartGame() {
+        if (!gameOverButtonPressed) {
+            StopAllCoroutines();
+            gameOverButtonPressed = true;
+            StartCoroutine(RestartGameCoroutine());
+        }
+    }
+
+    public void ButtonMainMenu() {
+        if (!gameOverButtonPressed) {
+            StopAllCoroutines();
+            gameOverButtonPressed = true;
+            StartCoroutine(MainMenuCoroutine());
+        }
     }
 }

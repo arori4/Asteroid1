@@ -19,7 +19,7 @@ public class Pools : NetworkBehaviour {
     static bool started = false;
     static Pools singleton;
 
-    private void Awake() {
+    void Awake() {
         for (int index = 0; index < poolObjects.Length; index++) {
             pools.Add(new ObjectPool(poolObjects[index]));
         }
@@ -30,7 +30,7 @@ public class Pools : NetworkBehaviour {
         //check for single instance
         if (started) {
             print("More than one instance of class Pools was created. " +
-                "This one in object " + gameObject);
+                "This one in object " + gameObject + ". Other one in " + singleton.gameObject);
             return;
         }
 
@@ -86,17 +86,14 @@ public class Pools : NetworkBehaviour {
      * Overloaded for similarity to Instantiate
      */
     public static GameObject Initialize(GameObject obj) {
-        if (!singleton.isServer) { return null; }
         return Initialize(obj, Vector3.zero, Quaternion.identity, singleton.parentTransform);
     }
 
     public static GameObject Initialize(GameObject obj, Transform parent) {
-        if (!singleton.isServer) { return null; }
         return Initialize(obj, Vector3.zero, Quaternion.identity, parent);
     }
 
     public static GameObject Initialize(GameObject obj, Vector3 position, Quaternion rotation) {
-        if (!singleton.isServer) { return null; }
         return Initialize(obj, position, rotation, singleton.parentTransform);
     }
 
@@ -136,8 +133,6 @@ public class Pools : NetworkBehaviour {
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());
         objPool.nextObject = obj;
     }
-
-
 
     void OnDestroy() {
         pools.Clear();

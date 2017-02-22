@@ -22,7 +22,7 @@ public class PlayerWeapons : NetworkBehaviour {
     WeaponInfo weaponInfo;
     float weaponNextFire;
     float weaponCurrentCharge;
-    bool weaponButtonPressed;
+    public bool weaponButtonPressed;
 
     //shield
     [Header("Shield Settings")]
@@ -31,14 +31,14 @@ public class PlayerWeapons : NetworkBehaviour {
     bool shieldActivated;
     [HideInInspector]
     public bool shieldRecharging;
-    bool shieldButtonPressed;
+    public bool shieldButtonPressed;
 
     //missile
     [Header("Missile Settings")]
     public GameObject missileType;
     MissileInfo missileInfo;
     int missileCount;
-    bool missileButtonPressed;
+    public bool missileButtonPressed;
     float missileNextFire;
 
     //ship
@@ -56,14 +56,20 @@ public class PlayerWeapons : NetworkBehaviour {
         //Set player variables
         playerCollision = GetComponent<ObjectCollisionHandler>();
     }
+    
 
+    //TODO: move
     void OnEnable() {
         ui = GameObject.FindGameObjectWithTag("UI Controller").GetComponent<UIController>();
+        if (isLocalPlayer) {
+            ui.player = this;
+        }
+
         //Set ship stats
         weaponNextFire = Time.time;
         energy = maxEnergy;
 
-        StartCoroutine(OnPostStart());
+        StartCoroutine(OnPostStart()); //delay so pool is done (messy solution)
     }
 
     private IEnumerator OnPostStart() {
@@ -75,7 +81,6 @@ public class PlayerWeapons : NetworkBehaviour {
         ChangeMissile(missileType, 5, false);
 
         AddGuns(numStartingGuns);
-
     }
 
     void Update () {
@@ -98,10 +103,10 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //shield input
         if (Input.GetKey(KeyCode.LeftShift) || shieldButtonPressed) {
-            ActivateShield();
+            CmdActivateShield();
         }
         else {
-            DeactivateShield();
+            CmdDeactivateShield();
         }
 
         //missile input
@@ -155,7 +160,8 @@ public class PlayerWeapons : NetworkBehaviour {
         }
     }
     
-    public void ActivateShield() {
+    [Command]
+    public void CmdActivateShield() {
         if (!shieldRecharging) {
             shieldActivated = true;
             shieldType.SetActive(true);
@@ -163,7 +169,8 @@ public class PlayerWeapons : NetworkBehaviour {
         }
     }
 
-    public void DeactivateShield() {
+    [Command]
+    public void CmdDeactivateShield() {
         if (!shieldRecharging) {
             shieldActivated = false;
             shieldType.SetActive(false);
@@ -318,11 +325,13 @@ public class PlayerWeapons : NetworkBehaviour {
 
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
-                DeactivateShield();
+                CmdDeactivateShield();
                 ui.ShieldRecharge(shieldInfo.rechargeTime, this);
                 float retval = -energy;
                 energy = 0;
-                ui.RegisterHit(retval);
+                if (isLocalPlayer) {
+                    ui.RegisterHit(retval);
+                }
                 return retval;
             }
             else {
@@ -331,7 +340,9 @@ public class PlayerWeapons : NetworkBehaviour {
         }
 
         else {
-            ui.RegisterHit(amount);
+            if (isLocalPlayer) {
+                ui.RegisterHit(amount);
+            }
             return amount;
         }
     }
@@ -353,24 +364,4 @@ public class PlayerWeapons : NetworkBehaviour {
         ui.healthSlider.val = 0;
     }
 
-
-    //For UI Use
-    public void onFireButtonDown() {
-        weaponButtonPressed = true;
-    }
-    public void onFireButtonUp() {
-        weaponButtonPressed = false;
-    }
-    public void onShieldButtonDown() {
-        shieldButtonPressed = true;
-    }
-    public void onShieldButtonUp() {
-        shieldButtonPressed = false;
-    }
-    public void onMissileButtonDown() {
-        missileButtonPressed = true;
-    }
-    public void onMissileButtonUp() {
-        missileButtonPressed = false;
-    }
 }

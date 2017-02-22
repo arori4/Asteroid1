@@ -14,7 +14,9 @@ public class ObjectPool{
 
     private Stack<GameObject> pool = new Stack<GameObject>();
     private bool isServer;
-    
+
+    static readonly Vector3 AWAY_LOCATION = new Vector3(-1000f, -1000f, -1000f);
+
     public ObjectPool(GameObject obj) {
         if (obj == null) {
             Debug.Log("ObjectPool initiated with a null object.");
@@ -107,6 +109,7 @@ public class ObjectPool{
         set {
             if (isServer) {
                 value.GetComponent<PoolMember>().SetObjectInactive();
+                value.transform.position = AWAY_LOCATION; //set location far away so we don't see it
                 pool.Push(value);
             }
         }

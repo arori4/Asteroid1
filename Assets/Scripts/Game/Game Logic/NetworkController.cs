@@ -10,9 +10,11 @@ using System.Collections.Generic;
 public class NetworkController : NetworkBehaviour {
 
     //Syncs
-    int score;
+    int score = 0;
     public int mode = 0;
     public int level = 1;
+    public int numPlayers = 1; //TODO: make both these private later
+    public int numPlayersAlive = 1;
 
     //game mode
     [Header("Game Modes")]
@@ -32,14 +34,12 @@ public class NetworkController : NetworkBehaviour {
     public SpawnClass enemyWeaponClass;
     int numEnemiesLeft;
     int maxEnemiesSpawnAtTime;
-
     //Asteroids
     public SpawnClass asteroidClass;
     public List<Material> asteroidMaterials;
     bool continueSpawningAsteroids;
     int maxAsteroidsSpawnAtTime;
     float asteroidSpeed;
-
     //Powerups
     public SpawnClass powerupClass;
 
@@ -47,10 +47,9 @@ public class NetworkController : NetworkBehaviour {
     bool recalculationFinished;
 
     //Local use
-    UIController ui;
+    public UIController ui;
 
     void Start() {
-        ui = GameObject.FindGameObjectWithTag("UI Controller").GetComponent<UIController>();
 
         //Set score
         if (PlayerPrefs.HasKey("Score")) {
@@ -160,9 +159,15 @@ public class NetworkController : NetworkBehaviour {
         }
 
     }
-
+    
+    /**
+     * Adds score and updates UI for all players
+     */
     public void AddScore(int scoreToAdd) {
         score += scoreToAdd;
+        if (ui.enabled) {
+            ui.RpcSetScoreText(score);
+        }
     }
 
     public void AdvanceLevel() {
@@ -177,6 +182,8 @@ public class NetworkController : NetworkBehaviour {
         //set the level back to 1
         PlayerPrefs.SetInt("Level", 1);
         PlayerPrefs.SetInt("Score", 0);
+
+        ui.RpcGameOver();
     }
 
     private IEnumerator SpawnEnemiesCoroutine() {

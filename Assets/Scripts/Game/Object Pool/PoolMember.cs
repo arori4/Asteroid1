@@ -120,7 +120,6 @@ public class PoolMember : NetworkBehaviour {
 
         if (particles != null) {
             ParticleSystem.EmissionModule emission = particles.emission;
-            particles.time = 0f;
             emission.enabled = active;
         }
 

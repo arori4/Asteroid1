@@ -9,6 +9,7 @@ using System.Collections;
 public class ObjectDestroyByTime : NetworkBehaviour {
 
     public float lifetime;
+
     bool hasStarted;
 
     void OnEnable() {
@@ -27,9 +28,7 @@ public class ObjectDestroyByTime : NetworkBehaviour {
 
     IEnumerator Disable() {
         yield return new WaitForSeconds(lifetime);
-
         Pools.Terminate(gameObject);
-
         hasStarted = false;
     }
 }
