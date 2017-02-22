@@ -9,16 +9,27 @@ using System.Collections;
 public class ObjectDestroyByTime : NetworkBehaviour {
 
     public float lifetime;
+    bool hasStarted;
 
     void OnEnable() {
         if (!isServer) { return; }
 
-        StartCoroutine(Disable());
+        if (!hasStarted) {
+            StartCoroutine(Disable());
+            hasStarted = true;
+        }
+    }
+
+    void OnDisable() {
+        StopAllCoroutines();
+        hasStarted = false;
     }
 
     IEnumerator Disable() {
         yield return new WaitForSeconds(lifetime);
 
         Pools.Terminate(gameObject);
+
+        hasStarted = false;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 
 /**
  * Varies the sound, an extension of AudioSource implementation.
+ * This can be run locally.
  */
  [RequireComponent(typeof(AudioSource))]
 public class SoundVarier : MonoBehaviour {

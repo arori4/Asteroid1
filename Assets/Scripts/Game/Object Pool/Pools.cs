@@ -130,7 +130,7 @@ public class Pools : NetworkBehaviour {
             return;
         }
         if (obj.GetComponent<PoolMember>().isObjectActive == false) {
-            print("Terminate on an already deactivated object " + obj); return;
+            print("Terminate on a deactivated object " + obj + " " + obj.GetComponent<NetworkIdentity>().netId); return;
         }
 
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());

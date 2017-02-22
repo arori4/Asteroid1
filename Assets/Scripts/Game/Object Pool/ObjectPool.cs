@@ -66,7 +66,6 @@ public class ObjectPool{
         //add object to pool and set member
         PoolMember member = newClone.AddComponent<PoolMember>();
         member.pool = this;
-        member.Initialize();
 
         //If server, register the spawn
         if (isServer) {
@@ -103,8 +102,7 @@ public class ObjectPool{
             if (clone.GetComponent<PoolMember>().isObjectActive) {
                 Debug.Log(clone.name + " in pool was still active upon initialization.");
             }
-
-            clone.GetComponent<PoolMember>().Initialize();
+            
             clone.GetComponent<PoolMember>().SetObjectActive();
             return clone;
         }

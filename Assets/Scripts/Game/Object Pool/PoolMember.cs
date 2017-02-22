@@ -10,9 +10,8 @@ using UnityEngine.Networking;
 public class PoolMember : NetworkBehaviour {
 
     [SyncVar]
-    public bool isObjectActive;
-    bool locallyActive;
-    bool justStarted;
+    public bool isObjectActive = false;
+    bool locallyActive = true;
 
     public ObjectPool pool; //pool this object belongs to
 
@@ -21,19 +20,12 @@ public class PoolMember : NetworkBehaviour {
     void Start() {
         //check for different components
         particles = GetComponent<ParticleSystem>();
-
-        isObjectActive = false;
-        locallyActive = true;
     }
-
-    public void Initialize() {
-        justStarted = true;
-    }
-
+    
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
         
-        if (NetworkServer.active || !isServer) {
+        if (NetworkServer.active && !isServer) {
             
             if (isObjectActive && !locallyActive) {
                 SetObjectActive();
@@ -57,13 +49,9 @@ public class PoolMember : NetworkBehaviour {
             emission.enabled = true;
         }
 
-        if (isServer || justStarted) {
-            print("ran setObjectActive " + justStarted + " " + netId);
+        if (isServer) {
             isObjectActive = true;
             RpcSetObjectActive();
-
-            //Set just started now to false: it should have gone through already 1 cycle of off/on
-            justStarted = false;
         }
     }
 
@@ -85,8 +73,7 @@ public class PoolMember : NetworkBehaviour {
             emission.enabled = false;
         }
 
-        if (isServer || justStarted) {
-            print("ran setObjectInactive " + justStarted + " " + netId);
+        if (isServer) {
             isObjectActive = false;
             RpcSetObjectInactive();
         }
