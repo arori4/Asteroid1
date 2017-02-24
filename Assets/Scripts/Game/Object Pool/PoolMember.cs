@@ -13,14 +13,9 @@ public class PoolMember : NetworkBehaviour {
     public bool isObjectActive = false;
     bool locallyActive = true;
 
+    static readonly Vector3 AWAY_LOCATION = new Vector3(-1000f, -1000f, -1000f);
+
     public ObjectPool pool; //pool this object belongs to
-
-    ParticleSystem particles;
-
-    void Start() {
-        //check for different components
-        particles = GetComponent<ParticleSystem>();
-    }
     
     void Update() {
         //Client checks to active or inactive this object locally based on the server version state @isObjectActive
@@ -118,13 +113,11 @@ public class PoolMember : NetworkBehaviour {
             transform.GetChild(i).gameObject.SetActive(active);
         }
 
-        if (particles != null) {
-            ParticleSystem.EmissionModule emission = particles.emission;
-            emission.enabled = active;
-        }
-
-
         locallyActive = active; //this was true always before...why?
+
+        if (!active) {
+            transform.position = AWAY_LOCATION;
+        }
     }
 
 }

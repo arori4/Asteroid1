@@ -28,7 +28,7 @@ public class ObjectDestroyByTime : NetworkBehaviour {
 
     IEnumerator Disable() {
         yield return new WaitForSeconds(lifetime);
-        Pools.Terminate(gameObject);
         hasStarted = false;
+        Pools.Terminate(gameObject);
     }
 }

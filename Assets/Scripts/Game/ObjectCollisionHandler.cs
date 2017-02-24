@@ -8,10 +8,17 @@ using System.Collections.Generic;
  * Also has behavior for death.
  */
 public class ObjectCollisionHandler : NetworkBehaviour {
+    
+    const float MAX_X_COLLIDE = 10f;
 
-    //collision and game health
+    //collision
     public CanCollideWith collideDefinition;
+    string lastColliderTag = ""; //for keeping tab of score right now
+
+    //health
     public float maxHealth = 10;
+    [SyncVar]
+    float currentHealth;
     public float damageAmount;
 
     //contact
@@ -28,22 +35,15 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     [Header("Drop Settings")]
     public List<DropPair> alwaysDrops;
     public List<DropPair> sometimesDrops;
-    List<GameObject> dropList = new List<GameObject>();
     public int maxNonEssentialDrops;
+    List<GameObject> dropList = new List<GameObject>();
 
     //States
     bool dropCalculationDone;
     bool startedDeathCoroutine;
-    [SyncVar]
-    float currentHealth;
-    string lastColliderTag = ""; //for keeping tab of score right now
     
-    //Constants
-    const float MAX_X_COLLIDE = 10f;
 
     void Start() {
-        //Set scripts from game handler
-        //ui = GameObject.FindWithTag("UI Controller").GetComponent<UIController>();
     }
 
     void OnEnable() {
@@ -60,10 +60,6 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     }
 
     void OnTriggerEnter(Collider other) {
-
-        //only run on server
-        if (!isServer) { return; }
-
         //ignore detectors
         if (CompareTag("Player Detector")) {
             return;
@@ -72,11 +68,13 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             return;
         }
 
-        //only collide if definitions say so, and if on the screen
-        if (collideDefinition.collidesWith(other) && transform.position.x < MAX_X_COLLIDE) {
+        //only collide if definitions say so, on the screen, and not already dead
+        if (collideDefinition.collidesWith(other) && 
+            transform.position.x < MAX_X_COLLIDE &&
+            !startedDeathCoroutine) {
             
             //special consideration for powerups
-            if (other.CompareTag("Powerup")) {
+            if (other.CompareTag("Powerup") && isServer) {
                 other.transform.parent.gameObject.GetComponent<PowerUpHandler>().CmdActivate(gameObject);
             }
             DealDamage(other.gameObject);
@@ -97,6 +95,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
     }
 
+    //TODO: replace with a script that checks if out of bounds
     void OnTriggerExit(Collider other) {
         if (isServer && other.CompareTag("GameBoundary")) {
             Pools.Terminate(gameObject);

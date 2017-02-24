@@ -156,6 +156,35 @@ public class UIController : NetworkBehaviour {
         caller.shieldRecharging = false;
     }
 
+    //TODO separate functions for different cases instead of bool val?
+    public void ChangeWeaponUI(WeaponInfo weaponInfo, bool duringGame) {
+        if (duringGame) {
+            weaponUIGroup.ChangeObjectDuringGame(weaponInfo.weaponIcon, weaponInfo.weaponName);
+        }
+        else {
+            weaponUIGroup.SetModel(weaponInfo.weaponIcon);
+            weaponUIGroup.SetText(weaponInfo.weaponName);
+        }
+    }
+    public void ChangeMissileUI(MissileInfo missileInfo, bool duringGame) {
+        if (duringGame) {
+            missileUIGroup.ChangeObjectDuringGame(missileInfo.missileIcon, missileInfo.missileName);
+        }
+        else {
+            missileUIGroup.SetModel(missileInfo.missileIcon);
+            missileUIGroup.SetText(missileInfo.missileName);
+        }
+    }
+    public void ChangeShieldUI(ShieldInfo shieldInfo, bool duringGame) {
+        if (duringGame) {
+            shieldUIGroup.ChangeObjectDuringGame(shieldInfo.shieldIcon, shieldInfo.shieldName);
+        }
+        else {
+            shieldUIGroup.SetModel(shieldInfo.shieldIcon);
+            shieldUIGroup.SetText(shieldInfo.shieldName);
+        }
+    }
+
 
     /**
      * Changing Scenes

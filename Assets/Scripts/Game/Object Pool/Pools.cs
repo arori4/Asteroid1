@@ -8,9 +8,6 @@ using UnityEngine.Networking;
  */
 public class Pools : NetworkBehaviour {
 
-    [Header("Meta")]
-    public Transform parentTransform;
-
     [Header("Game Objects")]
     public GameObject[] poolObjects;
 
@@ -86,7 +83,7 @@ public class Pools : NetworkBehaviour {
      * Overloaded for similarity to Instantiate
      */
     public static GameObject Initialize(GameObject obj) {
-        return Initialize(obj, Vector3.zero, Quaternion.identity, singleton.parentTransform);
+        return Initialize(obj, Vector3.zero, Quaternion.identity, null);
     }
 
     public static GameObject Initialize(GameObject obj, Transform parent) {
@@ -94,7 +91,7 @@ public class Pools : NetworkBehaviour {
     }
 
     public static GameObject Initialize(GameObject obj, Vector3 position, Quaternion rotation) {
-        return Initialize(obj, position, rotation, singleton.parentTransform);
+        return Initialize(obj, position, rotation, null);
     }
 
     public static GameObject Initialize( GameObject obj, Vector3 position, Quaternion rotation, Transform parent) {
@@ -106,7 +103,7 @@ public class Pools : NetworkBehaviour {
         GameObject nextObj = objPool.nextObject;
 
         //Set variables
-        nextObj.transform.parent = singleton.parentTransform;
+        nextObj.transform.parent = parent;
         nextObj.transform.position = position;
         nextObj.transform.rotation = rotation;
 
