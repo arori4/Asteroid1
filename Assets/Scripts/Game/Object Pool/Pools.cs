@@ -115,6 +115,7 @@ public class Pools : NetworkBehaviour {
      */
     public static void Terminate(GameObject obj) {
         if (!singleton.isServer) { return; }
+
         if (obj == null) {
             print("Terminate on a null object");
             return;
@@ -124,7 +125,8 @@ public class Pools : NetworkBehaviour {
             return;
         }
         if (obj.GetComponent<PoolMember>().isObjectActive == false) {
-            print("Terminate on a deactivated object " + obj + " " + obj.GetComponent<NetworkIdentity>().netId); return;
+            print("Terminate on a deactivated object " + obj + " " + obj.GetComponent<NetworkIdentity>().netId);
+            return;
         }
 
         ObjectPool objPool = GetObjectPool(obj, obj.GetComponent<PoolMember>());

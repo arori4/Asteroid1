@@ -7,7 +7,6 @@ using System.Collections;
  */
 [RequireComponent(typeof(CanvasGroup))]
 [RequireComponent(typeof(RectTransform))]
-[System.Serializable]
 public class UIButtonGroup : MonoBehaviour {
 
     //Children objects

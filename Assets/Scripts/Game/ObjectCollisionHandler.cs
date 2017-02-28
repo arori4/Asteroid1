@@ -41,10 +41,9 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     //States
     bool dropCalculationDone;
     bool startedDeathCoroutine;
-    
 
-    void Start() {
-    }
+    //Controlller
+    static CustomNetworkManager networkManager;
 
     void OnEnable() {
         //Set starting variables
@@ -57,6 +56,13 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
         dropList.Clear();
         StartCoroutine(CalculateDropsCoroutine());
+    }
+
+    void Start() {
+        if (isServer) {
+            networkManager = GameObject.FindGameObjectWithTag("GameController")
+                .GetComponent<CustomNetworkManager>();
+        }
     }
 
     void OnTriggerEnter(Collider other) {
@@ -90,6 +96,12 @@ public class ObjectCollisionHandler : NetworkBehaviour {
                     contactSoundList[Random.Range(0, contactSoundList.Length)],
                     other.transform.position, Quaternion.identity);
                 audio.GetComponent<AudioSource>().Play();
+            }
+
+            //kill when current health <= 0
+            if (isServer && currentHealth <= 0 && !startedDeathCoroutine) {
+                startedDeathCoroutine = true;
+                StartCoroutine(DeathCoroutine());
             }
         }
 
@@ -134,11 +146,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
 
     void Update() {
-        //kill when current health <= 0
-        if (isServer && currentHealth <= 0 && !startedDeathCoroutine) {
-            startedDeathCoroutine = true;
-            StartCoroutine(DeathCoroutine());
-        }
+
     }
 
 
@@ -161,7 +169,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
 
     private IEnumerator DeathCoroutine() {
-//        print(gameObject + " started death coroutine");
+        //print(gameObject + " " + gameObject.GetComponent<NetworkIdentity>().netId  + " started death coroutine ");
         //only run on server
         //handle score
         if (lastColliderTag.CompareTo("Player Weapon") == 0 ||
@@ -172,7 +180,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
             }
             else {
                 int amount = scoreInfo.score;
-                //networkController.AddScore(amount);
+                networkManager.AddScore(amount);
             }
         }
 

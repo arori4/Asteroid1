@@ -1,28 +1,16 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
 /**
  * Handles spawning and level
  */
-public class NetworkController : NetworkBehaviour {
+public class Spawner : MonoBehaviour {
 
-    //Syncs
-    int score = 0;
-    public int mode = 0;
-    public int level = 1;
-    public int numPlayers = 1; //TODO: make both these private later
-    public int numPlayersAlive = 1;
-
-    //game mode
-    [Header("Game Modes")]
+    //Constants
     const int LEVEL_MODE = 0;
     const int SURVIVAL_MODE = 1;
-    public float survivalLevelTime = 20f;
 
-    //Spawn Location
     [Header("Spawn Location")]
     public Vector2 spawnVerticalLocation = new Vector2(-4.5f, 4.5f);
     public Vector2 spawnXZLocation;
@@ -46,49 +34,15 @@ public class NetworkController : NetworkBehaviour {
     //Locks
     bool recalculationFinished;
 
-    //Local use
-    public UIController ui;
+    [Header("Network Manager")]
+    public CustomNetworkManager manager;
 
-    void Start() {
+    
+    public void StartSpawning(int startlevel, int mode) {
+        SetLevelProperties(startlevel, mode);
 
-        //Set score
-        if (PlayerPrefs.HasKey("Score")) {
-            AddScore(PlayerPrefs.GetInt("Score")); //score starts at 0
-        }
-        else {
-            PlayerPrefs.SetInt("Score", 0);
-            AddScore(0);
-        }
-
-        //initiate game mode and level
-        if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
-            mode = LEVEL_MODE;
-            SetLevel(PlayerPrefs.GetInt("Level"));
-            ui.ShowLargeText("Level" + level, 0.4f);
-        }
-        else if (PlayerPrefs.GetInt("Mode") == SURVIVAL_MODE) {
-            mode = SURVIVAL_MODE;
-            SetLevel(PlayerPrefs.GetInt("Level"));
-            ui.ShowLargeText("Survive" + level, 0.4f);
-            StartCoroutine(IncreaseLevels());
-        }
-        else {
-            print("Mode is invalid, game will be set to survival mode by default. " + mode);
-            mode = SURVIVAL_MODE;
-            SetLevel(1);
-            ui.ShowLargeText("Survive" + level, 0.4f);
-            StartCoroutine(IncreaseLevels());
-        }
-
-        mode = SURVIVAL_MODE;
-        SetLevel(1);
-        StartCoroutine(IncreaseLevels());
-        print("Setting level to 1 by debug");
-
-        //Start level
         recalculationFinished = false;
         continueSpawningAsteroids = true;
-        StartCoroutine(RecalculateFrequencies());
         StartCoroutine(SpawnEnemiesCoroutine());
         StartCoroutine(SpawnAsteroidsCoroutine());
         StartCoroutine(SpawnPowerupsCoroutine());
@@ -97,93 +51,66 @@ public class NetworkController : NetworkBehaviour {
     /**
      * Sets the level, and level properties
      */
-    private void SetLevel(int newLevel) {
-        //set level
-        level = newLevel;
+    public void SetLevelProperties(int newLevel, int mode) {
 
         //check level
-        if (level <= 0) {
+        if (newLevel <= 0) {
             print("level is less than 0, by default will set back to 1");
-            level = 1;
+            newLevel = 1;
         }
 
         //Set base numenemies left
         if (mode == LEVEL_MODE) {
-            numEnemiesLeft = 5 + 3 * level;
+            numEnemiesLeft = 5 + 3 * newLevel;
         }
         else if (mode == SURVIVAL_MODE) {
             numEnemiesLeft = 100000000;
         }
 
         //level dependent attributes
-        asteroidSpeed = 1 + level * 0.2f;
+        asteroidSpeed = 1 + newLevel * 0.2f;
 
         //attributes for each level
-        if (level >= 1) {
+        if (newLevel >= 1) {
             enemyClass.SetWaitTime(4.0f, 5.0f);
             asteroidClass.SetWaitTime(1.5f, 2.5f);
             powerupClass.SetWaitTime(5f, 10f);
             maxAsteroidsSpawnAtTime = 1;
             maxEnemiesSpawnAtTime = 1;
         }
-        if (level >= 5) {
+        if (newLevel >= 5) {
             enemyClass.SetWaitTime(3.0f, 4.0f);
             asteroidClass.SetWaitTime(1.25f, 2.0f);
         }
-        if (level >= 7) {
+        if (newLevel >= 7) {
             enemyClass.SetWaitTime(2.5f, 3.25f);
             asteroidClass.SetWaitTime(1.25f, 1.75f);
             maxAsteroidsSpawnAtTime = 2;
         }
-        if (level >= 10) {
+        if (newLevel >= 10) {
             enemyClass.SetWaitTime(2.5f, 3.0f);
             asteroidClass.SetWaitTime(1.0f, 1.5f);
             powerupClass.SetWaitTime(4.5f, 9f);
             maxEnemiesSpawnAtTime = 2;
         }
-        if (level >= 15) {
+        if (newLevel >= 15) {
             enemyClass.SetWaitTime(2.0f, 2.5f);
             asteroidClass.SetWaitTime(0.75f, 1.25f);
             maxAsteroidsSpawnAtTime = 3;
         }
-        if (level >= 20) {
+        if (newLevel >= 20) {
             enemyClass.SetWaitTime(1.75f, 2.0f);
             asteroidClass.SetWaitTime(0.65f, 1.0f);
             powerupClass.SetWaitTime(4f, 8f);
         }
-        if (level >= 25) {
+        if (newLevel >= 25) {
             enemyClass.SetWaitTime(1.5f, 1.75f);
             asteroidClass.SetWaitTime(0.5f, 0.85f);
             maxAsteroidsSpawnAtTime = 4;
             maxEnemiesSpawnAtTime = 3;
         }
 
-    }
-    
-    /**
-     * Adds score and updates UI for all players
-     */
-    public void AddScore(int scoreToAdd) {
-        score += scoreToAdd;
-        if (ui.enabled) {
-            ui.RpcSetScoreText(score);
-        }
-    }
-
-    public void AdvanceLevel() {
-        //Add level and score
-        PlayerPrefs.SetInt("Level", PlayerPrefs.GetInt("Level") + 1);
-        PlayerPrefs.SetInt("Score", score);
-    }
-
-    public void GameOver() {
-        GetComponent<GameSave>().SaveHighScore(score, 1); //for now, only 1 level
-
-        //set the level back to 1
-        PlayerPrefs.SetInt("Level", 1);
-        PlayerPrefs.SetInt("Score", 0);
-
-        ui.RpcGameOver();
+        StartCoroutine(RecalculateFrequencies(newLevel));
     }
 
     private IEnumerator SpawnEnemiesCoroutine() {
@@ -240,34 +167,7 @@ public class NetworkController : NetworkBehaviour {
         continueSpawningAsteroids = false;
         yield return new WaitForSeconds(5);
 
-        ui.ShowLargeText("Clear", 0.3f);
-
-        //GetComponent<UIController>().AdvanceLevel(); //level increase is handled here
-
-        yield return new WaitForSeconds(20);
-    }
-
-
-    /**
-     * Coroutine for spawning powerups
-     */
-    private IEnumerator SpawnPowerupsCoroutine() {
-        yield return new WaitForSeconds(powerupClass.NextWaitTime());
-
-        while (numEnemiesLeft > 0) {
-            if (!recalculationFinished) {
-                yield return new WaitForSeconds(0.5f);
-                continue;
-            }
-
-            //Only spawn one powerup at a time
-            GameObject powerupToSpawn = powerupClass.NextObject();
-            yield return null;
-
-            //Spawn powerup
-            SpawnInWave(powerupToSpawn);
-            yield return new WaitForSeconds(powerupClass.NextWaitTime());
-        }
+        manager.AdvanceLevel();
     }
 
 
@@ -297,20 +197,30 @@ public class NetworkController : NetworkBehaviour {
         }
     }
 
+
     /**
-     * Increases the level
-     * Only for survival mode
+     * Coroutine for spawning powerups
      */
-    private IEnumerator IncreaseLevels() {
-        while (true) {
-            yield return new WaitForSeconds(survivalLevelTime);
-            SetLevel(level + 1);
-            PlayerPrefs.SetInt("Level", level);
-            StartCoroutine(RecalculateFrequencies());
+    private IEnumerator SpawnPowerupsCoroutine() {
+        yield return new WaitForSeconds(powerupClass.NextWaitTime());
+
+        while (numEnemiesLeft > 0) {
+            if (!recalculationFinished) {
+                yield return new WaitForSeconds(0.5f);
+                continue;
+            }
+
+            //Only spawn one powerup at a time
+            GameObject powerupToSpawn = powerupClass.NextObject();
+            yield return null;
+
+            //Spawn powerup
+            SpawnInWave(powerupToSpawn);
+            yield return new WaitForSeconds(powerupClass.NextWaitTime());
         }
     }
 
-    private IEnumerator RecalculateFrequencies() {
+    private IEnumerator RecalculateFrequencies(int level) {
         enemyClass.Recalculate(level);
         yield return null;
         enemyWeaponClass.Recalculate(level);
@@ -323,10 +233,8 @@ public class NetworkController : NetworkBehaviour {
         recalculationFinished = true;
     }
 
-
-
     /**
-     * Spawns the object
+     * Spawn handling
      */
     private GameObject SpawnInWave(GameObject obj) {
 
@@ -336,10 +244,6 @@ public class NetworkController : NetworkBehaviour {
         
         return spawnedObj;
     }
-
-    /**
-     * Spawns an object with a random material
-     */
     private GameObject SpawnInWave(GameObject obj, List<Material> materials) {
         GameObject spawnedObj = SpawnInWave(obj);
 
@@ -348,7 +252,6 @@ public class NetworkController : NetworkBehaviour {
 
         return spawnedObj;
     }
-
 
     [ContextMenu("Sort by Level Appearance")]
     void SortEnemies() {

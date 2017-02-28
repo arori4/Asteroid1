@@ -56,6 +56,9 @@ public class UIController : NetworkBehaviour {
         StartCoroutine(FadeOutCoroutine(blackFader, 0.4f));
 	}
 
+    /**
+     * Score 
+     */
     [ClientRpc]
     public void RpcSetScoreText(int score) {
         scoreText.text = "Score: " + score;
@@ -77,16 +80,24 @@ public class UIController : NetworkBehaviour {
         StartCoroutine(FadeOutCoroutine(regularUI, 1));
     }
 
+    /**
+     * Advance Level
+     */
     [ClientRpc]
     public void RpcAdvanceLevel() {
         StartCoroutine(AdvanceLevelCoroutine());
+    }
+    private IEnumerator AdvanceLevelCoroutine() {
+        StartCoroutine(FadeInCoroutine(blackFader, 0.4f));
+        yield return new WaitForSeconds(4.0f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     /**
      * Large Text
      */
-
-    public void ShowLargeText(string text, float duration) {
+    [ClientRpc]
+    public void RpcShowLargeText(string text, float duration) {
         largeTextCanvas.alpha = 1;
         largeText.text = "text";
         StartCoroutine(FadeOutCoroutine(largeTextCanvas, 0.3f));
@@ -189,12 +200,6 @@ public class UIController : NetworkBehaviour {
     /**
      * Changing Scenes
      */
-
-    private IEnumerator AdvanceLevelCoroutine() {
-        StartCoroutine(FadeInCoroutine(blackFader, 0.4f));
-        yield return new WaitForSeconds(4.0f);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
 
     private IEnumerator RestartGameCoroutine() {
         StartCoroutine(FadeInCoroutine(blackFader, 0.5f));

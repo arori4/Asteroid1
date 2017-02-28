@@ -4,7 +4,6 @@ using System.Collections;
 
 /**
  * Randomly rotates the object based on the rotate speed
- * TODO: simplify variables?
  */
 public class ObjectRandomRotater : NetworkBehaviour {
 
@@ -22,7 +21,7 @@ public class ObjectRandomRotater : NetworkBehaviour {
 
 	void OnEnable () {
         if (!isServer) { return; }
-
+        
         rotateAmount = new Vector3(0, 0, 0);
 
         if (xRotate) {

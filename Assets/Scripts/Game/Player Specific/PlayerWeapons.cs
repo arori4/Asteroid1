@@ -339,19 +339,4 @@ public class PlayerWeapons : NetworkBehaviour {
         energy = Mathf.Min(maxEnergy, energy + add);
     }
 
-    void OnDisable() {
-        /* TODO: this was for death of player. handle this elsewhere
-        //hide the ui buttons
-        ui.weaponUIGroup.Deactivate();
-        ui.shieldUIGroup.Deactivate();
-        ui.missileUIGroup.Deactivate();
-        */
-
-        //set the hit background to 0
-        ui.hitCanvas.alpha = 0;
-
-        //set slider values to 0
-        ui.healthSlider.val = 0;
-    }
-
 }
