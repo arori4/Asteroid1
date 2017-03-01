@@ -11,27 +11,24 @@ public class ObjectCollisionHandler : NetworkBehaviour {
     
     const float MAX_X_COLLIDE = 10f;
 
-    //collision
+    [Header("Collision")]
     public CanCollideWith collideDefinition;
     string lastColliderTag = ""; //for keeping tab of score right now
-
-    //health
+    
+    [Header("Health")]
     public float maxHealth = 10;
+    public float damageAmount;
     [SyncVar]
     float currentHealth;
-    public float damageAmount;
-
-    //contact
+    
     [Header("Contact Settings")]
     public GameObject[] contactEffectList;
     public GameObject[] contactSoundList;
-
-    //death
+    
     [Header("Death Settings")]
     public GameObject[] explosionEffectList;
     public GameObject[] explosionSoundList;
-
-    //drops
+    
     [Header("Drop Settings")]
     public List<DropPair> alwaysDrops;
     public List<DropPair> sometimesDrops;
@@ -198,6 +195,11 @@ public class ObjectCollisionHandler : NetworkBehaviour {
                 explosionSoundList[Random.Range(0, explosionSoundList.Length)],
                 transform.position, Quaternion.identity);
             audio.GetComponent<AudioSource>().Play();
+        }
+
+        //If the player died, notifiy the network manager
+        if (tag.CompareTo("Player") == 0) {
+            networkManager.PlayerKilled();
         }
 
         //stop if calculations aren't done

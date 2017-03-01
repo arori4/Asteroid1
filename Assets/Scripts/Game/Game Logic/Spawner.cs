@@ -3,13 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 
 /**
- * Handles spawning and level
+ * Handles spawning and level. Should only be on a server only object.
+ * 
+ * Currently, level transitions when the amount of alien enemies have been spawned.
+ * Asteroids and powerups continue spawning independent of alien enemies, until no more
+ * enemies exist.
  */
 public class Spawner : MonoBehaviour {
 
     //Constants
     const int LEVEL_MODE = 0;
     const int SURVIVAL_MODE = 1;
+    public const float survivalLevelTime = 20f;
+
+    [Header("Game Modes")]
+    public int mode = 0;
+    public int level = 1;
 
     [Header("Spawn Location")]
     public Vector2 spawnVerticalLocation = new Vector2(-4.5f, 4.5f);
@@ -27,19 +36,44 @@ public class Spawner : MonoBehaviour {
     public List<Material> asteroidMaterials;
     bool continueSpawningAsteroids;
     int maxAsteroidsSpawnAtTime;
-    float asteroidSpeed;
+    float asteroidSpeed; //TODO: set this to be a range of values
     //Powerups
     public SpawnClass powerupClass;
 
     //Locks
     bool recalculationFinished;
+    CustomNetworkManager manager;
 
-    [Header("Network Manager")]
-    public CustomNetworkManager manager;
+    public void StartGame() {
+        manager = gameObject.GetComponent<CustomNetworkManager>();
 
-    
-    public void StartSpawning(int startlevel, int mode) {
-        SetLevelProperties(startlevel, mode);
+        //initiate game mode and level
+        if (manager.debug) {
+            print("Setting level to 1 by debug");
+            mode = SURVIVAL_MODE;
+            SetLevelProperties(1, mode);
+            StartCoroutine(IncreaseLevels());
+        }
+        else if (PlayerPrefs.GetInt("Mode") == LEVEL_MODE) {
+            mode = LEVEL_MODE;
+            SetLevelProperties(PlayerPrefs.GetInt("Level"), mode);
+            manager.SplashText("Level" + level, 0.4f);
+        }
+        else if (PlayerPrefs.GetInt("Mode") == SURVIVAL_MODE) {
+            mode = SURVIVAL_MODE;
+            SetLevelProperties(PlayerPrefs.GetInt("Level"), mode);
+            manager.SplashText("Survive" + level, 0.4f);
+            StartCoroutine(IncreaseLevels());
+        }
+        else {
+            print("Mode is invalid, game will be set to survival mode by default. " + mode);
+            mode = SURVIVAL_MODE;
+            SetLevelProperties(1, mode);
+            manager.SplashText("Survive" + level, 0.4f);
+            StartCoroutine(IncreaseLevels());
+        }
+
+        SetLevelProperties(level, mode);
 
         recalculationFinished = false;
         continueSpawningAsteroids = true;
@@ -113,6 +147,21 @@ public class Spawner : MonoBehaviour {
         StartCoroutine(RecalculateFrequencies(newLevel));
     }
 
+    /**
+     * Increases the level
+     * Only for survival mode
+     */
+    private IEnumerator IncreaseLevels() {
+        while (true) {
+            yield return new WaitForSeconds(survivalLevelTime);
+            level++;
+            SetLevelProperties(level, mode);
+            PlayerPrefs.SetInt("Level", level);
+
+            manager.SplashText("Level " + level, 2f);
+        }
+    }
+
     private IEnumerator SpawnEnemiesCoroutine() {
         yield return new WaitForSeconds(spawnBeginningWait);
 
@@ -148,7 +197,6 @@ public class Spawner : MonoBehaviour {
                         guns = weapons.guns;
                     }
                     //TODO: correct implementation
-
                     for (int gunIndex = 0; gunIndex < guns.Length; gunIndex++) {
                         //Choose random gun
                         GameObject gunToSet = enemyWeaponClass.NextObject();

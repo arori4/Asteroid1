@@ -6,6 +6,7 @@ using System.Collections;
 
 /**
  * Controls all UI elements during the game
+ * All events controlled by the network manager
  */
 public class UIController : NetworkBehaviour {
 
@@ -23,7 +24,7 @@ public class UIController : NetworkBehaviour {
     public CanvasGroup hitCanvas;
     bool hitCanvasActivated; //lock
     
-    [Header("UI")]
+    [Header("Large Splash Text")]
     public CanvasGroup largeTextCanvas;
     public Text largeText;
 
@@ -47,6 +48,7 @@ public class UIController : NetworkBehaviour {
         hitCanvas.alpha = 0;
         largeTextCanvas.alpha = 0;
         gameOverGUI.alpha = 0;
+        shieldSlider.GetComponent<CanvasGroup>().alpha = 0;
 
         //make sure game over is deactivated
         gameOverGUI.interactable = false;
@@ -95,12 +97,14 @@ public class UIController : NetworkBehaviour {
 
     /**
      * Large Text
+     * 
+     * TODO: allow different effects like fade in, fade out, etc.
      */
     [ClientRpc]
     public void RpcShowLargeText(string text, float duration) {
         largeTextCanvas.alpha = 1;
-        largeText.text = "text";
-        StartCoroutine(FadeOutCoroutine(largeTextCanvas, 0.3f));
+        largeText.text = text;
+        StartCoroutine(FadeOutCoroutine(largeTextCanvas, duration));
     }
 
     /**
@@ -166,8 +170,7 @@ public class UIController : NetworkBehaviour {
         shieldUIGroup.Show();
         caller.shieldRecharging = false;
     }
-
-    //TODO separate functions for different cases instead of bool val?
+    
     public void ChangeWeaponUI(WeaponInfo weaponInfo, bool duringGame) {
         if (duringGame) {
             weaponUIGroup.ChangeObjectDuringGame(weaponInfo.weaponIcon, weaponInfo.weaponName);
@@ -199,6 +202,8 @@ public class UIController : NetworkBehaviour {
 
     /**
      * Changing Scenes
+     * 
+     * TODO: let the manager handle this
      */
 
     private IEnumerator RestartGameCoroutine() {
@@ -221,29 +226,25 @@ public class UIController : NetworkBehaviour {
 
     private IEnumerator FadeInCoroutine(CanvasGroup canvas, float duration) {
         float lambda = 1f / duration;
-
         while (canvas.alpha < 1f) {
             canvas.alpha += Time.deltaTime * lambda;
             yield return null;
         }
-
         //lock at final value
         canvas.alpha = 1f;
     }
 
     private IEnumerator FadeOutCoroutine(CanvasGroup canvas, float duration) {
         float lambda = 1f / duration;
-
         while (canvas.alpha > 0) {
             canvas.alpha -= Time.deltaTime * lambda;
             yield return null;
         }
-
         //lock at final value
         canvas.alpha = 0;
     }
 
-    //For UI Use
+    //For local UI Use
     public void onFireButtonDown() {
         player.weaponButtonPressed = true;
     }

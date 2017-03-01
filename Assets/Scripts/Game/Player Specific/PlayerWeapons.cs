@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 /**
  * Controls the player's weapons, shields, and missiles
+ * Right now, controls anything related to energy
  */
 public class PlayerWeapons : NetworkBehaviour {
 
