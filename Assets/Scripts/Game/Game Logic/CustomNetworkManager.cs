@@ -26,7 +26,6 @@ public class CustomNetworkManager : NetworkManager {
     public override void OnStartServer() {
         base.OnStartServer();
         StartGame();
-        print("OnStartServer");
     }
 
     // called when a client connects 

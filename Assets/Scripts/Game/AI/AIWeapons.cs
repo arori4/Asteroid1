@@ -30,7 +30,7 @@ public class AIWeapons : NetworkBehaviour {
 
     IEnumerator FireSequence(GunDefinition gun) {
         while (true) {
-            yield return new WaitForSecondsRealtime(gun.GetNextFire());
+            yield return new WaitForSeconds(gun.GetNextFire());
             gun.Fire();
         }
     }

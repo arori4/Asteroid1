@@ -17,7 +17,7 @@ public class UIButtonGroup : MonoBehaviour {
     public bool startHidden;
 
     RectTransform rectTransform;
-    float moveTime = 0.85f;
+    float moveTime = 0.80f;
     float targetDisplacement;
     float startingX;
     bool isHidden;
@@ -50,7 +50,7 @@ public class UIButtonGroup : MonoBehaviour {
         //add in new child
         GameObject newWeaponIcon = GameObject.Instantiate(newMesh,
             parentObject.transform.position, new Quaternion(45, 90, 250, 0)) as GameObject;
-        //newWeaponIcon.transform.parent = transform;
+        newWeaponIcon.transform.parent = parentObject.transform;
     }
 
     public void SetText(string nextText) {

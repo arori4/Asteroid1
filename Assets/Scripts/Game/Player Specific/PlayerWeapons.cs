@@ -28,6 +28,7 @@ public class PlayerWeapons : NetworkBehaviour {
     //shield
     [Header("Shield Settings")]
     public GameObject shieldType;
+    GameObject currentShield;
     ShieldInfo shieldInfo;
     bool shieldActivated;
     [HideInInspector]
@@ -104,7 +105,7 @@ public class PlayerWeapons : NetworkBehaviour {
                 CmdMissileFire();
             }
 
-            //shield input
+            //shield input TODO: reduce amount of [Command]s sent
             if (Input.GetKey(KeyCode.LeftShift) || shieldButtonPressed) {
                 CmdActivateShield();
             }
@@ -112,8 +113,6 @@ public class PlayerWeapons : NetworkBehaviour {
                 CmdDeactivateShield();
             }
         }
-
-
     }
 
     [Command]
@@ -163,18 +162,20 @@ public class PlayerWeapons : NetworkBehaviour {
 
     [Command]
     public void CmdActivateShield() {
-        if (!shieldRecharging) {
+        if (!shieldRecharging && currentShield == null) {
             shieldActivated = true;
-            shieldType.SetActive(true);
+            currentShield = Pools.Initialize(shieldType, transform.position, transform.rotation,
+                transform.root);
             energy -= shieldInfo.energyDrain * Time.deltaTime;
         }
     }
 
     [Command]
     public void CmdDeactivateShield() {
-        if (!shieldRecharging) {
+        if (!shieldRecharging && currentShield != null) {
             shieldActivated = false;
-            shieldType.SetActive(false);
+            Pools.Terminate(currentShield);
+            currentShield = null;
         }
     }
     
@@ -192,7 +193,7 @@ public class PlayerWeapons : NetworkBehaviour {
         weaponType = newWeapon;
 
         //Replace UI only for local player, and if in game
-        if (isLocalPlayer && !duringGame) {
+        if (isLocalPlayer && duringGame) {
             ui.ChangeWeaponUI(weaponInfo, duringGame);
         }
     }
@@ -212,7 +213,7 @@ public class PlayerWeapons : NetworkBehaviour {
         missileCount = count;
 
         //Replace UI only for local player, and if in game
-        if (isLocalPlayer && !duringGame) {
+        if (isLocalPlayer && duringGame) {
             ui.ChangeMissileUI(missileInfo, duringGame);
         }
     }
@@ -232,7 +233,7 @@ public class PlayerWeapons : NetworkBehaviour {
         shieldRecharging = false;
 
         //Replace UI only for local player, and if in game
-        if (isLocalPlayer && !duringGame) {
+        if (isLocalPlayer && duringGame) {
             ui.ChangeShieldUI(shieldInfo, duringGame);
         }
     }

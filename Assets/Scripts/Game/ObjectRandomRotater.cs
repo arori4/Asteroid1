@@ -21,7 +21,7 @@ public class ObjectRandomRotater : NetworkBehaviour {
 
 	void OnEnable () {
         if (!isServer) { return; }
-        
+
         rotateAmount = new Vector3(0, 0, 0);
 
         if (xRotate) {
