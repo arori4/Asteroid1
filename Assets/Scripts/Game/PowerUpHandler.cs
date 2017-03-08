@@ -33,7 +33,9 @@ public class PowerUpHandler : NetworkBehaviour {
             playerWeapons.AddEnergy(energyDef.amount);
         }
         if (changeWeaponDef.activated) {
-            playerWeapons.ChangeWeapon(changeWeaponDef.weaponType, true);
+            playerWeapons.TargetChangeWeapon(playerWeapons.connectionToClient, 
+                changeWeaponDef.weaponType.GetComponent<WeaponInfo>().weaponName);
+            playerWeapons.SetWeapon(changeWeaponDef.weaponType);
         }
         if (changeMissileDef.activated) {
             playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount, true);

@@ -53,15 +53,14 @@ public class PlayerWeapons : NetworkBehaviour {
     public GameObject gunQuad;
     public GameObject turretModel;
 
-
     void OnEnable() {
         //Set ship stats
         weaponNextFire = Time.time;
         energy = maxEnergy;
 
+        SetWeapon(weaponType);
         //Set weapons
         ChangeShip(shipType);
-        ChangeWeapon(weaponType, false);
         ChangeShield(shieldType, false);
         ChangeMissile(missileType, 5, false);
     }
@@ -73,11 +72,11 @@ public class PlayerWeapons : NetworkBehaviour {
         ui = GameObject.FindGameObjectWithTag("UI Controller").GetComponent<UIController>();
         ui.player = this;
 
-        ui.ChangeWeaponUI(weaponInfo, false);
+        ui.SetWeaponUI(weaponInfo.weaponIcon, weaponInfo.weaponName);
         if (missileInfo != null) {//sometimes we don't have a missile to start
-            ui.ChangeMissileUI(missileInfo, false);
+            ui.SetMissileUI(missileInfo.missileIcon, missileInfo.missileName);
         }
-        ui.ChangeShieldUI(shieldInfo, false);
+        ui.SetShieldUI(shieldInfo.shieldIcon, shieldInfo.shieldName);
     }
 
     void Start() {
@@ -96,12 +95,18 @@ public class PlayerWeapons : NetworkBehaviour {
             ui.healthSlider.val = playerCollision.GetCurrentHealth();
             ui.energySlider.val = energy;
 
-            if (Input.GetKey(KeyCode.Space) || weaponButtonPressed) {
+            //increase charge time
+            weaponCurrentCharge += Time.deltaTime;
+
+            if ((Input.GetKey(KeyCode.Space) || weaponButtonPressed) &&
+                (Time.time >= weaponNextFire && weaponCurrentCharge > weaponInfo.chargeTime &&
+                 energy > weaponInfo.energyCost)) {
                 CmdWeaponFire();
             }
 
             //missile input
-            if (Input.GetKey(KeyCode.LeftControl) || missileButtonPressed) {
+            if ((Input.GetKey(KeyCode.LeftControl) || missileButtonPressed) &&
+                (Time.time >= missileNextFire && missileCount > 0)) {
                 CmdMissileFire();
             }
 
@@ -117,20 +122,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
     [Command]
     public void CmdWeaponFire() {
-        //increase charge time
-        weaponCurrentCharge += Time.deltaTime;
-
-        //only fire after a certain time quantum and amount of energy
-        if (Time.time >= weaponNextFire &&
-            weaponCurrentCharge > weaponInfo.chargeTime &&
-            energy > weaponInfo.energyCost) {
-
-            //create the weapon
-            foreach (Transform gun in gunLocations) {
-                GameObject spawnedWeapon = Pools.Initialize(weaponType, gun.position, gun.rotation);
-                //set the velocity to be the normal of the gun plane (up should be correct)
-                spawnedWeapon.GetComponent<ObjectStraightMover>().SetFinalDirection(gun.up);
-            }
+        //create the weapon projectile
+        foreach (Transform gun in gunLocations) {
+            GameObject spawnedWeapon = Pools.Initialize(weaponType, gun.position, gun.rotation);
+            //set the velocity to be the normal of the gun plane (up should be correct)
+            spawnedWeapon.GetComponent<ObjectStraightMover>().SetFinalDirection(gun.up);
 
             //set next fire and energy amount
             weaponNextFire = Time.time + weaponInfo.fireRate;
@@ -141,22 +137,18 @@ public class PlayerWeapons : NetworkBehaviour {
 
     [Command]
     public void CmdMissileFire() {
-        //only fire after a certain time quantum and amount of energy
-        if (Time.time >= missileNextFire && missileCount > 0) {
+        //create the missile
+        GameObject spawnedMissile = Pools.Initialize(missileType, gunLocations[0].position, gunLocations[0].rotation);
+        spawnedMissile.SetActive(true); //line is included to remove warnings for now
 
-            //create the missile
-            GameObject spawnedMissile = Pools.Initialize(missileType, gunLocations[0].position, gunLocations[0].rotation);
-            spawnedMissile.SetActive(true); //line is included to remove warnings for now
+        //set next fire and energy amount
+        missileNextFire = Time.time + missileInfo.fireRate;
+        missileCount--;
 
-            //set next fire and energy amount
-            missileNextFire = Time.time + missileInfo.fireRate;
-            missileCount--;
-
-            //Set ui to show lower missileCount
-            ui.missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
-            if (missileCount == 0) {
-                ui.missileUIGroup.Hide();
-            }
+        //Set ui to show lower missileCount
+        ui.missileUIGroup.SetText(missileInfo.missileName + " (" + missileCount + ")");
+        if (missileCount == 0) {
+            ui.missileUIGroup.Hide();
         }
     }
 
@@ -179,30 +171,26 @@ public class PlayerWeapons : NetworkBehaviour {
         }
     }
     
-    public void ChangeWeapon(GameObject newWeapon, bool duringGame) {
-        if (newWeapon == null) {
-            return;
-        }
-
+    public void SetWeapon(GameObject newWeapon) {
         weaponInfo = newWeapon.GetComponent<WeaponInfo>();
         if (weaponInfo == null) {
             print("Changing weapon to a non weapon. Weapon not assigned.");
             return;
         }
-
         weaponType = newWeapon;
+    }
+    [TargetRpc]
+    public void TargetChangeWeapon(NetworkConnection conn, string weaponName) {
+        GameObject newWeapon = Assets.Weapon(weaponName);
 
-        //Replace UI only for local player, and if in game
-        if (isLocalPlayer && duringGame) {
-            ui.ChangeWeaponUI(weaponInfo, duringGame);
-        }
+        SetWeapon(newWeapon);
+        
+        WeaponInfo info = newWeapon.GetComponent<WeaponInfo>();
+
+        ui.ChangeWeaponUI(info.weaponIcon, info.name);
     }
 
     public void ChangeMissile(GameObject missile, int count, bool duringGame) {
-        if (missile == null) {
-            return;
-        }
-
         missileInfo = missile.GetComponent<MissileInfo>();
         if (missileInfo == null) {
             print("Changing missile to a non missile. Weapon not assigned.");
@@ -214,15 +202,11 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //Replace UI only for local player, and if in game
         if (isLocalPlayer && duringGame) {
-            ui.ChangeMissileUI(missileInfo, duringGame);
+            ui.ChangeMissileUI(missileInfo.missileIcon, missileInfo.missileName);
         }
     }
 
     public void ChangeShield(GameObject shield, bool duringGame) {
-        if (shield == null) {
-            return;
-        }
-
         shieldInfo = shield.GetComponent<ShieldInfo>();
         if (shieldInfo == null) {
             print("Changing shield to a non shield. Shield not assigned.");
@@ -234,7 +218,7 @@ public class PlayerWeapons : NetworkBehaviour {
 
         //Replace UI only for local player, and if in game
         if (isLocalPlayer && duringGame) {
-            ui.ChangeShieldUI(shieldInfo, duringGame);
+            ui.ChangeShieldUI(shieldInfo.shieldIcon, shieldInfo.shieldName);
         }
     }
 

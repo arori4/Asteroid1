@@ -5,7 +5,8 @@ using UnityEngine.Networking;
 using System.Collections;
 
 /**
- * Controls all UI elements during the game
+ * Controls all UI elements during the game.
+ * Contains wrappers.
  * All events controlled by the network manager
  */
 public class UIController : NetworkBehaviour {
@@ -19,11 +20,11 @@ public class UIController : NetworkBehaviour {
     public UISliderGroup healthSlider;
     public UISliderGroup energySlider;
     public UISliderGroup shieldSlider;
-    
+
     [Header("Hit Canvas")]
     public CanvasGroup hitCanvas;
     bool hitCanvasActivated; //lock
-    
+
     [Header("Large Splash Text")]
     public CanvasGroup largeTextCanvas;
     public Text largeText;
@@ -31,7 +32,7 @@ public class UIController : NetworkBehaviour {
     [Header("Game Over")]
     public CanvasGroup gameOverGUI;
     public Text gameOverScoreText;
-    
+
     [Header("Other Overlays")]
     public CanvasGroup blackFader;
 
@@ -39,7 +40,7 @@ public class UIController : NetworkBehaviour {
 
     public PlayerWeapons player;
 
-    void Start () {
+    void Start() {
         Application.targetFrameRate = 60;
 
         //set alphas
@@ -56,7 +57,7 @@ public class UIController : NetworkBehaviour {
 
         //start the game and fade up
         StartCoroutine(FadeOutCoroutine(blackFader, 0.4f));
-	}
+    }
 
     /**
      * Score 
@@ -162,7 +163,7 @@ public class UIController : NetworkBehaviour {
 
         StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 4f));
         yield return new WaitForSeconds(0.25f);
-        
+
         //set alpha back to 1 so that when we need it again, it appears
         shieldBarCanvas.alpha = 1;
         shieldSlider.gameObject.SetActive(false);
@@ -170,33 +171,30 @@ public class UIController : NetworkBehaviour {
         shieldUIGroup.Show();
         caller.shieldRecharging = false;
     }
-    
-    public void ChangeWeaponUI(WeaponInfo weaponInfo, bool duringGame) {
-        if (duringGame) {
-            weaponUIGroup.ChangeObjectDuringGame(weaponInfo.weaponIcon, weaponInfo.weaponName);
-        }
-        else {
-            weaponUIGroup.SetModel(weaponInfo.weaponIcon);
-            weaponUIGroup.SetText(weaponInfo.weaponName);
-        }
+
+
+    public void SetWeaponUI(GameObject weaponIcon, string name) {
+        weaponUIGroup.SetModel(weaponIcon);
+        weaponUIGroup.SetText(name);
     }
-    public void ChangeMissileUI(MissileInfo missileInfo, bool duringGame) {
-        if (duringGame) {
-            missileUIGroup.ChangeObjectDuringGame(missileInfo.missileIcon, missileInfo.missileName);
-        }
-        else {
-            missileUIGroup.SetModel(missileInfo.missileIcon);
-            missileUIGroup.SetText(missileInfo.missileName);
-        }
+    public void ChangeWeaponUI(GameObject weaponIcon, string name) {
+        weaponUIGroup.ChangeObjectDuringGame(weaponIcon, name);
     }
-    public void ChangeShieldUI(ShieldInfo shieldInfo, bool duringGame) {
-        if (duringGame) {
-            shieldUIGroup.ChangeObjectDuringGame(shieldInfo.shieldIcon, shieldInfo.shieldName);
-        }
-        else {
-            shieldUIGroup.SetModel(shieldInfo.shieldIcon);
-            shieldUIGroup.SetText(shieldInfo.shieldName);
-        }
+
+    public void SetMissileUI(GameObject missileIcon, string name) {
+        missileUIGroup.SetModel(missileIcon);
+        missileUIGroup.SetText(name);
+    }
+    public void ChangeMissileUI(GameObject missileIcon, string name) {
+        missileUIGroup.ChangeObjectDuringGame(missileIcon, name);
+    }
+
+    public void SetShieldUI(GameObject shieldIcon, string name) {
+        shieldUIGroup.SetModel(shieldIcon);
+        shieldUIGroup.SetText(name);
+    }
+    public void ChangeShieldUI(GameObject shieldIcon, string name) {
+        shieldUIGroup.ChangeObjectDuringGame(shieldIcon, name);
     }
 
 
