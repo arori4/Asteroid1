@@ -199,7 +199,7 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
         //If the player died, notifiy the network manager
         if (tag.CompareTo("Player") == 0) {
-            networkManager.PlayerKilled();
+            networkManager.PlayerKilled(connectionToClient, gameObject);
         }
 
         //stop if calculations aren't done
@@ -230,6 +230,10 @@ public class ObjectCollisionHandler : NetworkBehaviour {
 
         //finally kill object
         Pools.Terminate(gameObject);
+        //if the player, then destroy it
+        if (gameObject.CompareTag("Player")) {
+
+        }
     }
     
 

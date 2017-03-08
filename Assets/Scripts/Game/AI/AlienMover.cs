@@ -18,8 +18,8 @@ public class AlienMover : NetworkBehaviour {
     public MoveToCenter moveToCenter;
     public TargetPlayer targetPlayer;
 
-    Vector3 currentVelocity; //calculated on client
-
+    [SyncVar]
+    Vector3 currentVelocity; 
     [SyncVar]
     float targetX;
     [SyncVar]

@@ -4,7 +4,7 @@ using UnityEngine;
 
 /**
  * Local class that allows lookup by keyword
- * Use RPC or Target Calls to reference
+ * Use RPC or Target Calls to reference.
  */
 public class Assets : MonoBehaviour{
 

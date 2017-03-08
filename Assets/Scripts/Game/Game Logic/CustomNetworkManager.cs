@@ -13,6 +13,9 @@ public class CustomNetworkManager : NetworkManager {
     [Header("Debug")]
     public bool debug;
 
+    [Header("Player")]
+    public GameObject deadPlayerPrefab;
+
     [Header("Meta")] //TODO: make both these private later
     public int score = 0;
     public int numPlayersAlive = 0;
@@ -104,7 +107,14 @@ public class CustomNetworkManager : NetworkManager {
         numPlayersAlive++;
     }
 
-    public void PlayerKilled() {
+    public void PlayerKilled(NetworkConnection connection, GameObject playerObj) {
+        //Replace player
+        NetworkServer.ReplacePlayerForConnection(connection, 
+            deadPlayerPrefab, 0);
+        //Kill old prefab
+        Destroy(playerObj);
+        NetworkServer.Destroy(playerObj);
+
         numPlayersAlive--;
         if (numPlayersAlive <= 0) {
             GameOver();
@@ -144,6 +154,9 @@ public class CustomNetworkManager : NetworkManager {
         //set the level back to 1
         PlayerPrefs.SetInt("Level", 1);
         PlayerPrefs.SetInt("Score", 0);
+
+        //Stop spawning
+        spawner.StopAllCoroutines();
 
         //Tell of the UI controllers
         ui.RpcGameOver();

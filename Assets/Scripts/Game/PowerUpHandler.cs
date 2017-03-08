@@ -33,12 +33,15 @@ public class PowerUpHandler : NetworkBehaviour {
             playerWeapons.AddEnergy(energyDef.amount);
         }
         if (changeWeaponDef.activated) {
+            playerWeapons.SetWeapon(changeWeaponDef.weaponType);
             playerWeapons.TargetChangeWeapon(playerWeapons.connectionToClient, 
                 changeWeaponDef.weaponType.GetComponent<WeaponInfo>().weaponName);
-            playerWeapons.SetWeapon(changeWeaponDef.weaponType);
         }
         if (changeMissileDef.activated) {
-            playerWeapons.ChangeMissile(changeMissileDef.missileType, changeMissileDef.amount, true);
+            playerWeapons.SetMissile(changeMissileDef.missileType, changeMissileDef.amount);
+            playerWeapons.TargetChangeMissile(playerWeapons.connectionToClient,
+                changeMissileDef.missileType.GetComponent<MissileInfo>().missileName,
+                changeMissileDef.amount);
         }
         if (spawnObjectDef.activated) {
             Pools.Initialize(spawnObjectDef.objectToSpawn, transform.position, Quaternion.identity);

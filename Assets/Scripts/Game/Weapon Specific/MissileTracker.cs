@@ -6,7 +6,7 @@ using System.Collections;
  * Handles the missile tracking and homing on different targets
  */
  [RequireComponent(typeof(SphereCollider))]
-public class MissileTracker : NetworkBehaviour {
+public class MissileTracker : MonoBehaviour {
 
     public float trackingRange;
     public float acceleration;
@@ -71,13 +71,12 @@ public class MissileTracker : NetworkBehaviour {
 
     void OnTriggerEnter(Collider other) {
         //Track an alien only if we haven't started
-        if (target == null && other.tag.CompareTo("Alien") == 0 && isServer) {
-            RpcSetTarget(other.gameObject);
+        if (target == null && other.tag.CompareTo("Alien") == 0) {
+            SetTarget(other.gameObject);
         }
     }
-
-    [ClientRpc]
-    void RpcSetTarget(GameObject newTarget) {
+    
+    void SetTarget(GameObject newTarget) {
         target = newTarget;
     }
 
