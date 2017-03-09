@@ -26,6 +26,11 @@ public class CustomNetworkManager : NetworkManager {
     [Header("Local Use")]
     public UIController ui;
 
+    private void Start() {
+        //StartHost();
+        print("Started host");
+    }
+
     public override void OnStartServer() {
         base.OnStartServer();
         StartGame();

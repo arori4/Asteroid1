@@ -332,7 +332,7 @@ public class PlayerWeapons : NetworkBehaviour {
             //return 0 if shield still up, or amount of hit left if weak
             if (energy < 0) {
                 CmdDeactivateShield();
-                ui.ShieldRecharge(shieldInfo.rechargeTime, this);
+                ui.TargetShieldRecharge(connectionToClient , shieldInfo.rechargeTime);
                 float retval = -energy;
                 energy = 0;
                 if (isLocalPlayer) {
@@ -352,6 +352,7 @@ public class PlayerWeapons : NetworkBehaviour {
             return amount;
         }
     }
+
 
     public void AddEnergy(float add) {
         energy = Mathf.Min(maxEnergy, energy + add);

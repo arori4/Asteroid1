@@ -135,16 +135,19 @@ public class UIController : NetworkBehaviour {
         }
     }
 
-    public void ShieldRecharge(float rechargeTime, PlayerWeapons caller) {
-        StartCoroutine(RechargeShield(rechargeTime, caller));
+    [TargetRpc]
+    public void TargetShieldRecharge(NetworkConnection conn, float rechargeTime) {
+        StartCoroutine(RechargeShield(rechargeTime));
     }
-    private IEnumerator RechargeShield(float rechargeTime, PlayerWeapons caller) {
+    private IEnumerator RechargeShield(float rechargeTime) {
         shieldUIGroup.Hide();
 
         shieldSlider.gameObject.SetActive(true);
         shieldSlider.val = 0f;
+        CanvasGroup shieldBarCanvas = shieldSlider.gameObject.GetComponent<CanvasGroup>();
+        StartCoroutine(FadeInCoroutine(shieldBarCanvas, 0.1f));
 
-        caller.shieldRecharging = true;
+        player.shieldRecharging = true;
 
         //TODO: move this to an option in UISLiderGroup later
         while (shieldSlider.val < 1) {
@@ -153,15 +156,14 @@ public class UIController : NetworkBehaviour {
         }
 
         //keep shield bar up for a second before removing it
-        CanvasGroup shieldBarCanvas = shieldSlider.gameObject.GetComponent<CanvasGroup>();
         for (int index = 0; index < 2; index++) {
-            StartCoroutine(FadeInCoroutine(shieldBarCanvas, 4f));
+            StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 0.25f));
             yield return new WaitForSeconds(0.25f);
-            StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 4f));
+            StartCoroutine(FadeInCoroutine(shieldBarCanvas, 0.25f));
             yield return new WaitForSeconds(0.25f);
         }
 
-        StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 4f));
+        StartCoroutine(FadeOutCoroutine(shieldBarCanvas, 0.25f));
         yield return new WaitForSeconds(0.25f);
 
         //set alpha back to 1 so that when we need it again, it appears
@@ -169,7 +171,7 @@ public class UIController : NetworkBehaviour {
         shieldSlider.gameObject.SetActive(false);
 
         shieldUIGroup.Show();
-        caller.shieldRecharging = false;
+        player.shieldRecharging = false;
     }
 
 

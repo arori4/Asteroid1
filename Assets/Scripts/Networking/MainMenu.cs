@@ -158,7 +158,7 @@ public class MainMenu : MonoBehaviour {
             }
 
             //Start next level
-            StartCoroutine(LoadNextSceneCoroutine("Main Game"));
+            StartCoroutine(LoadNextSceneCoroutine("Main Game Networked"));
         }
     }
 
@@ -193,7 +193,7 @@ public class MainMenu : MonoBehaviour {
             }
 
             //Start next level
-            StartCoroutine(LoadNextSceneCoroutine("Main Game"));
+            StartCoroutine(LoadNextSceneCoroutine("Main Game Networked"));
         }
     }
 
