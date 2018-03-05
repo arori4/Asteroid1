@@ -130,7 +130,7 @@ public class LobbyManager : NetworkLobbyManager {
     public override GameObject OnLobbyServerCreateLobbyPlayer(NetworkConnection conn, short playerControllerId) {
 
         GameObject obj = Instantiate(lobbyPlayerPrefab.gameObject) as GameObject;
-        LobbyPlayer newPlayer = obj.GetComponent<LobbyPlayer>();
+        //LobbyPlayer newPlayer = obj.GetComponent<LobbyPlayer>();
         //newPlayer.ToggleJoinButton(numPlayers + 1 >= minPlayers);
 
 

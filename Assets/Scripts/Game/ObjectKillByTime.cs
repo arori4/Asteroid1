@@ -25,6 +25,7 @@ public class ObjectKillByTime : NetworkBehaviour {
         handler.AddHealth(-handler.GetCurrentHealth() - 383283);
 
         yield return null;
+
     }
 
 }
